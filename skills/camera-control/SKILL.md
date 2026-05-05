@@ -1,5 +1,5 @@
 ---
-name: codex-vision
+name: camera-control
 description: Use when the user asks Codex to snapshot, stream, inspect, or stop the local macOS camera through Codex Vision.
 ---
 
