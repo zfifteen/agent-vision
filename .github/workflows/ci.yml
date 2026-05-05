@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift test
+        run: swift test
+      - name: Release build
+        run: swift build -c release
+      - name: Validate manifests
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
+              path = pathlib.Path(rel)
+              data = json.loads(path.read_text(encoding="utf-8"))
+              assert data
+          plugin = json.loads(pathlib.Path(".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+          assert plugin["name"] == "codex-vision"
+          assert plugin["mcpServers"] == "./.mcp.json"
+          mcp = json.loads(pathlib.Path(".mcp.json").read_text(encoding="utf-8"))
+          assert mcp["mcpServers"]["codex-vision"]["command"].startswith("./")
+          PY
+      - name: Install dry-run
+        run: scripts/install-local.sh --dry-run

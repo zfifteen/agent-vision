@@ -1,0 +1,54 @@
+{
+  "name": "codex-vision",
+  "version": "1.0.0",
+  "description": "macOS-only Codex plugin for explicit live camera frames through MCP.",
+  "author": {
+    "name": "Velocity Works",
+    "email": "velocityworks@users.noreply.github.com",
+    "url": "https://github.com/zfifteen"
+  },
+  "homepage": "https://github.com/zfifteen/codex-vision",
+  "repository": "https://github.com/zfifteen/codex-vision",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "codex-plugin",
+    "mcp",
+    "model-context-protocol",
+    "macos",
+    "avfoundation",
+    "camera",
+    "vision",
+    "local-first",
+    "swift",
+    "ai-assistant",
+    "laptop-camera"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex Vision",
+    "shortDescription": "Give Codex explicit live camera frames on macOS.",
+    "longDescription": "Codex Vision is a macOS-only Codex plugin that exposes the built-in camera through a native AVFoundation capture app and MCP tools. Codex can start a local capture session, request the latest JPEG frame, and stop the session without browser camera hacks or cloud camera services.",
+    "developerName": "Velocity Works",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://github.com/zfifteen/codex-vision",
+    "privacyPolicyURL": "https://github.com/zfifteen/codex-vision/blob/main/README.md#privacy",
+    "termsOfServiceURL": "https://github.com/zfifteen/codex-vision/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Start Codex Vision and describe what the camera sees.",
+      "Use Codex Vision to read the note on my desk.",
+      "Stop the Codex Vision camera session."
+    ],
+    "brandColor": "#00D4FF",
+    "composerIcon": "./assets/readme-hero.png",
+    "logo": "./assets/readme-hero.png",
+    "screenshots": [
+      "./assets/readme-hero.png"
+    ]
+  }
+}
