@@ -77,6 +77,8 @@ macOS asks for camera permission for the signed `CodexVision.app` the first time
 
 Version 1.0 does not implement background recording, cloud upload, device selection, audio capture, or unsolicited streaming into Codex context.
 
+See [PRIVACY.md](PRIVACY.md) for the standalone policy.
+
 ## Development
 
 ```bash

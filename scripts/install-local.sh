@@ -78,6 +78,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
+plutil -lint "$APP/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$APP" >/dev/null
 cat > "$ROOT/dist/codex-vision-mcp" <<'SH'
 #!/usr/bin/env bash

@@ -83,11 +83,16 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     }
 
     public func latestFrame() throws -> CameraFrame {
-        try frameQueue.sync {
-            guard let latest else {
+        let deadline = Date().addingTimeInterval(1)
+        while true {
+            if let frame = frameQueue.sync(execute: { latest }) {
+                return frame
+            }
+
+            if Date() >= deadline {
                 throw CameraError.frameUnavailable
             }
-            return latest
+            Thread.sleep(forTimeInterval: 0.05)
         }
     }
 

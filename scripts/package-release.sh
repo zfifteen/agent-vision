@@ -48,6 +48,7 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
+plutil -lint "$OUT/dist/CodexVision.app/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/CodexVision.app" >/dev/null
 cat > "$OUT/dist/codex-vision-mcp" <<'SH'
 #!/usr/bin/env bash
@@ -78,6 +79,7 @@ cp -R "$ROOT/skills" "$OUT/skills"
 cp "$ROOT/README.md" "$OUT/README.md"
 cp "$ROOT/INSTALL.md" "$OUT/INSTALL.md"
 cp "$ROOT/CODEX_INSTALL.md" "$OUT/CODEX_INSTALL.md"
+cp "$ROOT/PRIVACY.md" "$OUT/PRIVACY.md"
 cp "$ROOT/LICENSE" "$OUT/LICENSE"
 
 tar -C "$ROOT/release" -czf "$OUT.tar.gz" "codex-vision-$VERSION"

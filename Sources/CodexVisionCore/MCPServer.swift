@@ -53,15 +53,24 @@ public final class MCPServer {
             }
 
             let id = message["id"]
-            guard let method = message["method"] as? String else {
+            guard let methodValue = message["method"] else {
+                if message.keys.contains("id") {
+                    return errorResponse(id: id, code: -32600, message: "Invalid Request")
+                }
                 return nil
+            }
+            guard let method = methodValue as? String else {
+                return errorResponse(id: id, code: -32600, message: "Invalid Request")
             }
 
             switch method {
             case "initialize":
                 return successResponse(id: id, result: initializeResult())
             case "tools/list":
-                return successResponse(id: id, result: ["tools": toolDefinitions()])
+                return successResponse(id: id, result: [
+                    "tools": toolDefinitions(),
+                    "nextCursor": NSNull()
+                ])
             case "tools/call":
                 return handleToolCall(id: id, params: message["params"])
             default:
@@ -117,21 +126,25 @@ public final class MCPServer {
         [
             [
                 "name": "codex_vision_snapshot",
+                "title": "Snapshot",
                 "description": "Take one Codex Vision snapshot: start the built-in macOS camera, return one JPEG frame, then stop the camera.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_start",
+                "title": "Start Streaming",
                 "description": "Start streaming mode by keeping the persistent Codex Vision capture session active.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_frame",
+                "title": "Latest Frame",
                 "description": "Return the latest live JPEG frame from the active streaming-mode Codex Vision camera session.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_stop",
+                "title": "Stop Streaming",
                 "description": "Stop streaming mode, release the camera, and clear the cached frame.",
                 "inputSchema": emptyInputSchema()
             ]
@@ -216,7 +229,11 @@ public final class MCPServer {
     }
 
     private func encode(_ object: [String: Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
-        return String(decoding: data, as: UTF8.self)
+        do {
+            let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+            return String(decoding: data, as: UTF8.self)
+        } catch {
+            return #"{"error":{"code":-32603,"message":"Response encoding failed"},"id":null,"jsonrpc":"2.0"}"#
+        }
     }
 }

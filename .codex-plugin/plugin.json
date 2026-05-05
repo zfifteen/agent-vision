@@ -37,15 +37,15 @@
       "Read"
     ],
     "websiteURL": "https://github.com/zfifteen/codex-vision",
-    "privacyPolicyURL": "https://github.com/zfifteen/codex-vision/blob/main/README.md#privacy",
+    "privacyPolicyURL": "https://github.com/zfifteen/codex-vision/blob/main/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/zfifteen/codex-vision/blob/main/LICENSE",
     "defaultPrompt": [
       "/codex-vision snapshot",
       "/codex-vision streaming"
     ],
     "brandColor": "#00D4FF",
-    "composerIcon": "./assets/readme-hero.png",
-    "logo": "./assets/readme-hero.png",
+    "composerIcon": "./assets/composer-icon.png",
+    "logo": "./assets/logo.png",
     "screenshots": [
       "./assets/readme-hero.png"
     ]
