@@ -4,9 +4,9 @@ Control Codex Vision camera mode.
 
 ## Arguments
 
-- `snapshot`: take one image and turn the camera off.
+- `snapshot`: take one usable image and turn the camera off.
 - `streaming`: start streaming mode.
-- `roast`: take one image, turn the camera off, and write a playful roast.
+- `roast`: take one usable image, turn the camera off, and write a playful roast.
 
 ## Workflow
 
@@ -22,6 +22,8 @@ Control Codex Vision camera mode.
 ## Verification
 
 Confirm that the called tool returned `isError: false`. If the tool returns an error, report that exact error.
+
+Snapshot and roast mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts before returning an error.
 
 ## Response
 

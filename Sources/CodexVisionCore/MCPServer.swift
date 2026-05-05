@@ -181,7 +181,8 @@ public final class MCPServer {
             "mimeType": "image/jpeg",
             "width": frame.width,
             "height": frame.height,
-            "bytes": frame.jpegData.count
+            "bytes": frame.jpegData.count,
+            "meanBrightness": frame.meanBrightness
         ]
 
         return successResponse(id: id, result: [

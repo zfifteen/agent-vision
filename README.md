@@ -27,11 +27,11 @@ The user-facing slash command is intentionally small:
 /codex-vision roast
 ```
 
-Snapshot mode starts the camera, captures one JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera.
+Snapshot mode starts the camera, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
-Roast mode starts the camera, captures one JPEG frame, stops the camera, and writes one opt-in playful roast of 400 characters or fewer.
+Roast mode starts the camera, waits for a usable JPEG frame, stops the camera, and writes one opt-in playful roast of 400 characters or fewer.
 
 To stop streaming, tell Codex to stop camera use:
 
@@ -114,7 +114,7 @@ Take one image and turn the camera off:
 /codex-vision snapshot
 ```
 
-Use this when you want one image and then want the camera off. Codex Desktop should show the returned image as a preview thumbnail in the chat.
+Use this when you want one usable image and then want the camera off. Codex Desktop should show the returned image as a preview thumbnail in the chat.
 
 Start streaming mode and keep the camera available:
 
@@ -138,7 +138,7 @@ Take one image and request immediate emotional damage, responsibly:
 /codex-vision roast
 ```
 
-Roast mode uses the same camera lifecycle as snapshot mode: start, capture one frame, stop. The roast is short, opt-in, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
+Roast mode uses the same camera lifecycle as snapshot mode: start, wait for one usable frame, stop. The roast is short, opt-in, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
 
 ## Example Workflows
 
@@ -224,7 +224,7 @@ Snapshot mode:
 
 1. Codex calls `codex_vision_snapshot`.
 2. `CodexVision.app` starts the built-in camera.
-3. The app waits for a frame.
+3. The app waits for a usable frame.
 4. The app returns one JPEG frame.
 5. The app stops the camera and clears cached frame state.
 
@@ -232,7 +232,7 @@ Roast mode:
 
 1. Codex calls `codex_vision_snapshot`.
 2. `CodexVision.app` starts the built-in camera.
-3. The app returns one JPEG frame.
+3. The app waits for and returns one usable JPEG frame.
 4. The app stops the camera and clears cached frame state.
 5. Codex writes a short opt-in roast based on visible non-sensitive details.
 
@@ -294,6 +294,8 @@ If macOS repeatedly asks for camera permission, rerun the installer. Camera perm
 If streaming says it started but the camera indicator is off, the MCP process is not being kept alive. Streaming mode requires a persistent MCP session.
 
 If frames are unavailable immediately after starting streaming, wait briefly and pull again. The installed skill retries at most two times before telling the user the camera is not producing frames.
+
+If snapshot or roast mode sees a black frame, it treats that as camera warm-up, keeps the camera on, waits 5 seconds, and tries again. After 3 black-frame attempts, it returns an error instead of handing Codex a useless image.
 
 ## License
 

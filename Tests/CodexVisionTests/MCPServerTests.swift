@@ -20,7 +20,8 @@ private final class FakeCamera: CameraControlling {
             jpegData: Data([0xFF, 0xD8, 0xFF, 0xD9]),
             timestamp: "2026-05-05T20:00:00Z",
             width: 2,
-            height: 1
+            height: 1,
+            meanBrightness: 0.5
         )
     }
 
@@ -66,6 +67,7 @@ private final class FakeCamera: CameraControlling {
     #expect(image["mimeType"] as? String == "image/jpeg")
     #expect(metadata["width"] as? Int == 2)
     #expect(metadata["height"] as? Int == 1)
+    #expect(metadata["meanBrightness"] as? Double == 0.5)
 }
 
 @Test func snapshotToolReturnsImageContentAndMetadata() throws {
@@ -79,6 +81,7 @@ private final class FakeCamera: CameraControlling {
     #expect(image["mimeType"] as? String == "image/jpeg")
     #expect(metadata["width"] as? Int == 2)
     #expect(metadata["height"] as? Int == 1)
+    #expect(metadata["meanBrightness"] as? Double == 0.5)
 }
 
 @Test func startAndStopToolsReturnTextAndInvokeCamera() throws {
@@ -110,6 +113,18 @@ private final class FakeCamera: CameraControlling {
     let content = try #require(result["content"] as? [[String: Any]])
     #expect(result["isError"] as? Bool == true)
     #expect(content.first?["text"] as? String == "The camera session has not produced a frame yet.")
+}
+
+@Test func unusableFrameErrorPropagatesAsToolError() throws {
+    let camera = FakeCamera()
+    camera.latestFrameError = CameraError.frameNotUsable
+    let server = MCPServer(camera: camera)
+
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"codex_vision_frame","arguments":{}}}"#))
+    let result = try #require(response["result"] as? [String: Any])
+    let content = try #require(result["content"] as? [[String: Any]])
+    #expect(result["isError"] as? Bool == true)
+    #expect(content.first?["text"] as? String == "The camera produced frames, but they were still black after three attempts. Check the lens cover and lighting, then try again.")
 }
 
 @Test func unknownToolReturnsMCPToolError() throws {
