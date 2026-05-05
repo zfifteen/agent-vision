@@ -35,6 +35,7 @@ Treat requests such as "streaming off", "stop streaming", or "turn off the camer
 - Codex Vision is macOS-only.
 - The plugin uses the built-in Mac camera only in version 1.0.
 - Snapshot and roast mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts before returning an error.
+- If streaming mode is already active, snapshot and roast mode must not stop the streaming session.
 - If `codex_vision_frame` reports no frame yet during streaming mode, wait briefly and retry at most two times. If frame errors persist, tell the user the camera is not producing frames and suggest stopping and restarting streaming mode.
 - Streaming mode is pull-based live frame access. When streaming mode is on, Codex may pull frames as needed without asking the user for each individual frame.
 - Snapshot mode captures one usable frame and turns the camera off.

@@ -27,11 +27,11 @@ The user-facing slash command is intentionally small:
 /codex-vision roast
 ```
 
-Snapshot mode starts the camera, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
+Snapshot mode starts the camera if needed, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
-Roast mode starts the camera, waits for a usable JPEG frame, stops the camera, and writes one opt-in playful roast of 400 characters or fewer.
+Roast mode starts the camera if needed, waits for a usable JPEG frame, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer.
 
 To stop streaming, tell Codex to stop camera use:
 
@@ -223,17 +223,17 @@ The installer stages the plugin under `~/plugins/codex-vision`, caches it under 
 Snapshot mode:
 
 1. Codex calls `codex_vision_snapshot`.
-2. `CodexVision.app` starts the built-in camera.
+2. `CodexVision.app` starts the built-in camera if it is not already running.
 3. The app waits for a usable frame.
 4. The app returns one JPEG frame.
-5. The app stops the camera and clears cached frame state.
+5. If snapshot started the camera, the app stops the camera and clears cached frame state. If streaming was already active, the app leaves streaming active.
 
 Roast mode:
 
 1. Codex calls `codex_vision_snapshot`.
-2. `CodexVision.app` starts the built-in camera.
+2. `CodexVision.app` starts the built-in camera if it is not already running.
 3. The app waits for and returns one usable JPEG frame.
-4. The app stops the camera and clears cached frame state.
+4. If roast started the camera, the app stops the camera and clears cached frame state. If streaming was already active, the app leaves streaming active.
 5. Codex writes a short opt-in roast based on visible non-sensitive details.
 
 Streaming mode:

@@ -20,11 +20,11 @@ Codex Vision installs one slash command with three public arguments:
 /codex-vision roast
 ```
 
-`/codex-vision snapshot` starts the camera, waits for a usable JPEG frame, returns it into the chat, and stops the camera. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
+`/codex-vision snapshot` starts the camera if needed, waits for a usable JPEG frame, returns it into the chat, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
 
 `/codex-vision streaming` starts streaming mode. While streaming is active, the Mac camera indicator should stay on and Codex can call `codex_vision_frame` when visual context would help.
 
-`/codex-vision roast` starts the camera, waits for a usable JPEG frame, returns it into the chat, stops the camera, and asks Codex to write one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
+`/codex-vision roast` starts the camera if needed, waits for a usable JPEG frame, returns it into the chat, stops the camera only if roast started it, and asks Codex to write one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
 
 To stop streaming, ask Codex to stop camera use:
 

@@ -25,6 +25,8 @@ Confirm that the called tool returned `isError: false`. If the tool returns an e
 
 Snapshot and roast mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts before returning an error.
 
+If streaming mode is already active, snapshot and roast mode must not stop the streaming session.
+
 ## Response
 
 For `snapshot`, display or describe the returned image in chat. For `roast`, display or describe the returned image and include one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes. Do not mention internal readiness metadata such as brightness values unless reporting an error. For mode changes, state the resulting camera mode.

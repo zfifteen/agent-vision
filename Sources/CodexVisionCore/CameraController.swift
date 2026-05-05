@@ -74,21 +74,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     private var latest: CameraFrame?
 
     public func start() throws -> String {
-        try authorizeCamera()
-
-        try sessionQueue.sync {
-            if session.isRunning {
-                return
-            }
-
-            if !configured {
-                try configureSession()
-                configured = true
-            }
-
-            session.startRunning()
-        }
-
+        _ = try startSessionIfNeeded()
         return "Codex Vision camera session started."
     }
 
@@ -107,12 +93,14 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     }
 
     public func snapshot() throws -> CameraFrame {
-        _ = try start()
+        let startedSession = try startSessionIfNeeded()
         defer {
-            do {
-                _ = try stop()
-            } catch {
-                fputs("Codex Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
+            if startedSession {
+                do {
+                    _ = try stop()
+                } catch {
+                    fputs("Codex Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
+                }
             }
         }
 
@@ -140,6 +128,24 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             latest = nil
         }
         return "Codex Vision camera session stopped."
+    }
+
+    private func startSessionIfNeeded() throws -> Bool {
+        try authorizeCamera()
+
+        return try sessionQueue.sync {
+            if session.isRunning {
+                return false
+            }
+
+            if !configured {
+                try configureSession()
+                configured = true
+            }
+
+            session.startRunning()
+            return true
+        }
     }
 
     private func cachedFrame() -> CameraFrame? {

@@ -66,6 +66,9 @@ public final class MCPServer {
                 }
                 return errorResponse(id: id, code: -32600, message: "Invalid Request")
             }
+            if !hasID {
+                return nil
+            }
 
             switch method {
             case "initialize":
@@ -131,7 +134,7 @@ public final class MCPServer {
             [
                 "name": "codex_vision_snapshot",
                 "title": "Snapshot",
-                "description": "Take one Codex Vision snapshot: start the built-in macOS camera, return one JPEG frame, then stop the camera.",
+                "description": "Take one Codex Vision snapshot: start the built-in macOS camera if needed, return one JPEG frame, then stop only if snapshot started the camera.",
                 "inputSchema": emptyInputSchema()
             ],
             [
