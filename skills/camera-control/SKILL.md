@@ -25,6 +25,8 @@ For streaming mode:
 
 While streaming mode is active, call `codex_vision_frame` whenever current visual context would help. When the user asks to stop camera use, call `codex_vision_stop`.
 
+Treat requests such as "streaming off", "stop streaming", or "turn off the camera" as requests to call `codex_vision_stop`.
+
 ## Guardrails
 
 - Codex Vision is macOS-only.

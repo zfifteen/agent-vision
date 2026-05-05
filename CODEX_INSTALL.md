@@ -38,4 +38,11 @@ Or use the bundled slash commands:
 /codex-vision streaming
 ```
 
-Version 1.0 is pull-based: snapshot mode returns one frame and stops; streaming mode returns frames only when Codex calls `codex_vision_frame`.
+Version 1.0 is pull-based:
+
+- `/codex-vision snapshot` returns one JPEG frame into chat and stops the camera.
+- `/codex-vision streaming` starts a live camera session. The Mac camera indicator should stay on while this session is active.
+- While streaming is active, Codex may call `codex_vision_frame` whenever visual context would help, without asking for each frame.
+- When the user asks to stop streaming or stop camera use, call `codex_vision_stop`.
+
+There is no public `/codex-vision frame` or `/codex-vision stop` slash mode in version 1.0. Those are MCP tool actions Codex performs from the installed skill.

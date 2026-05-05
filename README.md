@@ -4,14 +4,14 @@
 
 Codex Vision is a macOS-only Codex plugin that lets a local Codex session request live camera frames through MCP.
 
-Version 1.0 gives Codex three explicit tools:
+Version 1.0 gives Codex four explicit tools:
 
 - `codex_vision_snapshot`
 - `codex_vision_start`
 - `codex_vision_frame`
 - `codex_vision_stop`
 
-The camera stays local. Codex gets a JPEG frame only when it calls the frame tool.
+The camera stays local. Codex gets a JPEG frame only when it calls the snapshot or frame tool.
 
 ## Install
 
@@ -37,19 +37,22 @@ Ask Codex:
 Use Codex Vision to start the camera, inspect the latest frame, and tell me what you can read from my note.
 ```
 
-For one-shot camera context, use:
+Codex Vision installs one slash command with two public modes:
 
 ```text
 /codex-vision snapshot
-```
-
-For streaming mode, use:
-
-```text
 /codex-vision streaming
 ```
 
-Snapshot mode starts the camera, returns one JPEG frame, and stops the camera. Streaming mode keeps the camera on so Codex can pull frames as needed until you stop it.
+Snapshot mode starts the camera, returns one JPEG frame, and stops the camera. In Codex Desktop the returned image appears as an image preview in the chat.
+
+Streaming mode keeps the camera on so Codex can pull frames as needed without asking for each frame. The Mac camera indicator should stay on while streaming mode is active. To stop streaming, ask Codex to stop camera use:
+
+```text
+Codex Vision streaming off
+```
+
+There is no public `/codex-vision frame` or `/codex-vision stop` slash mode in version 1.0. Frame pulls and stop calls are MCP tool actions Codex performs from the installed skill.
 
 ## Architecture
 
@@ -69,6 +72,8 @@ The plugin package contains `.codex-plugin/plugin.json`, `.mcp.json`, slash comm
 ## Privacy
 
 Codex Vision is explicit and pull-based. Snapshot mode starts the camera only for one frame. Streaming mode starts only when Codex calls `codex_vision_start`; frames are returned only when Codex calls `codex_vision_frame`; the session stops when Codex calls `codex_vision_stop`.
+
+macOS asks for camera permission for the signed `CodexVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
 
 Version 1.0 does not implement background recording, cloud upload, device selection, audio capture, or unsolicited streaming into Codex context.
 
