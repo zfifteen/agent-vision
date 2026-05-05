@@ -14,6 +14,7 @@ fi
 
 command -v swift >/dev/null || { echo "swift is required." >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
+command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
 SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
 if [[ -z "$SIGN_IDENTITY" ]]; then
   echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
@@ -46,14 +47,12 @@ BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
 APP="$ROOT/dist/CodexVision.app"
 PLUGIN_HOME="$HOME/plugins/codex-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/codex-vision/1.0.0"
-CURATED_SOURCE_HOME="$HOME/.codex/.tmp/plugins/plugins/codex-vision"
-CURATED_CACHE_HOME="$HOME/.codex/plugins/cache/openai-curated/codex-vision/1.0.0"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
-CURATED_MARKETPLACE="$HOME/.codex/.tmp/plugins/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+rm -f "$ROOT/dist/prompt-input-check.json"
 cp "$BUILD_DIR/CodexVision" "$APP/Contents/MacOS/CodexVision"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -120,21 +119,6 @@ cp -R "$ROOT/commands" "$CACHE_HOME/commands"
 cp -R "$ROOT/skills" "$CACHE_HOME/skills"
 cp -R "$ROOT/dist" "$CACHE_HOME/dist"
 
-rm -rf "$CURATED_SOURCE_HOME" "$CURATED_CACHE_HOME"
-mkdir -p "$CURATED_SOURCE_HOME" "$CURATED_CACHE_HOME"
-cp -R "$ROOT/.codex-plugin" "$CURATED_SOURCE_HOME/.codex-plugin"
-cp "$ROOT/.mcp.json" "$CURATED_SOURCE_HOME/.mcp.json"
-cp -R "$ROOT/assets" "$CURATED_SOURCE_HOME/assets"
-cp -R "$ROOT/commands" "$CURATED_SOURCE_HOME/commands"
-cp -R "$ROOT/skills" "$CURATED_SOURCE_HOME/skills"
-cp -R "$ROOT/dist" "$CURATED_SOURCE_HOME/dist"
-cp -R "$ROOT/.codex-plugin" "$CURATED_CACHE_HOME/.codex-plugin"
-cp "$ROOT/.mcp.json" "$CURATED_CACHE_HOME/.mcp.json"
-cp -R "$ROOT/assets" "$CURATED_CACHE_HOME/assets"
-cp -R "$ROOT/commands" "$CURATED_CACHE_HOME/commands"
-cp -R "$ROOT/skills" "$CURATED_CACHE_HOME/skills"
-cp -R "$ROOT/dist" "$CURATED_CACHE_HOME/dist"
-
 mkdir -p "$(dirname "$MARKETPLACE")"
 python3 - "$MARKETPLACE" <<'PY'
 import json
@@ -170,45 +154,16 @@ data["plugins"] = plugins
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 
-mkdir -p "$(dirname "$CURATED_MARKETPLACE")"
-python3 - "$CURATED_MARKETPLACE" <<'PY'
-import json
-import pathlib
-import sys
-
-path = pathlib.Path(sys.argv[1])
-data = json.loads(path.read_text(encoding="utf-8"))
-
-entry = {
-    "name": "codex-vision",
-    "source": {
-        "source": "local",
-        "path": "./plugins/codex-vision"
-    },
-    "policy": {
-        "installation": "INSTALLED_BY_DEFAULT",
-        "authentication": "ON_INSTALL"
-    },
-    "category": "Productivity"
-}
-
-plugins = [plugin for plugin in data.get("plugins", []) if plugin.get("name") != "codex-vision"]
-plugins.append(entry)
-data["plugins"] = plugins
-path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-PY
+codex plugin marketplace add "$HOME" >/dev/null
 
 mkdir -p "$(dirname "$CODEX_CONFIG")"
 python3 - "$CODEX_CONFIG" "$HOME" <<'PY'
-import datetime
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
-home = pathlib.Path(sys.argv[2])
 text = path.read_text(encoding="utf-8") if path.exists() else ""
-timestamp = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 def remove_section(source: str, header: str) -> str:
     pattern = re.compile(rf"(?ms)^\[{re.escape(header)}\]\n.*?(?=^\[|\Z)")
@@ -216,27 +171,34 @@ def remove_section(source: str, header: str) -> str:
 
 text = remove_section(text, 'plugins."codex-vision@local"')
 text = remove_section(text, 'plugins."codex-vision@openai-curated"')
-text = remove_section(text, "marketplaces.local")
 
 addition = f"""
 [plugins."codex-vision@local"]
 enabled = true
-
-[plugins."codex-vision@openai-curated"]
-enabled = true
-
-[marketplaces.local]
-last_updated = "{timestamp}"
-source_type = "local"
-source = "{home}"
 """
 
 path.write_text(text.rstrip() + "\n" + addition.lstrip(), encoding="utf-8")
 PY
 
+rm -rf \
+  "$HOME/.codex/.tmp/plugins/plugins/codex-vision" \
+  "$HOME/.codex/plugins/cache/openai-curated/codex-vision"
+
+PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/codex-vision-prompt-input.XXXXXX.json")"
+trap 'rm -f "$PROMPT_CHECK"' EXIT
+codex debug prompt-input "codex vision install check" > "$PROMPT_CHECK"
+python3 - "$PROMPT_CHECK" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+text = json.dumps(json.loads(open(path, encoding="utf-8").read()))
+count = text.count("`Codex Vision`: macOS-only Codex plugin for explicit live camera frames through MCP.")
+if count != 1:
+    raise SystemExit(f"Codex Vision plugin admission check failed: expected exactly one generated plugin entry, found {count}.")
+PY
+
 echo "Codex Vision installed at $PLUGIN_HOME"
 echo "Codex Vision cached at $CACHE_HOME"
-echo "Codex Vision source staged at $CURATED_SOURCE_HOME"
-echo "Codex Vision curated cache staged at $CURATED_CACHE_HOME"
 echo "Codex Vision registered in $CODEX_CONFIG"
 echo "Use /codex-vision snapshot or /codex-vision stream-on."
