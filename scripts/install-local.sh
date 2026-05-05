@@ -201,4 +201,4 @@ PY
 echo "Codex Vision installed at $PLUGIN_HOME"
 echo "Codex Vision cached at $CACHE_HOME"
 echo "Codex Vision registered in $CODEX_CONFIG"
-echo "Use /codex-vision snapshot or /codex-vision stream-on."
+echo "Use /codex-vision snapshot or /codex-vision streaming."

@@ -46,9 +46,7 @@ For one-shot camera context, use:
 For streaming mode, use:
 
 ```text
-/codex-vision stream-on
-/codex-vision frame
-/codex-vision stream-off
+/codex-vision streaming
 ```
 
 Snapshot mode starts the camera, returns one JPEG frame, and stops the camera. Streaming mode keeps the camera on so Codex can pull frames as needed until you stop it.

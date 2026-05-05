@@ -21,9 +21,9 @@ For streaming mode:
 ## Slash Commands
 
 - `/codex-vision snapshot`: call `codex_vision_snapshot`.
-- `/codex-vision stream-on`: call `codex_vision_start`.
-- `/codex-vision frame`: call `codex_vision_frame`.
-- `/codex-vision stream-off`: call `codex_vision_stop`.
+- `/codex-vision streaming`: call `codex_vision_start`.
+
+While streaming mode is active, call `codex_vision_frame` whenever current visual context would help. When the user asks to stop camera use, call `codex_vision_stop`.
 
 ## Guardrails
 

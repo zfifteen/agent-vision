@@ -5,18 +5,16 @@ Control Codex Vision camera mode.
 ## Arguments
 
 - `snapshot`: take one image and turn the camera off.
-- `stream-on`: start streaming mode.
-- `frame`: pull one frame from active streaming mode.
-- `stream-off`: stop streaming mode and release the camera.
+- `streaming`: start streaming mode.
 
 ## Workflow
 
 1. Read the first argument exactly.
 2. For `snapshot`, call `codex_vision_snapshot`.
-3. For `stream-on`, call `codex_vision_start`.
-4. For `frame`, call `codex_vision_frame`.
-5. For `stream-off`, call `codex_vision_stop`.
-6. If the first argument is missing or different, tell the user the supported arguments exactly.
+3. For `streaming`, call `codex_vision_start`.
+4. If the first argument is missing or different, tell the user the supported arguments exactly.
+5. While streaming mode is active, call `codex_vision_frame` whenever current visual context would help.
+6. When the user asks to stop camera use, call `codex_vision_stop`.
 
 ## Verification
 

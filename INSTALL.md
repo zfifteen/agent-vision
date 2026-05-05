@@ -23,9 +23,7 @@ macOS will ask for camera permission for `CodexVision.app` the first time the ca
 Streaming mode commands:
 
 ```text
-/codex-vision stream-on
-/codex-vision frame
-/codex-vision stream-off
+/codex-vision streaming
 ```
 
 ## Uninstall
