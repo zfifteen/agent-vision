@@ -38,3 +38,5 @@ Treat requests such as "streaming off", "stop streaming", or "turn off the camer
 - If `codex_vision_frame` reports no frame yet during streaming mode, wait briefly and retry at most two times. If frame errors persist, tell the user the camera is not producing frames and suggest stopping and restarting streaming mode.
 - Streaming mode is pull-based live frame access. When streaming mode is on, Codex may pull frames as needed without asking the user for each individual frame.
 - Snapshot mode captures one usable frame and turns the camera off.
+- Do not mention internal readiness metadata such as brightness values unless reporting an error.
+- If you need to save an MCP image to disk before displaying it in chat, use a fresh unique filename for each response. Do not reuse a temp image path from an earlier snapshot.

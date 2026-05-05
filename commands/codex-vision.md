@@ -27,4 +27,6 @@ Snapshot and roast mode intentionally wait for a usable frame. If the camera ret
 
 ## Response
 
-For `snapshot`, display or describe the returned image in chat. For `roast`, display or describe the returned image and include one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes. For mode changes, state the resulting camera mode.
+For `snapshot`, display or describe the returned image in chat. For `roast`, display or describe the returned image and include one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes. Do not mention internal readiness metadata such as brightness values unless reporting an error. For mode changes, state the resulting camera mode.
+
+If you need to save an MCP image to disk before displaying it in chat, use a fresh unique filename for each response. Do not reuse a temp image path from an earlier snapshot.
