@@ -14,12 +14,6 @@ fi
 
 command -v swift >/dev/null || { echo "swift is required." >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
-command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
-SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
-if [[ -z "$SIGN_IDENTITY" ]]; then
-  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
-  exit 1
-fi
 
 python3 - "$ROOT" <<'PY'
 import json
@@ -40,6 +34,13 @@ if [[ "$DRY_RUN" == "1" ]]; then
   swift build -c release --package-path "$ROOT" >/dev/null
   echo "Codex Vision dry-run validation succeeded."
   exit 0
+fi
+
+command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
+SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
+if [[ -z "$SIGN_IDENTITY" ]]; then
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  exit 1
 fi
 
 swift build -c release --package-path "$ROOT"
