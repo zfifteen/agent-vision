@@ -1,10 +1,8 @@
 {
   "mcpServers": {
     "codex-vision": {
-      "command": "./dist/CodexVision.app/Contents/MacOS/CodexVision",
-      "args": [
-        "mcp"
-      ],
+      "command": "./dist/codex-vision-mcp",
+      "args": [],
       "cwd": "."
     }
   }

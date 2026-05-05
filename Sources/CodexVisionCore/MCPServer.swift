@@ -7,18 +7,42 @@ public final class MCPServer {
         self.camera = camera
     }
 
-    public func run() {
-        while let line = readLine(strippingNewline: true) {
+    public func run(
+        input: FileHandle = .standardInput,
+        output: FileHandle = .standardOutput
+    ) {
+        var buffer = Data()
+
+        while true {
+            let chunk = input.availableData
+            if chunk.isEmpty {
+                break
+            }
+            buffer.append(chunk)
+
+            while let newline = buffer.firstIndex(of: 0x0A) {
+                let lineData = buffer[..<newline]
+                buffer.removeSubrange(...newline)
+                let line = String(decoding: lineData, as: UTF8.self)
+                writeResponse(for: line, to: output)
+            }
+        }
+
+        if !buffer.isEmpty {
+            let line = String(decoding: buffer, as: UTF8.self)
+            writeResponse(for: line, to: output)
+        }
+    }
+
+    private func writeResponse(for line: String, to output: FileHandle) {
             guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                continue
+                return
             }
 
             let response = handleLine(line)
             if let response {
-                print(response)
-                fflush(stdout)
+            output.write(Data((response + "\n").utf8))
             }
-        }
     }
 
     public func handleLine(_ line: String) -> String? {

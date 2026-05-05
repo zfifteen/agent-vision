@@ -13,7 +13,16 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "CodexVision",
-            dependencies: ["CodexVisionCore"]
+            dependencies: ["CodexVisionCore"],
+            exclude: ["Info.plist"],
+            linkerSettings: [
+                .unsafeFlags([
+                    "-Xlinker", "-sectcreate",
+                    "-Xlinker", "__TEXT",
+                    "-Xlinker", "__info_plist",
+                    "-Xlinker", "Sources/CodexVision/Info.plist"
+                ])
+            ]
         ),
         .target(
             name: "CodexVisionCore"

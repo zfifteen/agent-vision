@@ -1,0 +1,3 @@
+[mcp_servers.codex-vision]
+args = []
+command = "./dist/codex-vision-mcp"

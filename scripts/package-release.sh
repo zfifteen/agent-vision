@@ -43,6 +43,27 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 /usr/bin/codesign --force --sign - "$OUT/dist/CodexVision.app" >/dev/null
+cat > "$OUT/dist/codex-vision-mcp" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-vision.XXXXXX")"
+IN_FIFO="$TMP/in"
+OUT_FIFO="$TMP/out"
+mkfifo "$IN_FIFO" "$OUT_FIFO"
+cleanup() {
+  rm -rf "$TMP"
+}
+trap cleanup EXIT
+
+open -n "$ROOT/dist/CodexVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
+cat "$OUT_FIFO" &
+OUT_PID="$!"
+cat > "$IN_FIFO"
+wait "$OUT_PID"
+SH
+chmod +x "$OUT/dist/codex-vision-mcp"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"
