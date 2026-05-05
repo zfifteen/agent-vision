@@ -1,5 +1,6 @@
 .build/
 .swiftpm/
+.idea/
 dist/
 release/
 .DS_Store
