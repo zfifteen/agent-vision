@@ -19,7 +19,7 @@ Version 1.0 gives Codex four explicit MCP tools:
 - `codex_vision_frame`
 - `codex_vision_stop`
 
-The user-facing slash command is intentionally smaller:
+The user-facing slash command is intentionally small:
 
 ```text
 /codex-vision snapshot
@@ -28,9 +28,15 @@ The user-facing slash command is intentionally smaller:
 
 Snapshot mode starts the camera, captures one JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera.
 
-Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active. When you ask Codex to stop streaming or stop camera use, Codex calls `codex_vision_stop`.
+Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
-There is no public `/codex-vision frame` or `/codex-vision stop` slash mode in version 1.0. Those are internal MCP tool actions Codex performs from the installed skill.
+To stop streaming, tell Codex to stop camera use:
+
+```text
+Codex Vision streaming off
+```
+
+The installed skill maps that request to `codex_vision_stop`.
 
 ## What It Does Not Do
 
@@ -43,7 +49,6 @@ Codex Vision does not implement:
 - Browser `getUserMedia`.
 - Remote camera access.
 - Automatic frame ingestion when streaming mode is off.
-- Extra public slash modes beyond `snapshot` and `streaming`.
 
 The camera stays local. Codex gets a JPEG frame only when it calls the snapshot or frame tool.
 
@@ -92,7 +97,7 @@ If you are asking Codex to install the plugin for you, use a prompt like this:
 Clone https://github.com/zfifteen/codex-vision into ~/IdeaProjects/codex-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, and verify the plugin manifests parse as JSON.
 ```
 
-## Usage
+## Slash Commands
 
 Ask Codex:
 
@@ -100,7 +105,7 @@ Ask Codex:
 Use Codex Vision to start the camera, inspect the latest frame, and tell me what you can read from my note.
 ```
 
-For one-shot context:
+Take one image and turn the camera off:
 
 ```text
 /codex-vision snapshot
@@ -108,7 +113,7 @@ For one-shot context:
 
 Use this when you want one image and then want the camera off. Codex Desktop should show the returned image as a preview thumbnail in the chat.
 
-For live pull-based camera context:
+Start streaming mode and keep the camera available:
 
 ```text
 /codex-vision streaming
@@ -116,13 +121,13 @@ For live pull-based camera context:
 
 Use this when Codex may need to inspect more than one moment in time. While streaming mode is active, Codex can pull frames as needed without asking for each frame. The camera indicator should stay on while this mode is active.
 
-To stop streaming, ask Codex to stop camera use:
+Stop streaming mode and release the camera:
 
 ```text
 Codex Vision streaming off
 ```
 
-That phrase is not a separate public slash mode. It is natural-language intent handled by the installed skill, which calls `codex_vision_stop`.
+You can also say `stop streaming` or `turn off the camera`. Codex maps those requests to `codex_vision_stop`.
 
 ## Example Workflows
 
