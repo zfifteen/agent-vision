@@ -16,6 +16,7 @@ let package = Package(
             dependencies: ["CodexVisionCore"],
             exclude: ["Info.plist"],
             linkerSettings: [
+                // Embed camera usage metadata in the standalone CLI binary launched inside CodexVision.app.
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",

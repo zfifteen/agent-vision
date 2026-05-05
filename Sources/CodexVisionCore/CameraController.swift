@@ -99,7 +99,11 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     public func snapshot() throws -> CameraFrame {
         _ = try start()
         defer {
-            _ = try? stop()
+            do {
+                _ = try stop()
+            } catch {
+                fputs("Codex Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
+            }
         }
 
         Thread.sleep(forTimeInterval: 1)

@@ -15,6 +15,7 @@ Control Codex Vision camera mode.
 4. If the first argument is missing or different, tell the user the supported arguments exactly.
 5. While streaming mode is active, call `codex_vision_frame` whenever current visual context would help.
 6. When the user asks to stop camera use, call `codex_vision_stop`.
+7. If streaming frame pulls keep returning errors after two brief retries, tell the user the camera is not producing frames and suggest stopping and restarting streaming mode.
 
 ## Verification
 

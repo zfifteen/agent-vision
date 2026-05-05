@@ -95,6 +95,19 @@ cleanup() {
 trap cleanup EXIT
 
 open -n "$ROOT/dist/CodexVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
+APP_PATTERN="$ROOT/dist/[C]odexVision.app/Contents/MacOS/CodexVision mcp-fifo $IN_FIFO $OUT_FIFO"
+APP_PID=""
+for _ in {1..50}; do
+  APP_PID="$(pgrep -f "$APP_PATTERN" | head -n 1 || true)"
+  if [[ -n "$APP_PID" ]]; then
+    break
+  fi
+  sleep 0.1
+done
+if [[ -z "$APP_PID" ]]; then
+  echo "Codex Vision app did not launch for MCP FIFO mode." >&2
+  exit 1
+fi
 cat "$OUT_FIFO" &
 OUT_PID="$!"
 cat > "$IN_FIFO"
