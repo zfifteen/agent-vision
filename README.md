@@ -24,11 +24,14 @@ The user-facing slash command is intentionally small:
 ```text
 /codex-vision snapshot
 /codex-vision streaming
+/codex-vision roast
 ```
 
 Snapshot mode starts the camera, captures one JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera.
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
+
+Roast mode starts the camera, captures one JPEG frame, stops the camera, and writes one opt-in playful roast of 400 characters or fewer.
 
 To stop streaming, tell Codex to stop camera use:
 
@@ -129,6 +132,14 @@ Codex Vision streaming off
 
 You can also say `stop streaming` or `turn off the camera`. Codex maps those requests to `codex_vision_stop`.
 
+Take one image and request immediate emotional damage, responsibly:
+
+```text
+/codex-vision roast
+```
+
+Roast mode uses the same camera lifecycle as snapshot mode: start, capture one frame, stop. The roast is short, opt-in, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
+
 ## Example Workflows
 
 Read something in the room:
@@ -171,6 +182,14 @@ Use it for gentle accountability:
 Does my whiteboard plan contain an actual architecture, or did I draw six boxes and hope confidence would do the rest?
 ```
 
+Use it when you have made the bold choice to ask your computer for fashion notes:
+
+```text
+/codex-vision roast
+
+Roast me in 400 characters or fewer.
+```
+
 The plugin cannot touch objects, move the camera, choose a different camera, or infer anything outside the returned image. If the camera cannot see it, Codex Vision cannot see it either. This is still software, not a dramatic scene from a hacking movie.
 
 ## Architecture
@@ -208,6 +227,14 @@ Snapshot mode:
 3. The app waits for a frame.
 4. The app returns one JPEG frame.
 5. The app stops the camera and clears cached frame state.
+
+Roast mode:
+
+1. Codex calls `codex_vision_snapshot`.
+2. `CodexVision.app` starts the built-in camera.
+3. The app returns one JPEG frame.
+4. The app stops the camera and clears cached frame state.
+5. Codex writes a short opt-in roast based on visible non-sensitive details.
 
 Streaming mode:
 

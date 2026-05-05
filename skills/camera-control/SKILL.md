@@ -11,6 +11,8 @@ Use the Codex Vision MCP tools when the user explicitly asks for camera context.
 
 For one-shot camera context, call `codex_vision_snapshot`. This starts the camera, captures one JPEG frame, and stops the camera.
 
+For roast mode, call `codex_vision_snapshot`, inspect the returned image, and write one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes.
+
 For streaming mode:
 
 1. Call `codex_vision_start`.
@@ -22,6 +24,7 @@ For streaming mode:
 
 - `/codex-vision snapshot`: call `codex_vision_snapshot`.
 - `/codex-vision streaming`: call `codex_vision_start`.
+- `/codex-vision roast`: call `codex_vision_snapshot`, then write one playful roast of 400 characters or fewer.
 
 While streaming mode is active, call `codex_vision_frame` whenever current visual context would help. When the user asks to stop camera use, call `codex_vision_stop`.
 

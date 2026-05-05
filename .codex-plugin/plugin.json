@@ -41,7 +41,8 @@
     "termsOfServiceURL": "https://github.com/zfifteen/codex-vision/blob/main/LICENSE",
     "defaultPrompt": [
       "/codex-vision snapshot",
-      "/codex-vision streaming"
+      "/codex-vision streaming",
+      "/codex-vision roast"
     ],
     "brandColor": "#00D4FF",
     "composerIcon": "./assets/composer-icon.png",
