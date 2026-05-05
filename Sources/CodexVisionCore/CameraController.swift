@@ -17,9 +17,13 @@ public struct CameraFrame: Equatable {
 }
 
 public protocol CameraControlling {
+    /// Start a persistent camera session for streaming mode.
     func start() throws -> String
+    /// Return the latest frame from an active streaming session.
     func latestFrame() throws -> CameraFrame
+    /// Start the camera, return one frame, and release the camera before returning or throwing.
     func snapshot() throws -> CameraFrame
+    /// Stop the active camera session and clear cached frame state.
     func stop() throws -> String
 }
 
@@ -85,7 +89,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     public func latestFrame() throws -> CameraFrame {
         let deadline = Date().addingTimeInterval(1)
         while true {
-            if let frame = frameQueue.sync(execute: { latest }) {
+            if let frame = cachedFrame() {
                 return frame
             }
 
@@ -106,10 +110,9 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             }
         }
 
-        Thread.sleep(forTimeInterval: 1)
         let deadline = Date().addingTimeInterval(3)
         while Date() < deadline {
-            if let frame = try? latestFrame() {
+            if let frame = cachedFrame() {
                 return frame
             }
             Thread.sleep(forTimeInterval: 0.05)
@@ -128,6 +131,12 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             latest = nil
         }
         return "Codex Vision camera session stopped."
+    }
+
+    private func cachedFrame() -> CameraFrame? {
+        frameQueue.sync {
+            latest
+        }
     }
 
     private func authorizeCamera() throws {

@@ -138,6 +138,18 @@ private final class FakeCamera: CameraControlling {
     #expect(server.handleLine(#"{"jsonrpc":"2.0"}"#) == nil)
 }
 
+@Test func notificationWithNonStringMethodIsIgnored() throws {
+    let server = MCPServer(camera: FakeCamera())
+    #expect(server.handleLine(#"{"jsonrpc":"2.0","method":7}"#) == nil)
+}
+
+@Test func requestWithNonStringMethodReturnsInvalidRequestWhenIdIsPresent() throws {
+    let server = MCPServer(camera: FakeCamera())
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":12,"method":7}"#))
+    let error = try #require(response["error"] as? [String: Any])
+    #expect(error["code"] as? Int == -32600)
+}
+
 private func decode(_ line: String?) throws -> [String: Any] {
     let line = try #require(line)
     let data = Data(line.utf8)

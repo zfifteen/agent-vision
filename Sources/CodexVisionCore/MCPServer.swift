@@ -53,13 +53,17 @@ public final class MCPServer {
             }
 
             let id = message["id"]
+            let hasID = message.keys.contains("id")
             guard let methodValue = message["method"] else {
-                if message.keys.contains("id") {
+                if hasID {
                     return errorResponse(id: id, code: -32600, message: "Invalid Request")
                 }
                 return nil
             }
             guard let method = methodValue as? String else {
+                if !hasID {
+                    return nil
+                }
                 return errorResponse(id: id, code: -32600, message: "Invalid Request")
             }
 
