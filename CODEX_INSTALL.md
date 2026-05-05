@@ -22,14 +22,22 @@ python3 -m json.tool .mcp.json >/dev/null
 scripts/install-local.sh
 ```
 
-4. Restart Codex.
-
-5. Use the MCP tools:
+4. Use the MCP tools:
 
 ```text
+codex_vision_snapshot
 codex_vision_start
 codex_vision_frame
 codex_vision_stop
 ```
 
-Version 1.0 is pull-based: Codex receives camera frames only when it calls `codex_vision_frame`.
+Or use the bundled slash commands:
+
+```text
+/codex-vision:snapshot
+/codex-vision:stream-on
+/codex-vision:frame
+/codex-vision:stream-off
+```
+
+Version 1.0 is pull-based: snapshot mode returns one frame and stops; streaming mode returns frames only when Codex calls `codex_vision_frame`.

@@ -3,8 +3,12 @@ import Testing
 @testable import CodexVisionCore
 
 private final class FakeCamera: CameraControlling {
+    private(set) var startCount = 0
+    private(set) var stopCount = 0
+
     func start() throws -> String {
-        "started"
+        startCount += 1
+        return "started"
     }
 
     func latestFrame() throws -> CameraFrame {
@@ -16,8 +20,13 @@ private final class FakeCamera: CameraControlling {
         )
     }
 
+    func snapshot() throws -> CameraFrame {
+        try latestFrame()
+    }
+
     func stop() throws -> String {
-        "stopped"
+        stopCount += 1
+        return "stopped"
     }
 }
 
@@ -36,12 +45,25 @@ private final class FakeCamera: CameraControlling {
     let result = try #require(response["result"] as? [String: Any])
     let tools = try #require(result["tools"] as? [[String: Any]])
     let names = tools.compactMap { $0["name"] as? String }
-    #expect(names == ["codex_vision_start", "codex_vision_frame", "codex_vision_stop"])
+    #expect(names == ["codex_vision_snapshot", "codex_vision_start", "codex_vision_frame", "codex_vision_stop"])
 }
 
 @Test func frameToolReturnsImageContentAndMetadata() throws {
     let server = MCPServer(camera: FakeCamera())
     let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"codex_vision_frame","arguments":{}}}"#))
+    let result = try #require(response["result"] as? [String: Any])
+    let content = try #require(result["content"] as? [[String: Any]])
+    let image = try #require(content.first)
+    let metadata = try #require(result["structuredContent"] as? [String: Any])
+    #expect(image["type"] as? String == "image")
+    #expect(image["mimeType"] as? String == "image/jpeg")
+    #expect(metadata["width"] as? Int == 2)
+    #expect(metadata["height"] as? Int == 1)
+}
+
+@Test func snapshotToolReturnsImageContentAndMetadata() throws {
+    let server = MCPServer(camera: FakeCamera())
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"codex_vision_snapshot","arguments":{}}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let content = try #require(result["content"] as? [[String: Any]])
     let image = try #require(content.first)

@@ -19,6 +19,7 @@ public struct CameraFrame: Equatable {
 public protocol CameraControlling {
     func start() throws -> String
     func latestFrame() throws -> CameraFrame
+    func snapshot() throws -> CameraFrame
     func stop() throws -> String
 }
 
@@ -90,11 +91,32 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
         }
     }
 
+    public func snapshot() throws -> CameraFrame {
+        _ = try start()
+        defer {
+            _ = try? stop()
+        }
+
+        Thread.sleep(forTimeInterval: 1)
+        let deadline = Date().addingTimeInterval(3)
+        while Date() < deadline {
+            if let frame = try? latestFrame() {
+                return frame
+            }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+
+        throw CameraError.frameUnavailable
+    }
+
     public func stop() throws -> String {
         sessionQueue.sync {
             if session.isRunning {
                 session.stopRunning()
             }
+        }
+        frameQueue.sync {
+            latest = nil
         }
         return "Codex Vision camera session stopped."
     }

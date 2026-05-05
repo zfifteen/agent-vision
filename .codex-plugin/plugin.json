@@ -40,9 +40,9 @@
     "privacyPolicyURL": "https://github.com/zfifteen/codex-vision/blob/main/README.md#privacy",
     "termsOfServiceURL": "https://github.com/zfifteen/codex-vision/blob/main/LICENSE",
     "defaultPrompt": [
-      "Start Codex Vision and describe what the camera sees.",
-      "Use Codex Vision to read the note on my desk.",
-      "Stop the Codex Vision camera session."
+      "/codex-vision:snapshot",
+      "/codex-vision:stream-on",
+      "/codex-vision:stream-off"
     ],
     "brandColor": "#00D4FF",
     "composerIcon": "./assets/readme-hero.png",

@@ -35,14 +35,14 @@ public final class MCPServer {
     }
 
     private func writeResponse(for line: String, to output: FileHandle) {
-            guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                return
-            }
+        guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
 
-            let response = handleLine(line)
-            if let response {
+        let response = handleLine(line)
+        if let response {
             output.write(Data((response + "\n").utf8))
-            }
+        }
     }
 
     public func handleLine(_ line: String) -> String? {
@@ -82,6 +82,9 @@ public final class MCPServer {
 
         do {
             switch name {
+            case "codex_vision_snapshot":
+                let frame = try camera.snapshot()
+                return toolFrameResponse(id: id, frame: frame)
             case "codex_vision_start":
                 return toolTextResponse(id: id, text: try camera.start())
             case "codex_vision_frame":
@@ -113,18 +116,23 @@ public final class MCPServer {
     private func toolDefinitions() -> [[String: Any]] {
         [
             [
+                "name": "codex_vision_snapshot",
+                "description": "Take one Codex Vision snapshot: start the built-in macOS camera, return one JPEG frame, then stop the camera.",
+                "inputSchema": emptyInputSchema()
+            ],
+            [
                 "name": "codex_vision_start",
-                "description": "Start the persistent Codex Vision capture session using the built-in macOS camera.",
+                "description": "Start streaming mode by keeping the persistent Codex Vision capture session active.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_frame",
-                "description": "Return the latest live JPEG frame from the active Codex Vision camera session.",
+                "description": "Return the latest live JPEG frame from the active streaming-mode Codex Vision camera session.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_stop",
-                "description": "Stop the Codex Vision capture session and release the camera.",
+                "description": "Stop streaming mode, release the camera, and clear the cached frame.",
                 "inputSchema": emptyInputSchema()
             ]
         ]

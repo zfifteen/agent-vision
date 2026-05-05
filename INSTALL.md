@@ -8,19 +8,25 @@ cd codex-vision
 scripts/install-local.sh
 ```
 
-The installer builds `CodexVision.app`, stages the plugin under `~/plugins/codex-vision`, and updates `~/.agents/plugins/marketplace.json`.
-
-After installation, restart Codex and enable the plugin if prompted.
+The installer builds `CodexVision.app`, stages the plugin under `~/plugins/codex-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `codex-vision@local` in `~/.codex/config.toml`.
 
 ## First Use
 
 Ask Codex:
 
 ```text
-Use Codex Vision to start the camera and inspect the latest frame.
+/codex-vision:snapshot
 ```
 
 macOS will ask for camera permission for `CodexVision.app` the first time the capture session starts.
+
+Streaming mode commands:
+
+```text
+/codex-vision:stream-on
+/codex-vision:frame
+/codex-vision:stream-off
+```
 
 ## Uninstall
 
@@ -30,4 +36,4 @@ Remove the staged plugin directory:
 rm -rf ~/plugins/codex-vision
 ```
 
-Then remove the `codex-vision` entry from `~/.agents/plugins/marketplace.json`.
+Then remove the `codex-vision` entry from `~/.agents/plugins/marketplace.json` and the `codex-vision@local` plugin entry from `~/.codex/config.toml`.

@@ -10,6 +10,12 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
+SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
+if [[ -z "$SIGN_IDENTITY" ]]; then
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  exit 1
+fi
+
 rm -rf "$OUT" "$OUT.tar.gz"
 mkdir -p "$OUT"
 "$ROOT/scripts/install-local.sh" --dry-run
@@ -42,7 +48,7 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
-/usr/bin/codesign --force --sign - "$OUT/dist/CodexVision.app" >/dev/null
+/usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/CodexVision.app" >/dev/null
 cat > "$OUT/dist/codex-vision-mcp" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -67,6 +73,7 @@ chmod +x "$OUT/dist/codex-vision-mcp"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"
+cp -R "$ROOT/commands" "$OUT/commands"
 cp -R "$ROOT/skills" "$OUT/skills"
 cp "$ROOT/README.md" "$OUT/README.md"
 cp "$ROOT/INSTALL.md" "$OUT/INSTALL.md"
