@@ -15,7 +15,7 @@ The installer builds `CodexVision.app`, stages the plugin under `~/plugins/codex
 Ask Codex:
 
 ```text
-/codex-vision:snapshot
+/codex-vision snapshot
 ```
 
 macOS will ask for camera permission for `CodexVision.app` the first time the capture session starts.
@@ -23,9 +23,9 @@ macOS will ask for camera permission for `CodexVision.app` the first time the ca
 Streaming mode commands:
 
 ```text
-/codex-vision:stream-on
-/codex-vision:frame
-/codex-vision:stream-off
+/codex-vision stream-on
+/codex-vision frame
+/codex-vision stream-off
 ```
 
 ## Uninstall

@@ -34,10 +34,10 @@ codex_vision_stop
 Or use the bundled slash commands:
 
 ```text
-/codex-vision:snapshot
-/codex-vision:stream-on
-/codex-vision:frame
-/codex-vision:stream-off
+/codex-vision snapshot
+/codex-vision stream-on
+/codex-vision frame
+/codex-vision stream-off
 ```
 
 Version 1.0 is pull-based: snapshot mode returns one frame and stops; streaming mode returns frames only when Codex calls `codex_vision_frame`.

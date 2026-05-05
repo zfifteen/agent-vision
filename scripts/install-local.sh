@@ -45,6 +45,7 @@ swift build -c release --package-path "$ROOT"
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
 APP="$ROOT/dist/CodexVision.app"
 PLUGIN_HOME="$HOME/plugins/codex-vision"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/codex-vision/1.0.0"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
@@ -106,6 +107,15 @@ cp -R "$ROOT/assets" "$PLUGIN_HOME/assets"
 cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
+
+rm -rf "$CACHE_HOME"
+mkdir -p "$CACHE_HOME"
+cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
+cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
+cp -R "$ROOT/assets" "$CACHE_HOME/assets"
+cp -R "$ROOT/commands" "$CACHE_HOME/commands"
+cp -R "$ROOT/skills" "$CACHE_HOME/skills"
+cp -R "$ROOT/dist" "$CACHE_HOME/dist"
 
 mkdir -p "$(dirname "$MARKETPLACE")"
 python3 - "$MARKETPLACE" <<'PY'
@@ -175,5 +185,6 @@ path.write_text(text.rstrip() + "\n" + addition.lstrip(), encoding="utf-8")
 PY
 
 echo "Codex Vision installed at $PLUGIN_HOME"
+echo "Codex Vision cached at $CACHE_HOME"
 echo "Codex Vision registered in $CODEX_CONFIG"
-echo "Use /codex-vision:snapshot or /codex-vision:stream-on."
+echo "Use /codex-vision snapshot or /codex-vision stream-on."

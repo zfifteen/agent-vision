@@ -40,15 +40,15 @@ Use Codex Vision to start the camera, inspect the latest frame, and tell me what
 For one-shot camera context, use:
 
 ```text
-/codex-vision:snapshot
+/codex-vision snapshot
 ```
 
 For streaming mode, use:
 
 ```text
-/codex-vision:stream-on
-/codex-vision:frame
-/codex-vision:stream-off
+/codex-vision stream-on
+/codex-vision frame
+/codex-vision stream-off
 ```
 
 Snapshot mode starts the camera, returns one JPEG frame, and stops the camera. Streaming mode keeps the camera on so Codex can pull frames as needed until you stop it.
