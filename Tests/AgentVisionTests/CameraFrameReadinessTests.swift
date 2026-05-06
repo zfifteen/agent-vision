@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import CodexVisionCore
+@testable import AgentVisionCore
 
 @Test func frameReadinessRejectsBlackFramesAndAcceptsThresholdFrames() {
     let blackFrame = CameraFrame(

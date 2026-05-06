@@ -2,35 +2,35 @@
 import PackageDescription
 
 let package = Package(
-    name: "codex-vision",
+    name: "agent-vision",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "CodexVision", targets: ["CodexVision"]),
-        .library(name: "CodexVisionCore", targets: ["CodexVisionCore"])
+        .executable(name: "AgentVision", targets: ["AgentVision"]),
+        .library(name: "AgentVisionCore", targets: ["AgentVisionCore"])
     ],
     targets: [
         .executableTarget(
-            name: "CodexVision",
-            dependencies: ["CodexVisionCore"],
+            name: "AgentVision",
+            dependencies: ["AgentVisionCore"],
             exclude: ["Info.plist"],
             linkerSettings: [
-                // Embed camera usage metadata in the standalone CLI binary launched inside CodexVision.app.
+                // Embed camera usage metadata in the standalone CLI binary launched inside AgentVision.app.
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
-                    "-Xlinker", "Sources/CodexVision/Info.plist"
+                    "-Xlinker", "Sources/AgentVision/Info.plist"
                 ])
             ]
         ),
         .target(
-            name: "CodexVisionCore"
+            name: "AgentVisionCore"
         ),
         .testTarget(
-            name: "CodexVisionTests",
-            dependencies: ["CodexVisionCore"]
+            name: "AgentVisionTests",
+            dependencies: ["AgentVisionCore"]
         )
     ]
 )

@@ -3,16 +3,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="1.0.0"
-OUT="$ROOT/release/codex-vision-$VERSION"
+OUT="$ROOT/release/agent-vision-$VERSION"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "Codex Vision release packaging is macOS-only." >&2
+  echo "Agent Vision release packaging is macOS-only." >&2
   exit 1
 fi
 
 SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
 if [[ -z "$SIGN_IDENTITY" ]]; then
-  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for AgentVision.app." >&2
   exit 1
 fi
 
@@ -22,19 +22,19 @@ mkdir -p "$OUT"
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
 swift build -c release --package-path "$ROOT"
 
-mkdir -p "$OUT/dist/CodexVision.app/Contents/MacOS" "$OUT/dist/CodexVision.app/Contents/Resources"
-cp "$BUILD_DIR/CodexVision" "$OUT/dist/CodexVision.app/Contents/MacOS/CodexVision"
-cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
+mkdir -p "$OUT/dist/AgentVision.app/Contents/MacOS" "$OUT/dist/AgentVision.app/Contents/Resources"
+cp "$BUILD_DIR/AgentVision" "$OUT/dist/AgentVision.app/Contents/MacOS/AgentVision"
+cat > "$OUT/dist/AgentVision.app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key>
-  <string>CodexVision</string>
+  <string>AgentVision</string>
   <key>CFBundleIdentifier</key>
-  <string>works.velocity.codex-vision</string>
+  <string>works.velocity.agent-vision</string>
   <key>CFBundleName</key>
-  <string>Codex Vision</string>
+  <string>Agent Vision</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -44,14 +44,14 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Codex Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
 </dict>
 </plist>
 PLIST
-plutil -lint "$OUT/dist/CodexVision.app/Contents/Info.plist" >/dev/null
-/usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/CodexVision.app" >/dev/null
-cp "$ROOT/scripts/codex-vision-mcp.sh" "$OUT/dist/codex-vision-mcp"
-chmod +x "$OUT/dist/codex-vision-mcp"
+plutil -lint "$OUT/dist/AgentVision.app/Contents/Info.plist" >/dev/null
+/usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/AgentVision.app" >/dev/null
+cp "$ROOT/scripts/agent-vision-mcp.sh" "$OUT/dist/agent-vision-mcp"
+chmod +x "$OUT/dist/agent-vision-mcp"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"
@@ -63,5 +63,5 @@ cp "$ROOT/CODEX_INSTALL.md" "$OUT/CODEX_INSTALL.md"
 cp "$ROOT/PRIVACY.md" "$OUT/PRIVACY.md"
 cp "$ROOT/LICENSE" "$OUT/LICENSE"
 
-tar -C "$ROOT/release" -czf "$OUT.tar.gz" "codex-vision-$VERSION"
+tar -C "$ROOT/release" -czf "$OUT.tar.gz" "agent-vision-$VERSION"
 echo "$OUT.tar.gz"

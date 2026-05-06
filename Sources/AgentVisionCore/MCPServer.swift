@@ -98,18 +98,18 @@ public final class MCPServer {
 
         do {
             switch name {
-            case "codex_vision_snapshot":
+            case "agent_vision_snapshot":
                 let frame = try camera.snapshot()
                 return toolFrameResponse(id: id, frame: frame)
-            case "codex_vision_start":
+            case "agent_vision_start":
                 return toolTextResponse(id: id, text: try camera.start())
-            case "codex_vision_frame":
+            case "agent_vision_frame":
                 let frame = try camera.latestFrame()
                 return toolFrameResponse(id: id, frame: frame)
-            case "codex_vision_stop":
+            case "agent_vision_stop":
                 return toolTextResponse(id: id, text: try camera.stop())
             default:
-                return toolErrorResponse(id: id, text: "Unknown Codex Vision tool: \(name)")
+                return toolErrorResponse(id: id, text: "Unknown Agent Vision tool: \(name)")
             }
         } catch {
             return toolErrorResponse(id: id, text: error.localizedDescription)
@@ -123,7 +123,7 @@ public final class MCPServer {
                 "tools": [:]
             ],
             "serverInfo": [
-                "name": "codex-vision",
+                "name": "agent-vision",
                 "version": "1.0.0"
             ]
         ]
@@ -132,25 +132,25 @@ public final class MCPServer {
     private func toolDefinitions() -> [[String: Any]] {
         [
             [
-                "name": "codex_vision_snapshot",
+                "name": "agent_vision_snapshot",
                 "title": "Snapshot",
-                "description": "Take one Codex Vision snapshot: start the built-in macOS camera if needed, return one JPEG frame, then stop only if snapshot started the camera.",
+                "description": "Take one Agent Vision snapshot: start the built-in macOS camera if needed, return one JPEG frame, then stop only if snapshot started the camera.",
                 "inputSchema": emptyInputSchema()
             ],
             [
-                "name": "codex_vision_start",
+                "name": "agent_vision_start",
                 "title": "Start Streaming",
-                "description": "Start streaming mode by keeping the persistent Codex Vision capture session active.",
+                "description": "Start streaming mode by keeping the persistent Agent Vision capture session active.",
                 "inputSchema": emptyInputSchema()
             ],
             [
-                "name": "codex_vision_frame",
+                "name": "agent_vision_frame",
                 "title": "Latest Frame",
-                "description": "Return the latest live JPEG frame from the active streaming-mode Codex Vision camera session.",
+                "description": "Return the latest live JPEG frame from the active streaming-mode Agent Vision camera session.",
                 "inputSchema": emptyInputSchema()
             ],
             [
-                "name": "codex_vision_stop",
+                "name": "agent_vision_stop",
                 "title": "Stop Streaming",
                 "description": "Stop streaming mode, release the camera, and clear the cached frame.",
                 "inputSchema": emptyInputSchema()
@@ -197,7 +197,7 @@ public final class MCPServer {
                 ],
                 [
                     "type": "text",
-                    "text": "Codex Vision frame \(frame.width)x\(frame.height) captured at \(frame.timestamp)."
+                    "text": "Agent Vision frame \(frame.width)x\(frame.height) captured at \(frame.timestamp)."
                 ]
             ],
             "structuredContent": metadata,
