@@ -23,10 +23,10 @@ jobs:
               data = json.loads(path.read_text(encoding="utf-8"))
               assert data
           plugin = json.loads(pathlib.Path(".codex-plugin/plugin.json").read_text(encoding="utf-8"))
-          assert plugin["name"] == "codex-vision"
+          assert plugin["name"] == "agent-vision"
           assert plugin["mcpServers"] == "./.mcp.json"
           mcp = json.loads(pathlib.Path(".mcp.json").read_text(encoding="utf-8"))
-          assert mcp["mcpServers"]["codex-vision"]["command"].startswith("./")
+          assert mcp["mcpServers"]["agent-vision"]["command"] == "./dist/agent-vision-mcp"
           PY
       - name: Install dry-run
         run: scripts/install-local.sh --dry-run

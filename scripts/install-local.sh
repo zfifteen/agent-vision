@@ -2,13 +2,14 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OLD_SLUG="codex""-vision"
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
 fi
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "Codex Vision is macOS-only." >&2
+  echo "Agent Vision is macOS-only." >&2
   exit 1
 fi
 
@@ -24,48 +25,52 @@ root = pathlib.Path(sys.argv[1])
 for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
     path = root / rel
     data = json.loads(path.read_text(encoding="utf-8"))
-    if rel == ".codex-plugin/plugin.json" and data["name"] != "codex-vision":
+    if rel == ".codex-plugin/plugin.json" and data["name"] != "agent-vision":
         raise SystemExit(f"{rel} has wrong plugin name")
-    if rel == ".mcp.json" and "codex-vision" not in data.get("mcpServers", {}):
-        raise SystemExit(f"{rel} has no codex-vision MCP server")
+    if rel == ".mcp.json":
+        server = data.get("mcpServers", {}).get("agent-vision")
+        if server is None:
+            raise SystemExit(f"{rel} has no agent-vision MCP server")
+        if server.get("command") != "./dist/agent-vision-mcp":
+            raise SystemExit(f"{rel} has wrong agent-vision MCP command")
 PY
 
 if [[ "$DRY_RUN" == "1" ]]; then
   swift build -c release --package-path "$ROOT" >/dev/null
-  echo "Codex Vision dry-run validation succeeded."
+  echo "Agent Vision dry-run validation succeeded."
   exit 0
 fi
 
 command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
 SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
 if [[ -z "$SIGN_IDENTITY" ]]; then
-  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for AgentVision.app." >&2
   exit 1
 fi
 
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
 swift build -c release --package-path "$ROOT"
-APP="$ROOT/dist/CodexVision.app"
-PLUGIN_HOME="$HOME/plugins/codex-vision"
-CACHE_HOME="$HOME/.codex/plugins/cache/local/codex-vision/1.0.0"
+APP="$ROOT/dist/AgentVision.app"
+PLUGIN_HOME="$HOME/plugins/agent-vision"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 rm -f "$ROOT/dist/prompt-input-check.json"
-cp "$BUILD_DIR/CodexVision" "$APP/Contents/MacOS/CodexVision"
+cp "$BUILD_DIR/AgentVision" "$APP/Contents/MacOS/AgentVision"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key>
-  <string>CodexVision</string>
+  <string>AgentVision</string>
   <key>CFBundleIdentifier</key>
-  <string>works.velocity.codex-vision</string>
+  <string>works.velocity.agent-vision</string>
   <key>CFBundleName</key>
-  <string>Codex Vision</string>
+  <string>Agent Vision</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -75,14 +80,14 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Codex Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
 </dict>
 </plist>
 PLIST
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$APP" >/dev/null
-cp "$ROOT/scripts/codex-vision-mcp.sh" "$ROOT/dist/codex-vision-mcp"
-chmod +x "$ROOT/dist/codex-vision-mcp"
+cp "$ROOT/scripts/agent-vision-mcp.sh" "$ROOT/dist/agent-vision-mcp"
+chmod +x "$ROOT/dist/agent-vision-mcp"
 
 rm -rf "$PLUGIN_HOME"
 mkdir -p "$PLUGIN_HOME"
@@ -103,12 +108,13 @@ cp -R "$ROOT/skills" "$CACHE_HOME/skills"
 cp -R "$ROOT/dist" "$CACHE_HOME/dist"
 
 mkdir -p "$(dirname "$MARKETPLACE")"
-python3 - "$MARKETPLACE" <<'PY'
+python3 - "$MARKETPLACE" "$OLD_SLUG" <<'PY'
 import json
 import pathlib
 import sys
 
 path = pathlib.Path(sys.argv[1])
+old_slug = sys.argv[2]
 if path.exists():
     data = json.loads(path.read_text(encoding="utf-8"))
 else:
@@ -119,10 +125,10 @@ else:
     }
 
 entry = {
-    "name": "codex-vision",
+    "name": "agent-vision",
     "source": {
         "source": "local",
-        "path": "./plugins/codex-vision"
+        "path": "./plugins/agent-vision"
     },
     "policy": {
         "installation": "INSTALLED_BY_DEFAULT",
@@ -131,7 +137,11 @@ entry = {
     "category": "Productivity"
 }
 
-plugins = [plugin for plugin in data.get("plugins", []) if plugin.get("name") != "codex-vision"]
+plugins = [
+    plugin
+    for plugin in data.get("plugins", [])
+    if plugin.get("name") not in {"agent-vision", old_slug}
+]
 plugins.append(entry)
 data["plugins"] = plugins
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
@@ -140,23 +150,26 @@ PY
 codex plugin marketplace add "$HOME" >/dev/null
 
 mkdir -p "$(dirname "$CODEX_CONFIG")"
-python3 - "$CODEX_CONFIG" "$HOME" <<'PY'
+python3 - "$CODEX_CONFIG" "$HOME" "$OLD_SLUG" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
+old_slug = sys.argv[3]
 text = path.read_text(encoding="utf-8") if path.exists() else ""
 
 def remove_section(source: str, header: str) -> str:
     pattern = re.compile(rf"(?ms)^\[{re.escape(header)}\]\n.*?(?=^\[|\Z)")
     return pattern.sub("", source).strip() + ("\n" if source.strip() else "")
 
-text = remove_section(text, 'plugins."codex-vision@local"')
-text = remove_section(text, 'plugins."codex-vision@openai-curated"')
+text = remove_section(text, 'plugins."agent-vision@local"')
+text = remove_section(text, 'plugins."agent-vision@openai-curated"')
+text = remove_section(text, f'plugins."{old_slug}@local"')
+text = remove_section(text, f'plugins."{old_slug}@openai-curated"')
 
 addition = f"""
-[plugins."codex-vision@local"]
+[plugins."agent-vision@local"]
 enabled = true
 """
 
@@ -164,24 +177,28 @@ path.write_text(text.rstrip() + "\n" + addition.lstrip(), encoding="utf-8")
 PY
 
 rm -rf \
-  "$HOME/.codex/.tmp/plugins/plugins/codex-vision" \
-  "$HOME/.codex/plugins/cache/openai-curated/codex-vision"
+  "$HOME/plugins/$OLD_SLUG" \
+  "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \
+  "$HOME/.codex/.tmp/plugins/plugins/agent-vision" \
+  "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \
+  "$HOME/.codex/plugins/cache/openai-curated/agent-vision"
 
-PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/codex-vision-prompt-input.XXXXXX.json")"
+PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/agent-vision-prompt-input.XXXXXX.json")"
 trap 'rm -f "$PROMPT_CHECK"' EXIT
-codex debug prompt-input "codex vision install check" > "$PROMPT_CHECK"
+codex debug prompt-input "agent vision install check" > "$PROMPT_CHECK"
 python3 - "$PROMPT_CHECK" <<'PY'
 import json
 import sys
 
 path = sys.argv[1]
 text = json.dumps(json.loads(open(path, encoding="utf-8").read()))
-count = text.count("`Codex Vision`: macOS-only Codex plugin for explicit live camera frames through MCP.")
+count = text.count("`Agent Vision`: macOS-only plugin for explicit live camera frames through MCP.")
 if count != 1:
-    raise SystemExit(f"Codex Vision plugin admission check failed: expected exactly one generated plugin entry, found {count}.")
+    raise SystemExit(f"Agent Vision plugin admission check failed: expected exactly one generated plugin entry, found {count}.")
 PY
 
-echo "Codex Vision installed at $PLUGIN_HOME"
-echo "Codex Vision cached at $CACHE_HOME"
-echo "Codex Vision registered in $CODEX_CONFIG"
-echo "Use /codex-vision snapshot, /codex-vision streaming, or /codex-vision roast."
+echo "Agent Vision installed at $PLUGIN_HOME"
+echo "Agent Vision cached at $CACHE_HOME"
+echo "Agent Vision registered in $CODEX_CONFIG"
+echo "Use /agent-vision snapshot, /agent-vision streaming, or /agent-vision roast."

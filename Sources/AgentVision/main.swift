@@ -1,4 +1,4 @@
-import CodexVisionCore
+import AgentVisionCore
 import Darwin
 import Foundation
 
@@ -9,7 +9,7 @@ case "mcp":
     MCPServer(camera: AVCameraController()).run()
 case "mcp-fifo":
     guard arguments.count == 3 else {
-        fputs("Usage: CodexVision mcp-fifo INPUT_FIFO OUTPUT_FIFO\n", stderr)
+        fputs("Usage: AgentVision mcp-fifo INPUT_FIFO OUTPUT_FIFO\n", stderr)
         exit(64)
     }
     let inputPath = String(arguments[arguments.index(arguments.startIndex, offsetBy: 1)])
@@ -18,7 +18,7 @@ case "mcp-fifo":
         let input = FileHandle(forReadingAtPath: inputPath),
         let output = FileHandle(forWritingAtPath: outputPath)
     else {
-        fputs("CodexVision could not open MCP FIFO handles.\n", stderr)
+        fputs("AgentVision could not open MCP FIFO handles.\n", stderr)
         exit(66)
     }
     MCPServer(camera: AVCameraController()).run(input: input, output: output)
@@ -33,6 +33,6 @@ case "authorize-camera":
         exit(1)
     }
 default:
-    fputs("Usage: CodexVision mcp|mcp-fifo|authorize-camera\n", stderr)
+    fputs("Usage: AgentVision mcp|mcp-fifo|authorize-camera\n", stderr)
     exit(64)
 }

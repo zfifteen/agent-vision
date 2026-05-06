@@ -61,7 +61,7 @@ extension CameraError: LocalizedError {
         case .cameraUnavailable:
             return "No built-in macOS camera is available."
         case .permissionDenied:
-            return "Camera permission was denied for CodexVision.app."
+            return "Camera permission was denied for AgentVision.app."
         case .permissionUnknown:
             return "Camera permission could not be resolved."
         case .captureInputFailed(let reason):
@@ -78,15 +78,15 @@ extension CameraError: LocalizedError {
 
 public final class AVCameraController: NSObject, CameraControlling, AVCaptureVideoDataOutputSampleBufferDelegate {
     private let session = AVCaptureSession()
-    private let sessionQueue = DispatchQueue(label: "codex-vision.capture.session")
-    private let frameQueue = DispatchQueue(label: "codex-vision.capture.frames")
+    private let sessionQueue = DispatchQueue(label: "agent-vision.capture.session")
+    private let frameQueue = DispatchQueue(label: "agent-vision.capture.frames")
     private let ciContext = CIContext()
     private var configured = false
     private var latest: CameraFrame?
 
     public func start() throws -> String {
         _ = try startSessionIfNeeded()
-        return "Codex Vision camera session started."
+        return "Agent Vision camera session started."
     }
 
     public func latestFrame() throws -> CameraFrame {
@@ -100,7 +100,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
                 do {
                     _ = try stop()
                 } catch {
-                    fputs("Codex Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
+                    fputs("Agent Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
                 }
             }
         }
@@ -128,7 +128,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
         frameQueue.sync {
             latest = nil
         }
-        return "Codex Vision camera session stopped."
+        return "Agent Vision camera session stopped."
     }
 
     private func startSessionIfNeeded() throws -> Bool {

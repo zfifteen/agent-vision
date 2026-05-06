@@ -3,14 +3,14 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleIdentifier</key>
-  <string>works.velocity.codex-vision</string>
+  <string>works.velocity.agent-vision</string>
   <key>CFBundleName</key>
-  <string>Codex Vision</string>
+  <string>Agent Vision</string>
   <key>CFBundleShortVersionString</key>
   <string>1.0.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>NSCameraUsageDescription</key>
-  <string>Codex Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
 </dict>
 </plist>

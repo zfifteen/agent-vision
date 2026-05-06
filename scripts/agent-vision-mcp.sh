@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-vision.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/agent-vision.XXXXXX")"
 IN_FIFO="$TMP/in"
 OUT_FIFO="$TMP/out"
 mkfifo "$IN_FIFO" "$OUT_FIFO"
@@ -12,11 +12,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-open -n "$ROOT/dist/CodexVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
+open -n "$ROOT/dist/AgentVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
 APP_PID=""
 for _ in {1..50}; do
   APP_PID="$(ps -axo pid=,command= | awk -v in_fifo="$IN_FIFO" -v out_fifo="$OUT_FIFO" '
-    /CodexVision/ && index($0, "mcp-fifo") && index($0, in_fifo) && index($0, out_fifo) {
+    /AgentVision/ && index($0, "mcp-fifo") && index($0, in_fifo) && index($0, out_fifo) {
       print $1
       exit
     }
@@ -28,7 +28,7 @@ for _ in {1..50}; do
 done
 
 if [[ -z "$APP_PID" ]]; then
-  echo "Codex Vision app did not launch for MCP FIFO mode." >&2
+  echo "Agent Vision app did not launch for MCP FIFO mode." >&2
   exit 1
 fi
 

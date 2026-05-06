@@ -1,33 +1,33 @@
-![Codex Vision hero](assets/readme-hero.png)
+![Agent Vision hero](assets/readme-hero.png)
 
-# Codex Vision
+# Agent Vision
 
-Codex Vision is a macOS-only Codex plugin that lets a local Codex session request live camera frames through MCP.
+Agent Vision is a macOS-only Codex plugin that lets a local Codex session request live camera frames through MCP.
 
 It gives Codex a tiny, explicit window into the physical world around your Mac. Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product wearing a fake mustache and pretending to be productivity software. Just a signed native macOS app, an MCP server, and a camera frame when you ask for one.
 
 Some people will love this. Some people will absolutely hate it. Both reactions are reasonable.
 
-If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Codex Vision is for the person who already trusts a local Codex session with real work and wants to say, "look at this thing," without taking a screenshot, emailing themself a photo, dragging files around, or performing the tiny office ritual where you hold a circuit board up to a laptop camera like you are negotiating with the future.
+If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for the person who already trusts a local Codex session with real work and wants to say, "look at this thing," without taking a screenshot, emailing themself a photo, dragging files around, or performing the tiny office ritual where you hold a circuit board up to a laptop camera like you are negotiating with the future.
 
 ## What It Does
 
 Version 1.0 gives Codex four explicit MCP tools:
 
-- `codex_vision_snapshot`
-- `codex_vision_start`
-- `codex_vision_frame`
-- `codex_vision_stop`
+- `agent_vision_snapshot`
+- `agent_vision_start`
+- `agent_vision_frame`
+- `agent_vision_stop`
 
 The user-facing slash command is intentionally small:
 
 ```text
-/codex-vision snapshot
-/codex-vision streaming
-/codex-vision roast
+/agent-vision snapshot
+/agent-vision streaming
+/agent-vision roast
 ```
 
-Snapshot mode starts the camera if needed, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
+Snapshot mode starts the camera if needed, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
@@ -36,14 +36,14 @@ Roast mode is snapshot plus prose: it starts the camera if needed, waits for a u
 To stop streaming, tell Codex to stop camera use:
 
 ```text
-Codex Vision streaming off
+Agent Vision streaming off
 ```
 
-The installed skill maps that request to `codex_vision_stop`.
+The installed skill maps that request to `agent_vision_stop`.
 
 ## What It Does Not Do
 
-Codex Vision does not implement:
+Agent Vision does not implement:
 
 - Cloud upload.
 - Background recording.
@@ -57,7 +57,7 @@ The camera stays local. Codex gets a JPEG frame only when it calls the snapshot 
 
 ## Who This Is For
 
-Codex Vision is for local-first Codex users who want the assistant to inspect physical things near the computer.
+Agent Vision is for local-first Codex users who want the assistant to inspect physical things near the computer.
 
 It is useful when the thing you need help with is real, visible, and annoying to describe:
 
@@ -74,11 +74,11 @@ It is not for people who want their camera to be completely absent from their AI
 
 ## Install
 
-Codex Vision requires macOS, Swift, Xcode command line tools, the Codex CLI, and an Apple Development signing identity for a real local install.
+Agent Vision requires macOS, Swift, Xcode command line tools, the Codex CLI, and an Apple Development signing identity for a real local install.
 
 ```bash
-git clone https://github.com/zfifteen/codex-vision.git
-cd codex-vision
+git clone https://github.com/zfifteen/agent-vision.git
+cd agent-vision
 scripts/install-local.sh
 ```
 
@@ -97,7 +97,7 @@ Dry-run validates manifests and runs a release build. It does not register the p
 If you are asking Codex to install the plugin for you, use a prompt like this:
 
 ```text
-Clone https://github.com/zfifteen/codex-vision into ~/IdeaProjects/codex-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, and verify the plugin manifests parse as JSON.
+Clone https://github.com/zfifteen/agent-vision into ~/IdeaProjects/agent-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, and verify the plugin manifests parse as JSON.
 ```
 
 ## Slash Commands
@@ -105,13 +105,13 @@ Clone https://github.com/zfifteen/codex-vision into ~/IdeaProjects/codex-vision,
 Ask Codex:
 
 ```text
-Use Codex Vision to start the camera, inspect the latest frame, and tell me what you can read from my note.
+Use Agent Vision to start the camera, inspect the latest frame, and tell me what you can read from my note.
 ```
 
 Take one image and turn the camera off:
 
 ```text
-/codex-vision snapshot
+/agent-vision snapshot
 ```
 
 Use this when you want one usable image and then want the camera off. If the camera is already on because streaming mode is active, snapshot leaves streaming mode active. Codex Desktop should show the returned image as a preview thumbnail in the chat.
@@ -119,7 +119,7 @@ Use this when you want one usable image and then want the camera off. If the cam
 Start streaming mode and keep the camera available:
 
 ```text
-/codex-vision streaming
+/agent-vision streaming
 ```
 
 Use this when Codex may need to inspect more than one moment in time. While streaming mode is active, Codex can pull frames as needed without asking for each frame. The camera indicator should stay on while this mode is active.
@@ -127,15 +127,15 @@ Use this when Codex may need to inspect more than one moment in time. While stre
 Stop streaming mode and release the camera:
 
 ```text
-Codex Vision streaming off
+Agent Vision streaming off
 ```
 
-You can also say `stop streaming` or `turn off the camera`. Codex maps those requests to `codex_vision_stop`.
+You can also say `stop streaming` or `turn off the camera`. Codex maps those requests to `agent_vision_stop`.
 
 Take one image and request immediate emotional damage, responsibly:
 
 ```text
-/codex-vision roast
+/agent-vision roast
 ```
 
 Roast mode uses the same camera lifecycle as snapshot mode, then adds a short text response. The roast is opt-in and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
@@ -145,7 +145,7 @@ Roast mode uses the same camera lifecycle as snapshot mode, then adds a short te
 Read something in the room:
 
 ```text
-/codex-vision snapshot
+/agent-vision snapshot
 
 What does the label on this device say?
 ```
@@ -153,7 +153,7 @@ What does the label on this device say?
 Debug a physical setup:
 
 ```text
-/codex-vision streaming
+/agent-vision streaming
 
 Watch this prototype while I press the button. Tell me whether the status LED changes.
 ```
@@ -161,7 +161,7 @@ Watch this prototype while I press the button. Tell me whether the status LED ch
 Use it as the least glamorous lab assistant ever hired:
 
 ```text
-/codex-vision snapshot
+/agent-vision snapshot
 
 Is this connector seated correctly, or am I about to spend 45 minutes blaming software for a cable problem?
 ```
@@ -169,7 +169,7 @@ Is this connector seated correctly, or am I about to spend 45 minutes blaming so
 Use it for desk archaeology:
 
 ```text
-/codex-vision snapshot
+/agent-vision snapshot
 
 Find the sticky note with the part number and read it back to me.
 ```
@@ -177,7 +177,7 @@ Find the sticky note with the part number and read it back to me.
 Use it for gentle accountability:
 
 ```text
-/codex-vision snapshot
+/agent-vision snapshot
 
 Does my whiteboard plan contain an actual architecture, or did I draw six boxes and hope confidence would do the rest?
 ```
@@ -185,19 +185,19 @@ Does my whiteboard plan contain an actual architecture, or did I draw six boxes 
 Use it when you have made the bold choice to ask your computer for fashion notes:
 
 ```text
-/codex-vision roast
+/agent-vision roast
 
 Roast me in 400 characters or fewer.
 ```
 
-The plugin cannot touch objects, move the camera, choose a different camera, or infer anything outside the returned image. If the camera cannot see it, Codex Vision cannot see it either. This is still software, not a dramatic scene from a hacking movie.
+The plugin cannot touch objects, move the camera, choose a different camera, or infer anything outside the returned image. If the camera cannot see it, Agent Vision cannot see it either. This is still software, not a dramatic scene from a hacking movie.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  A["Codex"] --> B["Codex Vision MCP"]
-  B --> C["CodexVision.app"]
+  A["Codex"] --> B["Agent Vision MCP"]
+  B --> C["AgentVision.app"]
   C --> D["AVFoundation"]
   D --> E["Built-in Mac camera"]
   E --> F["Latest JPEG frame"]
@@ -209,47 +209,47 @@ The plugin package contains:
 
 - `.codex-plugin/plugin.json`
 - `.mcp.json`
-- `commands/codex-vision.md`
+- `commands/agent-vision.md`
 - `skills/camera-control/SKILL.md`
-- `dist/CodexVision.app`
-- `dist/codex-vision-mcp`
+- `dist/AgentVision.app`
+- `dist/agent-vision-mcp`
 
 The native app owns the camera permission. The MCP wrapper launches the signed app bundle and bridges JSON-RPC over named FIFOs. This preserves the macOS app identity that Camera permission is attached to.
 
-The installer stages the plugin under `~/plugins/codex-vision`, caches it under `~/.codex/plugins/cache/local/codex-vision/1.0.0`, registers the home-local marketplace in `~/.codex/config.toml`, and runs a Codex admission check before exiting.
+The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.0`, registers the home-local marketplace in `~/.codex/config.toml`, and runs a Codex admission check before exiting.
 
 ## Camera Modes
 
 Snapshot mode:
 
-1. Codex calls `codex_vision_snapshot`.
-2. `CodexVision.app` starts the built-in camera if it is not already running.
+1. Codex calls `agent_vision_snapshot`.
+2. `AgentVision.app` starts the built-in camera if it is not already running.
 3. The app waits for a usable frame.
 4. The app returns one JPEG frame.
 5. If snapshot started the camera, the app stops the camera and clears cached frame state. If streaming was already active, the app leaves streaming active.
 
 Roast mode:
 
-1. Codex calls `codex_vision_snapshot`.
-2. `CodexVision.app` starts the built-in camera if it is not already running.
+1. Codex calls `agent_vision_snapshot`.
+2. `AgentVision.app` starts the built-in camera if it is not already running.
 3. The app waits for and returns one usable JPEG frame.
 4. If roast started the camera, the app stops the camera and clears cached frame state. If streaming was already active, the app leaves streaming active.
 5. Codex writes a short opt-in roast based on visible non-sensitive details.
 
 Streaming mode:
 
-1. Codex calls `codex_vision_start`.
-2. `CodexVision.app` keeps a capture session active.
-3. Codex calls `codex_vision_frame` whenever visual context would help.
-4. Codex calls `codex_vision_stop` when the user asks to stop camera use.
+1. Codex calls `agent_vision_start`.
+2. `AgentVision.app` keeps a capture session active.
+3. Codex calls `agent_vision_frame` whenever visual context would help.
+4. Codex calls `agent_vision_stop` when the user asks to stop camera use.
 
 The user-visible invariant is simple: snapshot should blink the camera on briefly; streaming should keep the camera indicator on until stopped.
 
 ## Privacy
 
-Codex Vision is explicit and pull-based. Snapshot mode starts the camera only for one frame. Streaming mode starts only when Codex calls `codex_vision_start`; frames are returned only when Codex calls `codex_vision_frame`; the session stops when Codex calls `codex_vision_stop`.
+Agent Vision is explicit and pull-based. Snapshot mode starts the camera only for one frame. Streaming mode starts only when Codex calls `agent_vision_start`; frames are returned only when Codex calls `agent_vision_frame`; the session stops when Codex calls `agent_vision_stop`.
 
-macOS asks for camera permission for the signed `CodexVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
+macOS asks for camera permission for the signed `AgentVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
 
 Version 1.0 does not implement background recording, cloud upload, device selection, audio capture, or unsolicited streaming into Codex context.
 
@@ -286,10 +286,10 @@ scripts/package-release.sh
 If the slash command does not appear, verify the local plugin cache exists:
 
 ```bash
-ls ~/.codex/plugins/cache/local/codex-vision/1.0.0
+ls ~/.codex/plugins/cache/local/agent-vision/1.0.0
 ```
 
-If macOS repeatedly asks for camera permission, rerun the installer. Camera permission is tied to the signed `CodexVision.app` identity.
+If macOS repeatedly asks for camera permission, rerun the installer. Camera permission is tied to the signed `AgentVision.app` identity.
 
 If streaming says it started but the camera indicator is off, the MCP process is not being kept alive. Streaming mode requires a persistent MCP session.
 

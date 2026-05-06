@@ -1,6 +1,6 @@
-# /codex-vision
+# /agent-vision
 
-Control Codex Vision camera mode.
+Control Agent Vision camera mode.
 
 ## Arguments
 
@@ -11,12 +11,12 @@ Control Codex Vision camera mode.
 ## Workflow
 
 1. Read the first argument exactly.
-2. For `snapshot`, call `codex_vision_snapshot`.
-3. For `streaming`, call `codex_vision_start`.
-4. For `roast`, call `codex_vision_snapshot`, inspect the returned image, and write one roast of 400 characters or fewer.
+2. For `snapshot`, call `agent_vision_snapshot`.
+3. For `streaming`, call `agent_vision_start`.
+4. For `roast`, call `agent_vision_snapshot`, inspect the returned image, and write one roast of 400 characters or fewer.
 5. If the first argument is missing or different, tell the user the supported arguments exactly.
-6. While streaming mode is active, call `codex_vision_frame` whenever current visual context would help.
-7. When the user asks to stop camera use, call `codex_vision_stop`.
+6. While streaming mode is active, call `agent_vision_frame` whenever current visual context would help.
+7. When the user asks to stop camera use, call `agent_vision_stop`.
 8. If streaming frame pulls keep returning errors after two brief retries, tell the user the camera is not producing frames and suggest stopping and restarting streaming mode.
 
 ## Verification

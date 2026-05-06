@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "codex-vision": {
-      "command": "./dist/codex-vision-mcp",
+    "agent-vision": {
+      "command": "./dist/agent-vision-mcp",
       "args": [],
       "cwd": "."
     }

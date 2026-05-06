@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import CodexVisionCore
+@testable import AgentVisionCore
 
 private final class FakeCamera: CameraControlling {
     private(set) var startCount = 0
@@ -40,7 +40,7 @@ private final class FakeCamera: CameraControlling {
     let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let serverInfo = try #require(result["serverInfo"] as? [String: Any])
-    #expect(serverInfo["name"] as? String == "codex-vision")
+    #expect(serverInfo["name"] as? String == "agent-vision")
     #expect(serverInfo["version"] as? String == "1.0.0")
 }
 
@@ -51,14 +51,14 @@ private final class FakeCamera: CameraControlling {
     let tools = try #require(result["tools"] as? [[String: Any]])
     let names = tools.compactMap { $0["name"] as? String }
     let titles = tools.compactMap { $0["title"] as? String }
-    #expect(names == ["codex_vision_snapshot", "codex_vision_start", "codex_vision_frame", "codex_vision_stop"])
+    #expect(names == ["agent_vision_snapshot", "agent_vision_start", "agent_vision_frame", "agent_vision_stop"])
     #expect(titles == ["Snapshot", "Start Streaming", "Latest Frame", "Stop Streaming"])
     #expect(result["nextCursor"] is NSNull)
 }
 
 @Test func frameToolReturnsImageContentAndMetadata() throws {
     let server = MCPServer(camera: FakeCamera())
-    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"codex_vision_frame","arguments":{}}}"#))
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"agent_vision_frame","arguments":{}}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let content = try #require(result["content"] as? [[String: Any]])
     let image = try #require(content.first)
@@ -72,7 +72,7 @@ private final class FakeCamera: CameraControlling {
 
 @Test func snapshotToolReturnsImageContentAndMetadata() throws {
     let server = MCPServer(camera: FakeCamera())
-    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"codex_vision_snapshot","arguments":{}}}"#))
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"agent_vision_snapshot","arguments":{}}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let content = try #require(result["content"] as? [[String: Any]])
     let image = try #require(content.first)
@@ -88,14 +88,14 @@ private final class FakeCamera: CameraControlling {
     let camera = FakeCamera()
     let server = MCPServer(camera: camera)
 
-    let startResponse = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"codex_vision_start","arguments":{}}}"#))
+    let startResponse = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"agent_vision_start","arguments":{}}}"#))
     let startResult = try #require(startResponse["result"] as? [String: Any])
     let startContent = try #require(startResult["content"] as? [[String: Any]])
     #expect(startResult["isError"] as? Bool == false)
     #expect(startContent.first?["text"] as? String == "started")
     #expect(camera.startCount == 1)
 
-    let stopResponse = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"codex_vision_stop","arguments":{}}}"#))
+    let stopResponse = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"agent_vision_stop","arguments":{}}}"#))
     let stopResult = try #require(stopResponse["result"] as? [String: Any])
     let stopContent = try #require(stopResult["content"] as? [[String: Any]])
     #expect(stopResult["isError"] as? Bool == false)
@@ -108,7 +108,7 @@ private final class FakeCamera: CameraControlling {
     camera.latestFrameError = CameraError.frameUnavailable
     let server = MCPServer(camera: camera)
 
-    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"codex_vision_frame","arguments":{}}}"#))
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"agent_vision_frame","arguments":{}}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let content = try #require(result["content"] as? [[String: Any]])
     #expect(result["isError"] as? Bool == true)
@@ -120,7 +120,7 @@ private final class FakeCamera: CameraControlling {
     camera.latestFrameError = CameraError.frameNotUsable
     let server = MCPServer(camera: camera)
 
-    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"codex_vision_frame","arguments":{}}}"#))
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"agent_vision_frame","arguments":{}}}"#))
     let result = try #require(response["result"] as? [String: Any])
     let content = try #require(result["content"] as? [[String: Any]])
     #expect(result["isError"] as? Bool == true)
