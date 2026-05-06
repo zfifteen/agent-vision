@@ -27,11 +27,11 @@ The user-facing slash command is intentionally small:
 /codex-vision roast
 ```
 
-Snapshot mode starts the camera if needed, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds, and tries again up to 3 total attempts.
+Snapshot mode starts the camera if needed, waits for a usable JPEG frame, returns it to Codex Desktop as an image preview, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
-Roast mode starts the camera if needed, waits for a usable JPEG frame, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer.
+Roast mode is snapshot plus prose: it starts the camera if needed, waits for a usable JPEG frame, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer. There is no separate roast MCP tool in version 1.0.
 
 To stop streaming, tell Codex to stop camera use:
 
@@ -82,7 +82,7 @@ cd codex-vision
 scripts/install-local.sh
 ```
 
-Restart Codex after installation.
+The installer registers the plugin and runs a Codex admission check before it exits. A Codex restart should not be required after a successful install. If the slash command is not visible in an already-open chat, open a new Codex session.
 
 For CI or package validation environments that do not have Codex configured or a signing identity installed, use dry-run mode:
 
@@ -114,7 +114,7 @@ Take one image and turn the camera off:
 /codex-vision snapshot
 ```
 
-Use this when you want one usable image and then want the camera off. Codex Desktop should show the returned image as a preview thumbnail in the chat.
+Use this when you want one usable image and then want the camera off. If the camera is already on because streaming mode is active, snapshot leaves streaming mode active. Codex Desktop should show the returned image as a preview thumbnail in the chat.
 
 Start streaming mode and keep the camera available:
 
@@ -138,7 +138,7 @@ Take one image and request immediate emotional damage, responsibly:
 /codex-vision roast
 ```
 
-Roast mode uses the same camera lifecycle as snapshot mode: start, wait for one usable frame, stop. The roast is short, opt-in, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
+Roast mode uses the same camera lifecycle as snapshot mode, then adds a short text response. The roast is opt-in and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
 
 ## Example Workflows
 
@@ -295,7 +295,7 @@ If streaming says it started but the camera indicator is off, the MCP process is
 
 If frames are unavailable immediately after starting streaming, wait briefly and pull again. The installed skill retries at most two times before telling the user the camera is not producing frames.
 
-If snapshot or roast mode sees a black frame, it treats that as camera warm-up, keeps the camera on, waits 5 seconds, and tries again. After 3 black-frame attempts, it returns an error instead of handing Codex a useless image.
+If snapshot or roast mode sees a black frame, it treats that as camera warm-up and keeps the camera on. The 5-second wait happens between attempts, for 3 total attempts. After 3 black-frame attempts, it returns an error instead of handing Codex a useless image.
 
 ## License
 

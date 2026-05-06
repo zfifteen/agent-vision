@@ -168,6 +168,28 @@ private final class FakeCamera: CameraControlling {
     #expect(server.handleLine(#"{"jsonrpc":"2.0","method":"missing/method","params":{}}"#) == nil)
 }
 
+@Test func runProcessesNewlineDelimitedRequestsAndIgnoresNotifications() throws {
+    let server = MCPServer(camera: FakeCamera())
+    let input = Pipe()
+    let output = Pipe()
+    let request = """
+    {"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+    {"jsonrpc":"2.0","id":14,"method":"tools/list"}
+
+    """
+
+    input.fileHandleForWriting.write(Data(request.utf8))
+    input.fileHandleForWriting.closeFile()
+    server.run(input: input.fileHandleForReading, output: output.fileHandleForWriting)
+    output.fileHandleForWriting.closeFile()
+
+    let text = String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+    let lines = text.split(separator: "\n")
+    #expect(lines.count == 1)
+    let response = try decode(String(lines[0]))
+    #expect(response["id"] as? Int == 14)
+}
+
 @Test func requestWithNonStringMethodReturnsInvalidRequestWhenIdIsPresent() throws {
     let server = MCPServer(camera: FakeCamera())
     let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":12,"method":7}"#))

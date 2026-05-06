@@ -19,8 +19,8 @@ fi
 rm -rf "$OUT" "$OUT.tar.gz"
 mkdir -p "$OUT"
 "$ROOT/scripts/install-local.sh" --dry-run
-swift build -c release --package-path "$ROOT"
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
+swift build -c release --package-path "$ROOT"
 
 mkdir -p "$OUT/dist/CodexVision.app/Contents/MacOS" "$OUT/dist/CodexVision.app/Contents/Resources"
 cp "$BUILD_DIR/CodexVision" "$OUT/dist/CodexVision.app/Contents/MacOS/CodexVision"
@@ -50,43 +50,7 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
 PLIST
 plutil -lint "$OUT/dist/CodexVision.app/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/CodexVision.app" >/dev/null
-cat > "$OUT/dist/codex-vision-mcp" <<'SH'
-#!/usr/bin/env bash
-set -euo pipefail
-
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/codex-vision.XXXXXX")"
-IN_FIFO="$TMP/in"
-OUT_FIFO="$TMP/out"
-mkfifo "$IN_FIFO" "$OUT_FIFO"
-cleanup() {
-  rm -rf "$TMP"
-}
-trap cleanup EXIT
-
-open -n "$ROOT/dist/CodexVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
-APP_PID=""
-for _ in {1..50}; do
-  APP_PID="$(ps -axo pid=,command= | awk -v in_fifo="$IN_FIFO" -v out_fifo="$OUT_FIFO" '
-    /CodexVision/ && index($0, "mcp-fifo") && index($0, in_fifo) && index($0, out_fifo) {
-      print $1
-      exit
-    }
-  ' || true)"
-  if [[ -n "$APP_PID" ]]; then
-    break
-  fi
-  sleep 0.1
-done
-if [[ -z "$APP_PID" ]]; then
-  echo "Codex Vision app did not launch for MCP FIFO mode." >&2
-  exit 1
-fi
-cat "$OUT_FIFO" &
-OUT_PID="$!"
-cat > "$IN_FIFO"
-wait "$OUT_PID"
-SH
+cp "$ROOT/scripts/codex-vision-mcp.sh" "$OUT/dist/codex-vision-mcp"
 chmod +x "$OUT/dist/codex-vision-mcp"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"

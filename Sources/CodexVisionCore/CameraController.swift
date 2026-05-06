@@ -43,6 +43,18 @@ private final class CameraPermissionResult: @unchecked Sendable {
     var granted = false
 }
 
+enum CameraFrameReadiness {
+    static let minimumUsableMeanBrightness = 0.02
+    static let frameWaitTimeout: TimeInterval = 3
+    static let pollInterval: TimeInterval = 0.05
+    static let snapshotMaxAttempts = 3
+    static let blackFrameRetryDelay: TimeInterval = 5
+
+    static func isUsable(_ frame: CameraFrame) -> Bool {
+        frame.meanBrightness >= minimumUsableMeanBrightness
+    }
+}
+
 extension CameraError: LocalizedError {
     public var errorDescription: String? {
         switch self {
@@ -65,7 +77,6 @@ extension CameraError: LocalizedError {
 }
 
 public final class AVCameraController: NSObject, CameraControlling, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private let minimumUsableMeanBrightness = 0.02
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "codex-vision.capture.session")
     private let frameQueue = DispatchQueue(label: "codex-vision.capture.frames")
@@ -79,17 +90,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     }
 
     public func latestFrame() throws -> CameraFrame {
-        let deadline = Date().addingTimeInterval(1)
-        while true {
-            if let frame = cachedFrame() {
-                return frame
-            }
-
-            if Date() >= deadline {
-                throw CameraError.frameUnavailable
-            }
-            Thread.sleep(forTimeInterval: 0.05)
-        }
+        try waitForFrame(timeout: CameraFrameReadiness.frameWaitTimeout)
     }
 
     public func snapshot() throws -> CameraFrame {
@@ -104,14 +105,14 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             }
         }
 
-        for attempt in 1...3 {
-            let frame = try waitForFrame(timeout: 3)
-            if frame.meanBrightness >= minimumUsableMeanBrightness {
+        for attempt in 1...CameraFrameReadiness.snapshotMaxAttempts {
+            let frame = try waitForFrame(timeout: CameraFrameReadiness.frameWaitTimeout)
+            if CameraFrameReadiness.isUsable(frame) {
                 return frame
             }
 
-            if attempt < 3 {
-                Thread.sleep(forTimeInterval: 5)
+            if attempt < CameraFrameReadiness.snapshotMaxAttempts {
+                Thread.sleep(forTimeInterval: CameraFrameReadiness.blackFrameRetryDelay)
             }
         }
 
@@ -160,7 +161,7 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             if let frame = cachedFrame() {
                 return frame
             }
-            Thread.sleep(forTimeInterval: 0.05)
+            Thread.sleep(forTimeInterval: CameraFrameReadiness.pollInterval)
         }
 
         throw CameraError.frameUnavailable
@@ -234,7 +235,9 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             return
         }
 
-        let meanBrightness = meanBrightness(of: pixelBuffer) ?? 0
+        guard let meanBrightness = meanBrightness(of: pixelBuffer) else {
+            return
+        }
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
         guard let jpeg = ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: [:]) else {
@@ -253,6 +256,10 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     }
 
     private func meanBrightness(of pixelBuffer: CVPixelBuffer) -> Double? {
+        guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA else {
+            return nil
+        }
+
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         defer {
             CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
