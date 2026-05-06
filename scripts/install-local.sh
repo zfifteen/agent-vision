@@ -33,6 +33,15 @@ for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
             raise SystemExit(f"{rel} has no agent-vision MCP server")
         if server.get("command") != "./dist/agent-vision-mcp":
             raise SystemExit(f"{rel} has wrong agent-vision MCP command")
+
+command = root / "commands" / "agent-vision.md"
+text = command.read_text(encoding="utf-8")
+if not text.startswith("---\n"):
+    raise SystemExit("commands/agent-vision.md must start with YAML frontmatter so Codex can index the slash command")
+if "\ndescription: Control Agent Vision camera mode.\n" not in text:
+    raise SystemExit("commands/agent-vision.md has wrong slash command description")
+if "\nargument-hint: snapshot|streaming|roast\n" not in text:
+    raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
 PY
 
 if [[ "$DRY_RUN" == "1" ]]; then
@@ -183,6 +192,85 @@ rm -rf \
   "$HOME/.codex/.tmp/plugins/plugins/agent-vision" \
   "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/openai-curated/agent-vision"
+
+python3 - "$CACHE_HOME/dist/agent-vision-mcp" <<'PY'
+import json
+import pathlib
+import select
+import subprocess
+import sys
+import time
+
+server = pathlib.Path(sys.argv[1])
+if not server.exists():
+    raise SystemExit(f"Installed MCP wrapper is missing: {server}")
+
+process = subprocess.Popen(
+    [str(server)],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    text=True,
+)
+
+try:
+    requests = [
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "agent-vision-install-check", "version": "1.0.0"},
+            },
+        },
+        {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
+    ]
+    for request in requests:
+        process.stdin.write(json.dumps(request, separators=(",", ":")) + "\n")
+        process.stdin.flush()
+
+    responses = {}
+    deadline = time.time() + 10
+    while time.time() < deadline and 2 not in responses:
+        readable, _, _ = select.select([process.stdout], [], [], 0.2)
+        for stream in readable:
+            line = stream.readline()
+            if not line:
+                continue
+            response = json.loads(line)
+            if "id" in response:
+                responses[response["id"]] = response
+
+    tools_response = responses.get(2)
+    if tools_response is None:
+        raise SystemExit("Agent Vision MCP tools/list check timed out")
+    if "error" in tools_response:
+        raise SystemExit(f"Agent Vision MCP tools/list failed: {tools_response['error']}")
+
+    actual = {
+        tool.get("name")
+        for tool in tools_response.get("result", {}).get("tools", [])
+    }
+    expected = {
+        "agent_vision_snapshot",
+        "agent_vision_start",
+        "agent_vision_frame",
+        "agent_vision_stop",
+    }
+    missing = sorted(expected - actual)
+    if missing:
+        raise SystemExit(f"Agent Vision MCP tools/list missing tools: {', '.join(missing)}")
+finally:
+    process.terminate()
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=2)
+PY
 
 PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/agent-vision-prompt-input.XXXXXX.json")"
 trap 'rm -f "$PROMPT_CHECK"' EXIT

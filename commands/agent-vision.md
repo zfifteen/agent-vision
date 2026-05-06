@@ -1,3 +1,8 @@
+---
+description: Control Agent Vision camera mode.
+argument-hint: snapshot|streaming|roast
+---
+
 # /agent-vision
 
 Control Agent Vision camera mode.

@@ -10,6 +10,8 @@ scripts/install-local.sh
 
 The installer builds `AgentVision.app`, stages the plugin under `~/plugins/agent-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `agent-vision@local` in `~/.codex/config.toml`.
 
+If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
+
 ## First Use
 
 Agent Vision installs one slash command with three public arguments:

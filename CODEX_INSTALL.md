@@ -22,6 +22,8 @@ python3 -m json.tool .mcp.json >/dev/null
 scripts/install-local.sh
 ```
 
+If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
+
 4. Use the MCP tools:
 
 ```text
