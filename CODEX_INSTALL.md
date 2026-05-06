@@ -26,6 +26,8 @@ If an already-open Codex chat does not show `/agent-vision` after a successful i
 
 The installer also registers `mcp_servers.agent_vision` in `~/.codex/config.toml`. Open a new Codex chat or session after install so the normal tool registry can load `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`.
 
+For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
+
 4. Use the MCP tools:
 
 ```text
@@ -50,3 +52,9 @@ Version 1.0 is pull-based:
 - `/agent-vision roast` is snapshot plus prose: it waits for one usable JPEG frame, returns it into chat, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
 - While streaming is active, Codex may call `agent_vision_frame` whenever visual context would help, without asking for each frame.
 - When the user asks to stop streaming or stop camera use, call `agent_vision_stop`.
+
+To uninstall the local plugin deterministically:
+
+```bash
+scripts/uninstall-local.sh
+```

@@ -14,6 +14,8 @@ If an already-open Codex chat does not show `/agent-vision` after a successful i
 
 The installer also registers `mcp_servers.agent_vision` in `~/.codex/config.toml`. Open a new Codex chat or session after install so the normal tool registry can load `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`.
 
+For QA traceability against the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
+
 ## First Use
 
 Agent Vision installs one slash command with three public arguments:
@@ -42,10 +44,10 @@ macOS will ask for camera permission for `AgentVision.app` the first time the ca
 
 ## Uninstall
 
-Remove the staged plugin directory:
+Run the deterministic local uninstaller:
 
 ```bash
-rm -rf ~/plugins/agent-vision
+scripts/uninstall-local.sh
 ```
 
-Then remove the `agent-vision` entry from `~/.agents/plugins/marketplace.json`, plus the `agent-vision@local` plugin entry and `mcp_servers.agent_vision` entry from `~/.codex/config.toml`.
+The uninstaller removes `~/plugins/agent-vision`, the local Codex plugin cache, the local marketplace entry, the `agent-vision@local` plugin config entry, `mcp_servers.agent_vision`, and legacy `codex-vision` rebrand artifacts.

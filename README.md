@@ -84,6 +84,8 @@ scripts/install-local.sh
 
 The installer registers the plugin, registers `mcp_servers.agent_vision`, verifies the MCP tool list, and runs a Codex admission check before it exits. Open a new Codex chat or session after install so the slash-command index and normal tool registry load the Agent Vision commands and MCP tools.
 
+For QA evidence that the install and uninstall lifecycle maps to the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
+
 For CI or package validation environments that do not have Codex configured or a signing identity installed, use dry-run mode:
 
 ```bash
@@ -279,6 +281,12 @@ Build a release archive:
 
 ```bash
 scripts/package-release.sh
+```
+
+Uninstall the local plugin:
+
+```bash
+scripts/uninstall-local.sh
 ```
 
 ## Troubleshooting
