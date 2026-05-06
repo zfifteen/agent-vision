@@ -141,6 +141,13 @@ private final class FakeCamera: CameraControlling {
     #expect(error["code"] as? Int == -32700)
 }
 
+@Test func topLevelNonObjectReturnsInvalidRequest() throws {
+    let server = MCPServer(camera: FakeCamera())
+    let response = try decode(server.handleLine(#"[]"#))
+    let error = try #require(response["error"] as? [String: Any])
+    #expect(error["code"] as? Int == -32600)
+}
+
 @Test func requestWithoutMethodReturnsInvalidRequestWhenIdIsPresent() throws {
     let server = MCPServer(camera: FakeCamera())
     let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":8}"#))

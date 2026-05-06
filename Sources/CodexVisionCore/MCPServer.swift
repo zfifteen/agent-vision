@@ -49,7 +49,7 @@ public final class MCPServer {
         do {
             let data = Data(line.utf8)
             guard let message = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return errorResponse(id: nil, code: -32700, message: "Parse error")
+                return errorResponse(id: nil, code: -32600, message: "Invalid Request")
             }
 
             let id = message["id"]
