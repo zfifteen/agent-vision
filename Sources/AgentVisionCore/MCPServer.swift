@@ -193,7 +193,11 @@ public final class MCPServer {
                 [
                     "type": "image",
                     "data": frame.jpegData.base64EncodedString(),
-                    "mimeType": "image/jpeg"
+                    "mimeType": "image/jpeg",
+                    "annotations": [
+                        "audience": ["assistant", "user"],
+                        "priority": 1.0
+                    ]
                 ],
                 [
                     "type": "text",

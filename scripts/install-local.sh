@@ -38,7 +38,7 @@ command = root / "commands" / "agent-vision.md"
 text = command.read_text(encoding="utf-8")
 if not text.startswith("---\n"):
     raise SystemExit("commands/agent-vision.md must start with YAML frontmatter so Codex can index the slash command")
-if "\ndescription: Control Agent Vision camera mode.\n" not in text:
+if "\ndescription: Snapshot, stream, or roast with the Agent Vision camera.\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command description")
 if "\nargument-hint: snapshot|streaming|roast\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
@@ -49,11 +49,26 @@ required_command_snippets = [
     "For `snapshot`, call `agent_vision_snapshot`.",
     "For `streaming`, call `agent_vision_start`.",
     "For `roast`, call `agent_vision_snapshot`, inspect the returned image, and write one roast of 400 characters or fewer.",
+    "If `agent_vision_snapshot` or `agent_vision_frame` returns metadata but no image content that Codex can directly inspect, stop and report the tool contract failure.",
+    "Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.",
     "When the user asks to stop camera use, call `agent_vision_stop`.",
 ]
 for snippet in required_command_snippets:
     if snippet not in text:
         raise SystemExit(f"commands/agent-vision.md is missing required slash command contract: {snippet}")
+
+skill = root / "skills" / "camera-control" / "SKILL.md"
+skill_text = skill.read_text(encoding="utf-8")
+required_skill_snippets = [
+    "description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast",
+    "`/agent-vision snapshot`: call `agent_vision_snapshot`.",
+    "`/agent-vision streaming`: call `agent_vision_start`.",
+    "`/agent-vision roast`: call `agent_vision_snapshot`, then write one playful roast",
+    "Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.",
+]
+for snippet in required_skill_snippets:
+    if snippet not in skill_text:
+        raise SystemExit(f"skills/camera-control/SKILL.md is missing required camera contract: {snippet}")
 PY
 
 if [[ "$DRY_RUN" == "1" ]]; then
@@ -171,15 +186,13 @@ PY
 codex plugin marketplace add "$HOME" >/dev/null
 
 mkdir -p "$(dirname "$CODEX_CONFIG")"
-python3 - "$CODEX_CONFIG" "$OLD_SLUG" "$CACHE_HOME" <<'PY'
-import json
+python3 - "$CODEX_CONFIG" "$OLD_SLUG" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
 old_slug = sys.argv[2]
-cache_home = pathlib.Path(sys.argv[3])
 text = path.read_text(encoding="utf-8") if path.exists() else ""
 
 def remove_section(source: str, header: str) -> str:
@@ -195,13 +208,7 @@ text = remove_section(text, 'mcp_servers."agent-vision"')
 text = remove_section(text, "mcp_servers.codex_vision")
 text = remove_section(text, f'mcp_servers."{old_slug}"')
 
-server = cache_home / "dist" / "agent-vision-mcp"
 addition = f"""
-[mcp_servers.agent_vision]
-command = {json.dumps(str(server))}
-cwd = {json.dumps(str(cache_home))}
-enabled = true
-
 [plugins."agent-vision@local"]
 enabled = true
 """
@@ -312,5 +319,5 @@ PY
 
 echo "Agent Vision installed at $PLUGIN_HOME"
 echo "Agent Vision cached at $CACHE_HOME"
-echo "Agent Vision registered in $CODEX_CONFIG"
+echo "Agent Vision plugin registered in $CODEX_CONFIG"
 echo "Use /agent-vision snapshot, /agent-vision streaming, or /agent-vision roast."

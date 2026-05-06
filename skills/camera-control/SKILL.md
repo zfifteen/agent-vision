@@ -1,6 +1,6 @@
 ---
 name: camera-control
-description: Use when the user asks Codex to snapshot, stream, inspect, or stop the local macOS camera through Agent Vision.
+description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, or asks Codex to snapshot, stream, inspect, roast, or stop the local macOS camera through Agent Vision.
 ---
 
 # Agent Vision
@@ -12,6 +12,8 @@ Use the Agent Vision MCP tools when the user explicitly asks for camera context.
 For one-shot camera context, call `agent_vision_snapshot`. This starts the camera, waits for a usable JPEG frame, and stops the camera.
 
 For roast mode, call `agent_vision_snapshot`, inspect the returned image, and write one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes.
+
+If `agent_vision_snapshot` or `agent_vision_frame` returns metadata but no image content that Codex can directly inspect, stop and report the tool contract failure. Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.
 
 For streaming mode:
 
@@ -40,4 +42,3 @@ Treat requests such as "streaming off", "stop streaming", or "turn off the camer
 - Streaming mode is pull-based live frame access. When streaming mode is on, Codex may pull frames as needed without asking the user for each individual frame.
 - Snapshot mode captures one usable frame and turns the camera off.
 - Do not mention internal readiness metadata such as brightness values unless reporting an error.
-- If you need to save an MCP image to disk before displaying it in chat, use a fresh unique filename for each response. Do not reuse a temp image path from an earlier snapshot.

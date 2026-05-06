@@ -24,7 +24,7 @@ scripts/install-local.sh
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
-The installer also registers `mcp_servers.agent_vision` in `~/.codex/config.toml`. Open a new Codex chat or session after install so the normal tool registry can load `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`.
+The installer removes legacy duplicate `mcp_servers.agent_vision` config and relies on the plugin `.mcp.json` entry for `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`. Open a new Codex chat or session after install so the plugin tool registry refreshes.
 
 For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
 

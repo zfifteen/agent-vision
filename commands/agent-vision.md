@@ -1,11 +1,11 @@
 ---
-description: Control Agent Vision camera mode.
+description: Snapshot, stream, or roast with the Agent Vision camera.
 argument-hint: snapshot|streaming|roast
 ---
 
 # /agent-vision
 
-Control Agent Vision camera mode.
+Snapshot, stream, or roast with the Agent Vision camera.
 
 ## Arguments
 
@@ -23,6 +23,7 @@ Control Agent Vision camera mode.
 6. While streaming mode is active, call `agent_vision_frame` whenever current visual context would help.
 7. When the user asks to stop camera use, call `agent_vision_stop`.
 8. If streaming frame pulls keep returning errors after two brief retries, tell the user the camera is not producing frames and suggest stopping and restarting streaming mode.
+9. If `agent_vision_snapshot` or `agent_vision_frame` returns metadata but no image content that Codex can directly inspect, stop and report the tool contract failure. Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.
 
 ## Verification
 
@@ -35,5 +36,3 @@ If streaming mode is already active, snapshot and roast mode must not stop the s
 ## Response
 
 For `snapshot`, display or describe the returned image in chat. For `roast`, display or describe the returned image and include one playful roast of 400 characters or fewer. Keep roasts opt-in, light, and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes. Do not mention internal readiness metadata such as brightness values unless reporting an error. For mode changes, state the resulting camera mode.
-
-If you need to save an MCP image to disk before displaying it in chat, use a fresh unique filename for each response. Do not reuse a temp image path from an earlier snapshot.

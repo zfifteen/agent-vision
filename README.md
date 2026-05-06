@@ -82,7 +82,7 @@ cd agent-vision
 scripts/install-local.sh
 ```
 
-The installer registers the plugin, registers `mcp_servers.agent_vision`, verifies the MCP tool list, and runs a Codex admission check before it exits. Open a new Codex chat or session after install so the slash-command index and normal tool registry load the Agent Vision commands and MCP tools.
+The installer registers the plugin, removes legacy duplicate `mcp_servers.agent_vision` config, verifies the MCP tool list through the plugin MCP config, and runs a Codex admission check before it exits. Open a new Codex chat or session after install so the slash-command index and plugin tool registry load the Agent Vision commands and MCP tools.
 
 For QA evidence that the install and uninstall lifecycle maps to the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
 
@@ -218,7 +218,7 @@ The plugin package contains:
 
 The native app owns the camera permission. The MCP wrapper launches the signed app bundle and bridges JSON-RPC over named FIFOs. This preserves the macOS app identity that Camera permission is attached to.
 
-The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.0`, registers the home-local marketplace and `mcp_servers.agent_vision` in `~/.codex/config.toml`, verifies the MCP tool list, and runs a Codex admission check before exiting.
+The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.0`, registers the home-local marketplace and `agent-vision@local` plugin entry in `~/.codex/config.toml`, removes legacy duplicate `mcp_servers.agent_vision` config, verifies the MCP tool list, and runs a Codex admission check before exiting.
 
 ## Camera Modes
 
