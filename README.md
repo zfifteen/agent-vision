@@ -1,4 +1,4 @@
-![Agent Vision hero](assets/readme-hero.png)
+![Agent Vision hero](assets/readme-hero.jpg)
 
 # Agent Vision
 
