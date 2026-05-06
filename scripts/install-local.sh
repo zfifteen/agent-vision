@@ -96,10 +96,14 @@ cleanup() {
 trap cleanup EXIT
 
 open -n "$ROOT/dist/CodexVision.app" --args mcp-fifo "$IN_FIFO" "$OUT_FIFO"
-APP_PATTERN="$ROOT/dist/[C]odexVision.app/Contents/MacOS/CodexVision mcp-fifo $IN_FIFO $OUT_FIFO"
 APP_PID=""
 for _ in {1..50}; do
-  APP_PID="$(pgrep -f "$APP_PATTERN" | head -n 1 || true)"
+  APP_PID="$(ps -axo pid=,command= | awk -v in_fifo="$IN_FIFO" -v out_fifo="$OUT_FIFO" '
+    /CodexVision/ && index($0, "mcp-fifo") && index($0, in_fifo) && index($0, out_fifo) {
+      print $1
+      exit
+    }
+  ' || true)"
   if [[ -n "$APP_PID" ]]; then
     break
   fi
