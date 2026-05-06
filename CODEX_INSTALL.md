@@ -22,14 +22,27 @@ python3 -m json.tool .mcp.json >/dev/null
 scripts/install-local.sh
 ```
 
-4. Restart Codex.
-
-5. Use the MCP tools:
+4. Use the MCP tools:
 
 ```text
+codex_vision_snapshot
 codex_vision_start
 codex_vision_frame
 codex_vision_stop
 ```
 
-Version 1.0 is pull-based: Codex receives camera frames only when it calls `codex_vision_frame`.
+Or use the bundled slash commands:
+
+```text
+/codex-vision snapshot
+/codex-vision streaming
+/codex-vision roast
+```
+
+Version 1.0 is pull-based:
+
+- `/codex-vision snapshot` waits for one usable JPEG frame, returns it into chat, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Codex Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
+- `/codex-vision streaming` starts a live camera session. The Mac camera indicator should stay on while this session is active.
+- `/codex-vision roast` is snapshot plus prose: it waits for one usable JPEG frame, returns it into chat, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
+- While streaming is active, Codex may call `codex_vision_frame` whenever visual context would help, without asking for each frame.
+- When the user asks to stop streaming or stop camera use, call `codex_vision_stop`.

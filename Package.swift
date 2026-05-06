@@ -13,7 +13,17 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "CodexVision",
-            dependencies: ["CodexVisionCore"]
+            dependencies: ["CodexVisionCore"],
+            exclude: ["Info.plist"],
+            linkerSettings: [
+                // Embed camera usage metadata in the standalone CLI binary launched inside CodexVision.app.
+                .unsafeFlags([
+                    "-Xlinker", "-sectcreate",
+                    "-Xlinker", "__TEXT",
+                    "-Xlinker", "__info_plist",
+                    "-Xlinker", "Sources/CodexVision/Info.plist"
+                ])
+            ]
         ),
         .target(
             name: "CodexVisionCore"

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>works.velocity.codex-vision</string>
+  <key>CFBundleName</key>
+  <string>Codex Vision</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Codex Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+</dict>
+</plist>

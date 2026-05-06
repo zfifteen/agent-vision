@@ -7,17 +7,41 @@ public final class MCPServer {
         self.camera = camera
     }
 
-    public func run() {
-        while let line = readLine(strippingNewline: true) {
-            guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                continue
-            }
+    public func run(
+        input: FileHandle = .standardInput,
+        output: FileHandle = .standardOutput
+    ) {
+        var buffer = Data()
 
-            let response = handleLine(line)
-            if let response {
-                print(response)
-                fflush(stdout)
+        while true {
+            let chunk = input.availableData
+            if chunk.isEmpty {
+                break
             }
+            buffer.append(chunk)
+
+            while let newline = buffer.firstIndex(of: 0x0A) {
+                let lineData = buffer[..<newline]
+                buffer.removeSubrange(...newline)
+                let line = String(decoding: lineData, as: UTF8.self)
+                writeResponse(for: line, to: output)
+            }
+        }
+
+        if !buffer.isEmpty {
+            let line = String(decoding: buffer, as: UTF8.self)
+            writeResponse(for: line, to: output)
+        }
+    }
+
+    private func writeResponse(for line: String, to output: FileHandle) {
+        guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        let response = handleLine(line)
+        if let response {
+            output.write(Data((response + "\n").utf8))
         }
     }
 
@@ -25,11 +49,24 @@ public final class MCPServer {
         do {
             let data = Data(line.utf8)
             guard let message = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return errorResponse(id: nil, code: -32700, message: "Parse error")
+                return errorResponse(id: nil, code: -32600, message: "Invalid Request")
             }
 
             let id = message["id"]
-            guard let method = message["method"] as? String else {
+            let hasID = message.keys.contains("id")
+            guard let methodValue = message["method"] else {
+                if hasID {
+                    return errorResponse(id: id, code: -32600, message: "Invalid Request")
+                }
+                return nil
+            }
+            guard let method = methodValue as? String else {
+                if !hasID {
+                    return nil
+                }
+                return errorResponse(id: id, code: -32600, message: "Invalid Request")
+            }
+            if !hasID {
                 return nil
             }
 
@@ -37,7 +74,10 @@ public final class MCPServer {
             case "initialize":
                 return successResponse(id: id, result: initializeResult())
             case "tools/list":
-                return successResponse(id: id, result: ["tools": toolDefinitions()])
+                return successResponse(id: id, result: [
+                    "tools": toolDefinitions(),
+                    "nextCursor": NSNull()
+                ])
             case "tools/call":
                 return handleToolCall(id: id, params: message["params"])
             default:
@@ -58,6 +98,9 @@ public final class MCPServer {
 
         do {
             switch name {
+            case "codex_vision_snapshot":
+                let frame = try camera.snapshot()
+                return toolFrameResponse(id: id, frame: frame)
             case "codex_vision_start":
                 return toolTextResponse(id: id, text: try camera.start())
             case "codex_vision_frame":
@@ -89,18 +132,27 @@ public final class MCPServer {
     private func toolDefinitions() -> [[String: Any]] {
         [
             [
+                "name": "codex_vision_snapshot",
+                "title": "Snapshot",
+                "description": "Take one Codex Vision snapshot: start the built-in macOS camera if needed, return one JPEG frame, then stop only if snapshot started the camera.",
+                "inputSchema": emptyInputSchema()
+            ],
+            [
                 "name": "codex_vision_start",
-                "description": "Start the persistent Codex Vision capture session using the built-in macOS camera.",
+                "title": "Start Streaming",
+                "description": "Start streaming mode by keeping the persistent Codex Vision capture session active.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_frame",
-                "description": "Return the latest live JPEG frame from the active Codex Vision camera session.",
+                "title": "Latest Frame",
+                "description": "Return the latest live JPEG frame from the active streaming-mode Codex Vision camera session.",
                 "inputSchema": emptyInputSchema()
             ],
             [
                 "name": "codex_vision_stop",
-                "description": "Stop the Codex Vision capture session and release the camera.",
+                "title": "Stop Streaming",
+                "description": "Stop streaming mode, release the camera, and clear the cached frame.",
                 "inputSchema": emptyInputSchema()
             ]
         ]
@@ -132,7 +184,8 @@ public final class MCPServer {
             "mimeType": "image/jpeg",
             "width": frame.width,
             "height": frame.height,
-            "bytes": frame.jpegData.count
+            "bytes": frame.jpegData.count,
+            "meanBrightness": frame.meanBrightness
         ]
 
         return successResponse(id: id, result: [
@@ -184,7 +237,11 @@ public final class MCPServer {
     }
 
     private func encode(_ object: [String: Any]) -> String {
-        let data = try! JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
-        return String(decoding: data, as: UTF8.self)
+        do {
+            let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+            return String(decoding: data, as: UTF8.self)
+        } catch {
+            return #"{"error":{"code":-32603,"message":"Response encoding failed"},"id":null,"jsonrpc":"2.0"}"#
+        }
     }
 }

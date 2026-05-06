@@ -7,18 +7,25 @@ public struct CameraFrame: Equatable {
     public let timestamp: String
     public let width: Int
     public let height: Int
+    public let meanBrightness: Double
 
-    public init(jpegData: Data, timestamp: String, width: Int, height: Int) {
+    public init(jpegData: Data, timestamp: String, width: Int, height: Int, meanBrightness: Double = 1) {
         self.jpegData = jpegData
         self.timestamp = timestamp
         self.width = width
         self.height = height
+        self.meanBrightness = meanBrightness
     }
 }
 
 public protocol CameraControlling {
+    /// Start a persistent camera session for streaming mode.
     func start() throws -> String
+    /// Return the latest frame from an active streaming session.
     func latestFrame() throws -> CameraFrame
+    /// Start the camera, return one frame, and release the camera before returning or throwing.
+    func snapshot() throws -> CameraFrame
+    /// Stop the active camera session and clear cached frame state.
     func stop() throws -> String
 }
 
@@ -28,11 +35,24 @@ public enum CameraError: Error, Equatable {
     case permissionUnknown
     case captureInputFailed(String)
     case frameUnavailable
+    case frameNotUsable
     case jpegEncodingFailed
 }
 
 private final class CameraPermissionResult: @unchecked Sendable {
     var granted = false
+}
+
+enum CameraFrameReadiness {
+    static let minimumUsableMeanBrightness = 0.02
+    static let frameWaitTimeout: TimeInterval = 3
+    static let pollInterval: TimeInterval = 0.05
+    static let snapshotMaxAttempts = 3
+    static let blackFrameRetryDelay: TimeInterval = 5
+
+    static func isUsable(_ frame: CameraFrame) -> Bool {
+        frame.meanBrightness >= minimumUsableMeanBrightness
+    }
 }
 
 extension CameraError: LocalizedError {
@@ -48,6 +68,8 @@ extension CameraError: LocalizedError {
             return "Camera input failed: \(reason)"
         case .frameUnavailable:
             return "The camera session has not produced a frame yet."
+        case .frameNotUsable:
+            return "The camera produced frames, but they were still black after three attempts. Check the lens cover and lighting, then try again."
         case .jpegEncodingFailed:
             return "The latest camera frame could not be encoded as JPEG."
         }
@@ -63,31 +85,38 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
     private var latest: CameraFrame?
 
     public func start() throws -> String {
-        try authorizeCamera()
-
-        try sessionQueue.sync {
-            if session.isRunning {
-                return
-            }
-
-            if !configured {
-                try configureSession()
-                configured = true
-            }
-
-            session.startRunning()
-        }
-
+        _ = try startSessionIfNeeded()
         return "Codex Vision camera session started."
     }
 
     public func latestFrame() throws -> CameraFrame {
-        try frameQueue.sync {
-            guard let latest else {
-                throw CameraError.frameUnavailable
+        try waitForFrame(timeout: CameraFrameReadiness.frameWaitTimeout)
+    }
+
+    public func snapshot() throws -> CameraFrame {
+        let startedSession = try startSessionIfNeeded()
+        defer {
+            if startedSession {
+                do {
+                    _ = try stop()
+                } catch {
+                    fputs("Codex Vision failed to stop camera after snapshot: \(error.localizedDescription)\n", stderr)
+                }
             }
-            return latest
         }
+
+        for attempt in 1...CameraFrameReadiness.snapshotMaxAttempts {
+            let frame = try waitForFrame(timeout: CameraFrameReadiness.frameWaitTimeout)
+            if CameraFrameReadiness.isUsable(frame) {
+                return frame
+            }
+
+            if attempt < CameraFrameReadiness.snapshotMaxAttempts {
+                Thread.sleep(forTimeInterval: CameraFrameReadiness.blackFrameRetryDelay)
+            }
+        }
+
+        throw CameraError.frameNotUsable
     }
 
     public func stop() throws -> String {
@@ -96,7 +125,46 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
                 session.stopRunning()
             }
         }
+        frameQueue.sync {
+            latest = nil
+        }
         return "Codex Vision camera session stopped."
+    }
+
+    private func startSessionIfNeeded() throws -> Bool {
+        try authorizeCamera()
+
+        return try sessionQueue.sync {
+            if session.isRunning {
+                return false
+            }
+
+            if !configured {
+                try configureSession()
+                configured = true
+            }
+
+            session.startRunning()
+            return true
+        }
+    }
+
+    private func cachedFrame() -> CameraFrame? {
+        frameQueue.sync {
+            latest
+        }
+    }
+
+    private func waitForFrame(timeout: TimeInterval) throws -> CameraFrame {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if let frame = cachedFrame() {
+                return frame
+            }
+            Thread.sleep(forTimeInterval: CameraFrameReadiness.pollInterval)
+        }
+
+        throw CameraError.frameUnavailable
     }
 
     private func authorizeCamera() throws {
@@ -167,6 +235,9 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             return
         }
 
+        guard let meanBrightness = meanBrightness(of: pixelBuffer) else {
+            return
+        }
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
         guard let jpeg = ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: [:]) else {
@@ -179,7 +250,49 @@ public final class AVCameraController: NSObject, CameraControlling, AVCaptureVid
             jpegData: jpeg,
             timestamp: ISO8601DateFormatter().string(from: Date()),
             width: width,
-            height: height
+            height: height,
+            meanBrightness: meanBrightness
         )
+    }
+
+    private func meanBrightness(of pixelBuffer: CVPixelBuffer) -> Double? {
+        guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA else {
+            return nil
+        }
+
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+        }
+
+        guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
+            return nil
+        }
+
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let rowBytes = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let xStep = max(width / 32, 1)
+        let yStep = max(height / 18, 1)
+        let bytes = baseAddress.assumingMemoryBound(to: UInt8.self)
+        var total = 0.0
+        var count = 0
+
+        for y in stride(from: 0, to: height, by: yStep) {
+            let row = bytes.advanced(by: y * rowBytes)
+            for x in stride(from: 0, to: width, by: xStep) {
+                let pixel = row.advanced(by: x * 4)
+                let blue = Double(pixel[0])
+                let green = Double(pixel[1])
+                let red = Double(pixel[2])
+                total += (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255.0
+                count += 1
+            }
+        }
+
+        guard count > 0 else {
+            return nil
+        }
+        return total / Double(count)
     }
 }

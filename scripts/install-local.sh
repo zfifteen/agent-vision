@@ -36,14 +36,24 @@ if [[ "$DRY_RUN" == "1" ]]; then
   exit 0
 fi
 
-swift build -c release --package-path "$ROOT"
+command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
+SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
+if [[ -z "$SIGN_IDENTITY" ]]; then
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  exit 1
+fi
+
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
+swift build -c release --package-path "$ROOT"
 APP="$ROOT/dist/CodexVision.app"
 PLUGIN_HOME="$HOME/plugins/codex-vision"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/codex-vision/1.0.0"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
+CODEX_CONFIG="$HOME/.codex/config.toml"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+rm -f "$ROOT/dist/prompt-input-check.json"
 cp "$BUILD_DIR/CodexVision" "$APP/Contents/MacOS/CodexVision"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -69,15 +79,28 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
-/usr/bin/codesign --force --sign - "$APP" >/dev/null
+plutil -lint "$APP/Contents/Info.plist" >/dev/null
+/usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$APP" >/dev/null
+cp "$ROOT/scripts/codex-vision-mcp.sh" "$ROOT/dist/codex-vision-mcp"
+chmod +x "$ROOT/dist/codex-vision-mcp"
 
 rm -rf "$PLUGIN_HOME"
 mkdir -p "$PLUGIN_HOME"
 cp -R "$ROOT/.codex-plugin" "$PLUGIN_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$PLUGIN_HOME/.mcp.json"
 cp -R "$ROOT/assets" "$PLUGIN_HOME/assets"
+cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
+
+rm -rf "$CACHE_HOME"
+mkdir -p "$CACHE_HOME"
+cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
+cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
+cp -R "$ROOT/assets" "$CACHE_HOME/assets"
+cp -R "$ROOT/commands" "$CACHE_HOME/commands"
+cp -R "$ROOT/skills" "$CACHE_HOME/skills"
+cp -R "$ROOT/dist" "$CACHE_HOME/dist"
 
 mkdir -p "$(dirname "$MARKETPLACE")"
 python3 - "$MARKETPLACE" <<'PY'
@@ -102,7 +125,7 @@ entry = {
         "path": "./plugins/codex-vision"
     },
     "policy": {
-        "installation": "AVAILABLE",
+        "installation": "INSTALLED_BY_DEFAULT",
         "authentication": "ON_INSTALL"
     },
     "category": "Productivity"
@@ -114,5 +137,51 @@ data["plugins"] = plugins
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 
+codex plugin marketplace add "$HOME" >/dev/null
+
+mkdir -p "$(dirname "$CODEX_CONFIG")"
+python3 - "$CODEX_CONFIG" "$HOME" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8") if path.exists() else ""
+
+def remove_section(source: str, header: str) -> str:
+    pattern = re.compile(rf"(?ms)^\[{re.escape(header)}\]\n.*?(?=^\[|\Z)")
+    return pattern.sub("", source).strip() + ("\n" if source.strip() else "")
+
+text = remove_section(text, 'plugins."codex-vision@local"')
+text = remove_section(text, 'plugins."codex-vision@openai-curated"')
+
+addition = f"""
+[plugins."codex-vision@local"]
+enabled = true
+"""
+
+path.write_text(text.rstrip() + "\n" + addition.lstrip(), encoding="utf-8")
+PY
+
+rm -rf \
+  "$HOME/.codex/.tmp/plugins/plugins/codex-vision" \
+  "$HOME/.codex/plugins/cache/openai-curated/codex-vision"
+
+PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/codex-vision-prompt-input.XXXXXX.json")"
+trap 'rm -f "$PROMPT_CHECK"' EXIT
+codex debug prompt-input "codex vision install check" > "$PROMPT_CHECK"
+python3 - "$PROMPT_CHECK" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+text = json.dumps(json.loads(open(path, encoding="utf-8").read()))
+count = text.count("`Codex Vision`: macOS-only Codex plugin for explicit live camera frames through MCP.")
+if count != 1:
+    raise SystemExit(f"Codex Vision plugin admission check failed: expected exactly one generated plugin entry, found {count}.")
+PY
+
 echo "Codex Vision installed at $PLUGIN_HOME"
-echo "Restart Codex, enable the Codex Vision plugin if prompted, then ask Codex to use codex_vision_start and codex_vision_frame."
+echo "Codex Vision cached at $CACHE_HOME"
+echo "Codex Vision registered in $CODEX_CONFIG"
+echo "Use /codex-vision snapshot, /codex-vision streaming, or /codex-vision roast."

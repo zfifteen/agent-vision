@@ -10,11 +10,17 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
+SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
+if [[ -z "$SIGN_IDENTITY" ]]; then
+  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for CodexVision.app." >&2
+  exit 1
+fi
+
 rm -rf "$OUT" "$OUT.tar.gz"
 mkdir -p "$OUT"
 "$ROOT/scripts/install-local.sh" --dry-run
-swift build -c release --package-path "$ROOT"
 BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
+swift build -c release --package-path "$ROOT"
 
 mkdir -p "$OUT/dist/CodexVision.app/Contents/MacOS" "$OUT/dist/CodexVision.app/Contents/Resources"
 cp "$BUILD_DIR/CodexVision" "$OUT/dist/CodexVision.app/Contents/MacOS/CodexVision"
@@ -42,14 +48,19 @@ cat > "$OUT/dist/CodexVision.app/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
-/usr/bin/codesign --force --sign - "$OUT/dist/CodexVision.app" >/dev/null
+plutil -lint "$OUT/dist/CodexVision.app/Contents/Info.plist" >/dev/null
+/usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/CodexVision.app" >/dev/null
+cp "$ROOT/scripts/codex-vision-mcp.sh" "$OUT/dist/codex-vision-mcp"
+chmod +x "$OUT/dist/codex-vision-mcp"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"
+cp -R "$ROOT/commands" "$OUT/commands"
 cp -R "$ROOT/skills" "$OUT/skills"
 cp "$ROOT/README.md" "$OUT/README.md"
 cp "$ROOT/INSTALL.md" "$OUT/INSTALL.md"
 cp "$ROOT/CODEX_INSTALL.md" "$OUT/CODEX_INSTALL.md"
+cp "$ROOT/PRIVACY.md" "$OUT/PRIVACY.md"
 cp "$ROOT/LICENSE" "$OUT/LICENSE"
 
 tar -C "$ROOT/release" -czf "$OUT.tar.gz" "codex-vision-$VERSION"
