@@ -42,6 +42,18 @@ if "\ndescription: Control Agent Vision camera mode.\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command description")
 if "\nargument-hint: snapshot|streaming|roast\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
+required_command_snippets = [
+    "- `snapshot`: take one usable image and turn the camera off.",
+    "- `streaming`: start streaming mode.",
+    "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
+    "For `snapshot`, call `agent_vision_snapshot`.",
+    "For `streaming`, call `agent_vision_start`.",
+    "For `roast`, call `agent_vision_snapshot`, inspect the returned image, and write one roast of 400 characters or fewer.",
+    "When the user asks to stop camera use, call `agent_vision_stop`.",
+]
+for snippet in required_command_snippets:
+    if snippet not in text:
+        raise SystemExit(f"commands/agent-vision.md is missing required slash command contract: {snippet}")
 PY
 
 if [[ "$DRY_RUN" == "1" ]]; then
@@ -159,13 +171,15 @@ PY
 codex plugin marketplace add "$HOME" >/dev/null
 
 mkdir -p "$(dirname "$CODEX_CONFIG")"
-python3 - "$CODEX_CONFIG" "$HOME" "$OLD_SLUG" <<'PY'
+python3 - "$CODEX_CONFIG" "$OLD_SLUG" "$CACHE_HOME" <<'PY'
+import json
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
-old_slug = sys.argv[3]
+old_slug = sys.argv[2]
+cache_home = pathlib.Path(sys.argv[3])
 text = path.read_text(encoding="utf-8") if path.exists() else ""
 
 def remove_section(source: str, header: str) -> str:
@@ -176,8 +190,18 @@ text = remove_section(text, 'plugins."agent-vision@local"')
 text = remove_section(text, 'plugins."agent-vision@openai-curated"')
 text = remove_section(text, f'plugins."{old_slug}@local"')
 text = remove_section(text, f'plugins."{old_slug}@openai-curated"')
+text = remove_section(text, "mcp_servers.agent_vision")
+text = remove_section(text, 'mcp_servers."agent-vision"')
+text = remove_section(text, "mcp_servers.codex_vision")
+text = remove_section(text, f'mcp_servers."{old_slug}"')
 
+server = cache_home / "dist" / "agent-vision-mcp"
 addition = f"""
+[mcp_servers.agent_vision]
+command = {json.dumps(str(server))}
+cwd = {json.dumps(str(cache_home))}
+enabled = true
+
 [plugins."agent-vision@local"]
 enabled = true
 """

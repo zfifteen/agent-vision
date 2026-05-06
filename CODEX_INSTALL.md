@@ -24,6 +24,8 @@ scripts/install-local.sh
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
+The installer also registers `mcp_servers.agent_vision` in `~/.codex/config.toml`. Open a new Codex chat or session after install so the normal tool registry can load `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`.
+
 4. Use the MCP tools:
 
 ```text

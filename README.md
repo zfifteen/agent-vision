@@ -82,7 +82,7 @@ cd agent-vision
 scripts/install-local.sh
 ```
 
-The installer registers the plugin and runs a Codex admission check before it exits. A Codex restart should not be required after a successful install. If the slash command is not visible in an already-open chat, open a new Codex session.
+The installer registers the plugin, registers `mcp_servers.agent_vision`, verifies the MCP tool list, and runs a Codex admission check before it exits. Open a new Codex chat or session after install so the slash-command index and normal tool registry load the Agent Vision commands and MCP tools.
 
 For CI or package validation environments that do not have Codex configured or a signing identity installed, use dry-run mode:
 
@@ -97,7 +97,7 @@ Dry-run validates manifests and runs a release build. It does not register the p
 If you are asking Codex to install the plugin for you, use a prompt like this:
 
 ```text
-Clone https://github.com/zfifteen/agent-vision into ~/IdeaProjects/agent-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, and verify the plugin manifests parse as JSON.
+Clone https://github.com/zfifteen/agent-vision into ~/IdeaProjects/agent-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, verify the plugin manifests parse as JSON, and open a new Codex session before using /agent-vision.
 ```
 
 ## Slash Commands
@@ -216,7 +216,7 @@ The plugin package contains:
 
 The native app owns the camera permission. The MCP wrapper launches the signed app bundle and bridges JSON-RPC over named FIFOs. This preserves the macOS app identity that Camera permission is attached to.
 
-The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.0`, registers the home-local marketplace in `~/.codex/config.toml`, and runs a Codex admission check before exiting.
+The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.0`, registers the home-local marketplace and `mcp_servers.agent_vision` in `~/.codex/config.toml`, verifies the MCP tool list, and runs a Codex admission check before exiting.
 
 ## Camera Modes
 
