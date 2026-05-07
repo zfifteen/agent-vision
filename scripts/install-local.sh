@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OLD_SLUG="codex""-vision"
+OLD_VERSION="1.0.0"
+VERSION="1.0.1"
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
@@ -43,14 +45,17 @@ if "\ndescription: Snapshot, stream, or roast with the Agent Vision camera.\n" n
 if "\nargument-hint: snapshot|streaming|roast\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
 required_command_snippets = [
+    "Agent Vision camera requests are not repository tasks.",
+    "This slash command is camera control only.",
+    "Do not inspect or roast the repository",
+    "the first shell command must create the frame directory and run `agent-vision-capture-file`",
     "- `snapshot`: take one usable image and turn the camera off.",
     "- `streaming`: start streaming mode.",
     "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
-    "For `snapshot`, call `agent_vision_snapshot`.",
+    "For `snapshot`, create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it",
     "For `streaming`, call `agent_vision_start`.",
-    "For `roast`, call `agent_vision_snapshot`, inspect the returned image, and write one roast of 400 characters or fewer.",
-    "If `agent_vision_snapshot` or `agent_vision_frame` returns metadata but no image content that Codex can directly inspect, stop and report the tool contract failure.",
-    "Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.",
+    "For `roast`, materialize a JPEG file with the same command, then run `codex exec --ephemeral -i",
+    "If snapshot file mode fails, report the exact command error.",
     "When the user asks to stop camera use, call `agent_vision_stop`.",
 ]
 for snippet in required_command_snippets:
@@ -61,10 +66,18 @@ skill = root / "skills" / "camera-control" / "SKILL.md"
 skill_text = skill.read_text(encoding="utf-8")
 required_skill_snippets = [
     "description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast",
-    "`/agent-vision snapshot`: call `agent_vision_snapshot`.",
+    "## Execution Discipline",
+    "Agent Vision camera requests are not repository tasks.",
+    "If this rule is violated, report that as command-dispatch behavior.",
+    "This skill controls the local camera.",
+    "Do not inspect or roast the repository",
+    "the first shell command must create the frame directory and run `agent-vision-capture-file`",
+    "This is the normal image-access path.",
+    "`/agent-vision snapshot`: materialize one JPEG file",
     "`/agent-vision streaming`: call `agent_vision_start`.",
-    "`/agent-vision roast`: call `agent_vision_snapshot`, then write one playful roast",
-    "Do not use the local MCP wrapper, a temp file, a screenshot, another camera path, or any decoded artifact as a substitute for the normal tool result.",
+    "`/agent-vision roast`: materialize one JPEG file",
+    "Do not write the roast in the current agent from Markdown, metadata, or memory.",
+    "If the separate image-input pass fails, report that exact failure instead of roasting from metadata.",
 ]
 for snippet in required_skill_snippets:
     if snippet not in skill_text:
@@ -88,7 +101,8 @@ BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
 swift build -c release --package-path "$ROOT"
 APP="$ROOT/dist/AgentVision.app"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
-CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
+OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
@@ -110,7 +124,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.0</string>
+  <string>1.0.1</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
@@ -124,6 +138,8 @@ plutil -lint "$APP/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$APP" >/dev/null
 cp "$ROOT/scripts/agent-vision-mcp.sh" "$ROOT/dist/agent-vision-mcp"
 chmod +x "$ROOT/dist/agent-vision-mcp"
+cp "$ROOT/scripts/agent-vision-capture-file.sh" "$ROOT/dist/agent-vision-capture-file"
+chmod +x "$ROOT/dist/agent-vision-capture-file"
 
 rm -rf "$PLUGIN_HOME"
 mkdir -p "$PLUGIN_HOME"
@@ -134,7 +150,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME"
+rm -rf "$CACHE_HOME" "$OLD_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -219,6 +235,7 @@ PY
 rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$OLD_CACHE_HOME" \
   "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \
   "$HOME/.codex/.tmp/plugins/plugins/agent-vision" \
   "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \
@@ -253,7 +270,7 @@ try:
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "agent-vision-install-check", "version": "1.0.0"},
+                "clientInfo": {"name": "agent-vision-install-check", "version": "1.0.1"},
             },
         },
         {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}},
@@ -262,6 +279,7 @@ try:
     for request in requests:
         process.stdin.write(json.dumps(request, separators=(",", ":")) + "\n")
         process.stdin.flush()
+    process.stdin.close()
 
     responses = {}
     deadline = time.time() + 10
@@ -295,12 +313,15 @@ try:
     if missing:
         raise SystemExit(f"Agent Vision MCP tools/list missing tools: {', '.join(missing)}")
 finally:
-    process.terminate()
     try:
         process.wait(timeout=2)
     except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=2)
+        process.terminate()
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=2)
 PY
 
 PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/agent-vision-prompt-input.XXXXXX.json")"
@@ -312,7 +333,7 @@ import sys
 
 path = sys.argv[1]
 text = json.dumps(json.loads(open(path, encoding="utf-8").read()))
-count = text.count("`Agent Vision`: macOS-only plugin for explicit live camera frames through MCP.")
+count = text.count("`Agent Vision`: macOS-only plugin for explicit local camera frames.")
 if count != 1:
     raise SystemExit(f"Agent Vision plugin admission check failed: expected exactly one generated plugin entry, found {count}.")
 PY

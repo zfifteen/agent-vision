@@ -1,7 +1,7 @@
 {
   "name": "agent-vision",
-  "version": "1.0.0",
-  "description": "macOS-only plugin for explicit live camera frames through MCP.",
+  "version": "1.0.1",
+  "description": "macOS-only plugin for explicit local camera frames.",
   "author": {
     "name": "Velocity Works",
     "email": "velocityworks@users.noreply.github.com",
@@ -28,8 +28,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Agent Vision",
-    "shortDescription": "Give Codex explicit live camera frames on macOS.",
-    "longDescription": "Agent Vision is a macOS-only plugin that exposes the built-in camera through a native AVFoundation capture app and MCP tools. Codex can start a local capture session, request the latest JPEG frame, and stop the session without browser camera hacks or cloud camera services.",
+    "shortDescription": "Give Codex explicit local camera frames on macOS.",
+    "longDescription": "Agent Vision is a macOS-only plugin that exposes the built-in camera through a native AVFoundation capture app, MCP tools, and a local JPEG materialization path. Codex can start a local capture session, save a requested JPEG frame, and stop the session without browser camera hacks or cloud camera services.",
     "developerName": "Velocity Works",
     "category": "Productivity",
     "capabilities": [
