@@ -9,14 +9,30 @@ mkfifo "$IN_FIFO" "$OUT_FIFO"
 APP_PID=""
 OUT_PID=""
 
+terminate_pid() {
+  local pid="$1"
+  if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return 0
+  fi
+
+  kill "$pid" 2>/dev/null || true
+  for _ in {1..20}; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      return 0
+    fi
+    sleep 0.1
+  done
+
+  if kill -0 "$pid" 2>/dev/null; then
+    kill -KILL "$pid" 2>/dev/null || true
+  fi
+}
+
 cleanup() {
   trap - EXIT INT TERM HUP
-  if [[ -n "$OUT_PID" ]] && kill -0 "$OUT_PID" 2>/dev/null; then
-    kill "$OUT_PID" 2>/dev/null || true
-  fi
-  if [[ -n "$APP_PID" ]] && kill -0 "$APP_PID" 2>/dev/null; then
-    kill "$APP_PID" 2>/dev/null || true
-  fi
+  terminate_pid "$OUT_PID"
+  terminate_pid "$APP_PID"
+  wait "$OUT_PID" 2>/dev/null || true
   rm -rf "$TMP"
 }
 trap cleanup EXIT
