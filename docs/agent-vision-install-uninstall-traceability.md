@@ -68,17 +68,17 @@ Confirm public documentation status:
 scripts/install-local.sh --dry-run
 scripts/install-local.sh
 test -d "$HOME/plugins/agent-vision"
-test -d "$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
+test -d "$HOME/.codex/plugins/cache/local/agent-vision/1.0.1"
 python3 -m json.tool "$HOME/.agents/plugins/marketplace.json" >/dev/null
 rg -n 'agent-vision|plugins\."agent-vision@local"' "$HOME/.codex/config.toml"
 ! rg -n 'mcp_servers.agent_vision' "$HOME/.codex/config.toml"
-codesign --verify --deep --strict "$HOME/.codex/plugins/cache/local/agent-vision/1.0.0/dist/AgentVision.app"
+codesign --verify --deep --strict "$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/AgentVision.app"
 ```
 
 Verify installed MCP tools with JSON-RPC `tools/list` against:
 
 ```text
-$HOME/.codex/plugins/cache/local/agent-vision/1.0.0/dist/agent-vision-mcp
+$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-mcp
 ```
 
 Expected tools:
@@ -95,7 +95,7 @@ agent_vision_stop
 ```bash
 scripts/uninstall-local.sh
 test ! -e "$HOME/plugins/agent-vision"
-test ! -e "$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
+test ! -e "$HOME/.codex/plugins/cache/local/agent-vision/1.0.1"
 python3 -m json.tool "$HOME/.agents/plugins/marketplace.json" >/dev/null
 ! rg -n 'agent-vision|codex-vision|mcp_servers.agent_vision|plugins\."agent-vision@local"' "$HOME/.codex/config.toml"
 ```

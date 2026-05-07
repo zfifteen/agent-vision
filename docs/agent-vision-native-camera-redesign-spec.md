@@ -1,7 +1,9 @@
 # Agent Vision Native Camera Redesign Specification
 
-Status: Draft for implementation
+Status: Superseded design alternative
 Date: 2026-05-06
+
+This document records the native-helper redesign considered after MCP image content failed as a direct model-vision path. The implemented revision keeps the existing signed app and MCP snapshot stack, then materializes the returned JPEG through `agent-vision-capture-file`. See [agent-vision-file-materialization-spec.md](agent-vision-file-materialization-spec.md) for the active design.
 
 ## 1. Problem
 

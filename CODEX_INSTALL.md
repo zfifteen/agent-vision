@@ -45,11 +45,11 @@ Or use the bundled slash commands:
 /agent-vision roast
 ```
 
-Version 1.0 is pull-based:
+Version 1.0.1 is pull-based:
 
-- `/agent-vision snapshot` waits for one usable JPEG frame, returns it into chat, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
+- `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
 - `/agent-vision streaming` starts a live camera session. The Mac camera indicator should stay on while this session is active.
-- `/agent-vision roast` is snapshot plus prose: it waits for one usable JPEG frame, returns it into chat, stops the camera only if roast started it, and writes one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
+- `/agent-vision roast` is snapshot plus prose: it materializes one usable JPEG, passes that exact file to `codex exec -i`, displays the saved image, and returns one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
 - While streaming is active, Codex may call `agent_vision_frame` whenever visual context would help, without asking for each frame.
 - When the user asks to stop streaming or stop camera use, call `agent_vision_stop`.
 
