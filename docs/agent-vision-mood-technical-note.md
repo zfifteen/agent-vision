@@ -50,6 +50,8 @@ Expected user-visible cases:
 - **Ambiguous read:** Codex reports uncertainty and uses clearer structure, steadier pacing, and explicit uncertainty.
 - **User correction:** The user's correction becomes the interaction-state signal for the current response or task phase.
 
+Correction protocol is conversational. If Codex reports `frustrated_or_blocked` and the user replies, "No, I'm focused," Codex treats `focused_neutral` as the active interaction state for the current response or task phase.
+
 Mood is opt-in at the command level. A single mood read is a current-response signal. A future session mode can introduce longer-lived behavior.
 
 ## System Model
@@ -117,6 +119,22 @@ The output labels are practical response-shaping labels:
 
 Each label maps to a distinct response policy.
 
+Static visual cues vary across people, cultures, disability, neurodivergence, lighting, camera angle, and baseline expression. The estimate therefore stays attached to visible cues, carries confidence, and yields to user correction.
+
+## Confidence Gating
+
+Confidence controls whether the interaction-state estimate is allowed to affect Codex's next response.
+
+| Condition | Resulting behavior |
+| --- | --- |
+| `presence = absent` | Return `absent`; do not apply mood-conditioned behavior. |
+| user occluded, multiple people visible, or image quality unusable | Return `uncertain`; do not apply mood-conditioned behavior. |
+| `confidence < 0.40` | Return `uncertain`; do not apply mood-conditioned behavior. |
+| `0.40 <= confidence < 0.70` | Report uncertainty and apply only low-risk clarity adjustments: clearer structure, steadier pacing, and explicit uncertainty. |
+| `confidence >= 0.70` | Apply the state-specific response policy. |
+
+Confidence is a practical gating score, not a psychological certainty score. It represents how strongly the visible evidence supports a response-shaping label for the current turn. The `0.40` and `0.70` thresholds are initial product gates: below `0.40`, the signal is too weak to use; from `0.40` to `0.69`, the signal can support only low-risk clarity adjustments; at `0.70` or above, the signal can support the state-specific policy. Evaluation can tune these thresholds while preserving the same three gating bands.
+
 ## Policy Mapping
 
 The policy map is the core feature. Mood matters when it changes how Codex helps.
@@ -134,16 +152,34 @@ The policy map is the core feature. Mood matters when it changes how Codex helps
 
 These adjustments shape response form. Codex answers the actual prompt, preserves the requested scope, and follows the same tool and permission rules.
 
-Main control surfaces:
+Main control surfaces and operational rules:
 
-- **Verbosity budget:** amount of explanation before or after the result.
-- **Clarification threshold:** question versus narrow assumption and action.
-- **Evidence density:** supporting detail, command output, and citation level.
-- **Pacing:** small steps versus broader synthesis.
-- **Directness:** action, recommendation, or conceptual framing first.
-- **Repair behavior:** acknowledge friction and correct course before continuing.
+- **Verbosity budget:** `tired_or_overloaded` uses a short headline and one recommended path; `curious_or_exploratory` may include conceptual framing after the answer; `skeptical_or_evaluating` may spend more words on evidence.
+- **Clarification threshold:** `frustrated_or_blocked` favors a narrow stated assumption and action when the assumption is reversible; `high_stakes_or_cautious` favors a question before irreversible steps.
+- **Evidence density:** `skeptical_or_evaluating` includes concrete evidence such as commands, observed outputs, file references, citations, or explicit assumptions; `frustrated_or_blocked` includes only evidence needed to trust the next action.
+- **Pacing:** `tired_or_overloaded` uses small chunks and clear stopping points; `curious_or_exploratory` may use a broader synthesis.
+- **Directness:** `frustrated_or_blocked` puts the fix, action, or current blocker in the first paragraph; `focused_neutral` follows normal task order.
+- **Repair behavior:** when prior assistant friction is relevant, `frustrated_or_blocked` starts by owning the miss and correcting course; other states keep repair language proportional.
 
 For the same code failure, `frustrated_or_blocked` leads Codex to inspect, fix, and report concrete verification with little ceremony. `skeptical_or_evaluating` adds evidence connecting the fix to the failure. `curious_or_exploratory` adds the causal model and nearby alternatives after the main result.
+
+## Precedence Rules
+
+Mood is a low-priority calibration layer. Higher-priority controls always govern the response:
+
+1. System, developer, tool, permission, approval, and sandbox constraints.
+2. The user's explicit instruction and stated preference.
+3. Factual correctness, material caveats, and task completeness.
+4. User correction of the visual inference.
+5. Mood-derived response calibration.
+
+If delivery fit conflicts with factual completeness, factual completeness wins. A tired-state response can be shorter, but it must still include material caveats and required safety or correctness information.
+
+## Data Handling
+
+Mood uses the existing Agent Vision snapshot path and must add no new raw-image persistence. The mood feature must not create a mood history, training dataset, background recorder, or separate image archive.
+
+The structured tool result may appear anywhere normal MCP tool output already appears in the local Codex session. Raw image retention must follow the existing Agent Vision snapshot behavior. Mood-specific logs, if added later, must store only the structured result needed for debugging or evaluation and must omit raw frames by default.
 
 ## Evaluation
 
@@ -165,5 +201,7 @@ An online evaluation can track explicit user corrections and follow-up friction 
 ## Operating Bounds
 
 One image is a current-moment signal. Mood reads include confidence, observable basis, and uncertainty. The user's words govern the response. The state applies to the current response by default. The feature estimates interaction state for delivery fit.
+
+Medical, psychological, intoxication, crisis, and safety-state detection are outside the operating envelope. If visible cues appear to require those categories to interpret, Mood returns `uncertain` and Codex proceeds from the user's words and ordinary safety rules.
 
 These bounds keep the feature aligned with its purpose: a local, opt-in calibration signal that helps Codex choose the right response shape for the current moment.
