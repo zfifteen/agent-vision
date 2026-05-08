@@ -74,32 +74,31 @@ It is not for people who want their camera to be completely absent from their AI
 
 ## Install
 
-Agent Vision requires macOS, Swift, Xcode command line tools, the Codex CLI, and an Apple Development signing identity for a real local install.
+Ask Codex to install Agent Vision from the repository URL:
 
-```bash
-git clone https://github.com/zfifteen/agent-vision.git
-cd agent-vision
-scripts/install-local.sh
+```text
+Install Agent Vision from https://github.com/zfifteen/agent-vision
 ```
 
-The installer registers the plugin, removes legacy duplicate `mcp_servers.agent_vision` config, verifies the MCP tool list through the plugin MCP config, and runs a Codex admission check before it exits. Open a new Codex chat or session after install so the slash-command index and plugin tool registry load the Agent Vision commands and MCP tools.
+Codex should download the packaged release from that repository, extract it, run the package `install.sh`, and then open a new Codex session so `/agent-vision` and the Agent Vision MCP tools are loaded.
 
 For QA evidence that the install and uninstall lifecycle maps to the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
 
-For CI or package validation environments that do not have Codex configured or a signing identity installed, use dry-run mode:
+Manual package install:
 
 ```bash
-scripts/install-local.sh --dry-run
+curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
+tar -xzf agent-vision-1.0.1.tar.gz
+cd agent-vision-1.0.1
+./install.sh
 ```
-
-Dry-run validates manifests and runs a release build. It does not register the plugin, sign the app bundle, or touch the local Codex plugin cache.
 
 ## Prompt Codex To Install This
 
 If you are asking Codex to install the plugin for you, use a prompt like this:
 
 ```text
-Clone https://github.com/zfifteen/agent-vision into ~/IdeaProjects/agent-vision, inspect CODEX_INSTALL.md, run scripts/install-local.sh, verify the plugin manifests parse as JSON, and open a new Codex session before using /agent-vision.
+Install Agent Vision from https://github.com/zfifteen/agent-vision. Use the packaged release archive from the repo releases, not the source/developer installer. Extract the archive, run ./install.sh, and open a new Codex session before using /agent-vision.
 ```
 
 ## Slash Commands
@@ -297,6 +296,7 @@ scripts/test-streaming-interaction.sh
 Build a release archive:
 
 ```bash
+AGENT_VISION_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 scripts/package-release.sh
 ```
 
@@ -305,6 +305,8 @@ Uninstall the local plugin:
 ```bash
 scripts/uninstall-local.sh
 ```
+
+The source installer is for development and release production. It builds and signs `AgentVision.app` locally, so it requires Swift, Xcode command line tools, and a local signing identity. The default install path for users is the packaged release installer.
 
 ## Troubleshooting
 

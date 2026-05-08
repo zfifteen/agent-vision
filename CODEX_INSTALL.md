@@ -1,25 +1,36 @@
 # Codex Installation Instructions
 
-These instructions are for a local Codex agent installing Agent Vision from the repository.
+These instructions are for a local Codex agent asked to install Agent Vision from:
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/zfifteen/agent-vision.git /Users/velocityworks/IdeaProjects/agent-vision
+```text
+https://github.com/zfifteen/agent-vision
 ```
 
-2. Inspect the plugin metadata:
+Install the packaged release. Do not clone the repository and run `scripts/install-local.sh` unless the user explicitly asks for a developer/source install.
+
+1. Download the release archive:
 
 ```bash
-cd /Users/velocityworks/IdeaProjects/agent-vision
-python3 -m json.tool .codex-plugin/plugin.json >/dev/null
-python3 -m json.tool .mcp.json >/dev/null
+curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
 ```
 
-3. Run the deterministic local installer:
+2. Extract the release archive:
 
 ```bash
-scripts/install-local.sh
+tar -xzf agent-vision-1.0.1.tar.gz
+cd agent-vision-1.0.1
+```
+
+3. Inspect the packaged app signature:
+
+```bash
+codesign --verify --deep --strict dist/AgentVision.app
+```
+
+4. Run the deterministic packaged installer:
+
+```bash
+./install.sh
 ```
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
@@ -28,7 +39,7 @@ The installer removes legacy duplicate `mcp_servers.agent_vision` config and rel
 
 For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
 
-4. Use the MCP tools:
+5. Use the MCP tools:
 
 ```text
 agent_vision_snapshot
@@ -56,5 +67,5 @@ Version 1.0.1 is pull-based:
 To uninstall the local plugin deterministically:
 
 ```bash
-scripts/uninstall-local.sh
+./uninstall.sh
 ```

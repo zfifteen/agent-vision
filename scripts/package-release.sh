@@ -10,9 +10,9 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
-SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'\"' '/Apple Development/ { print $2; exit }')"
+SIGN_IDENTITY="${AGENT_VISION_SIGN_IDENTITY:-}"
 if [[ -z "$SIGN_IDENTITY" ]]; then
-  echo "An Apple Development code signing identity is required so macOS preserves Camera permission for AgentVision.app." >&2
+  echo "AGENT_VISION_SIGN_IDENTITY is required for release packaging." >&2
   exit 1
 fi
 
@@ -54,11 +54,16 @@ cp "$ROOT/scripts/agent-vision-mcp.sh" "$OUT/dist/agent-vision-mcp"
 chmod +x "$OUT/dist/agent-vision-mcp"
 cp "$ROOT/scripts/agent-vision-capture-file.sh" "$OUT/dist/agent-vision-capture-file"
 chmod +x "$OUT/dist/agent-vision-capture-file"
+cp "$ROOT/scripts/install-packaged.sh" "$OUT/install.sh"
+chmod +x "$OUT/install.sh"
+cp "$ROOT/scripts/uninstall-packaged.sh" "$OUT/uninstall.sh"
+chmod +x "$OUT/uninstall.sh"
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"
 cp -R "$ROOT/commands" "$OUT/commands"
 cp -R "$ROOT/skills" "$OUT/skills"
+cp -R "$ROOT/docs" "$OUT/docs"
 cp "$ROOT/README.md" "$OUT/README.md"
 cp "$ROOT/INSTALL.md" "$OUT/INSTALL.md"
 cp "$ROOT/CODEX_INSTALL.md" "$OUT/CODEX_INSTALL.md"

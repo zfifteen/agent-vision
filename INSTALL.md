@@ -1,6 +1,33 @@
 # Install Agent Vision
 
-Agent Vision requires macOS, Swift, and Xcode command line tools.
+Ask Codex to install Agent Vision from the repository URL:
+
+```text
+Install Agent Vision from https://github.com/zfifteen/agent-vision
+```
+
+Codex should download the packaged release from that repository, extract it, run the package `install.sh`, and then open a new Codex session so `/agent-vision` and the Agent Vision MCP tools are loaded.
+
+Manual package install:
+
+```bash
+curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
+tar -xzf agent-vision-1.0.1.tar.gz
+cd agent-vision-1.0.1
+./install.sh
+```
+
+The installer stages the signed packaged `AgentVision.app`, stages the plugin under `~/plugins/agent-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `agent-vision@local` in `~/.codex/config.toml`.
+
+If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
+
+The installer removes legacy duplicate `mcp_servers.agent_vision` config and relies on the plugin `.mcp.json` entry for `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`. Open a new Codex chat or session after install so the plugin tool registry refreshes.
+
+For QA traceability against the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
+
+## Developer Source Install
+
+Source installs are for developers and release producers only. Do not use this path for a normal user install.
 
 ```bash
 git clone https://github.com/zfifteen/agent-vision.git
@@ -8,13 +35,7 @@ cd agent-vision
 scripts/install-local.sh
 ```
 
-The installer builds `AgentVision.app`, stages the plugin under `~/plugins/agent-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `agent-vision@local` in `~/.codex/config.toml`.
-
-If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
-
-The installer removes legacy duplicate `mcp_servers.agent_vision` config and relies on the plugin `.mcp.json` entry for `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`. Open a new Codex chat or session after install so the plugin tool registry refreshes.
-
-For QA traceability against the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
+The source installer builds and signs `AgentVision.app` locally, so it requires Swift, Xcode command line tools, and a local signing identity.
 
 ## First Use
 
@@ -47,7 +68,7 @@ macOS will ask for camera permission for `AgentVision.app` the first time the ca
 Run the deterministic local uninstaller:
 
 ```bash
-scripts/uninstall-local.sh
+./uninstall.sh
 ```
 
 The uninstaller removes `~/plugins/agent-vision`, the local Codex plugin cache, the local marketplace entry, the `agent-vision@local` plugin config entry, legacy `mcp_servers.agent_vision` config, and legacy `codex-vision` rebrand artifacts.
