@@ -12,9 +12,10 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 
 ## What It Does
 
-Version 1.0.1 gives Codex four explicit MCP tools:
+Version 1.0.1 gives Codex five explicit MCP tools:
 
 - `agent_vision_snapshot`
+- `agent_vision_mood`
 - `agent_vision_start`
 - `agent_vision_frame`
 - `agent_vision_stop`
@@ -25,6 +26,7 @@ The user-facing slash command is intentionally small:
 /agent-vision snapshot
 /agent-vision streaming
 /agent-vision roast
+/agent-vision mood
 ```
 
 Snapshot mode starts the camera if needed, waits for a usable JPEG frame, materializes that frame under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
@@ -32,6 +34,8 @@ Snapshot mode starts the camera if needed, waits for a usable JPEG frame, materi
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
 Roast mode is snapshot plus prose: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, and returns one opt-in playful roast of 400 characters or fewer. There is no separate roast MCP tool in version 1.0.1.
+
+Mood mode is snapshot plus delivery calibration: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, parses strict JSON with `presence`, `interaction_state`, `confidence`, `observable_basis`, and `assistant_adjustments`, and applies that result internally. The normal user experience shows neither the captured image nor the raw JSON. The result shapes only the current response or task phase: pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior. It does not change facts, permissions, approval behavior, user intent, or task scope.
 
 To stop streaming, tell Codex to stop camera use:
 
@@ -52,6 +56,7 @@ Agent Vision does not implement:
 - Browser `getUserMedia`.
 - Remote camera access.
 - Automatic frame ingestion when streaming mode is off.
+- Mood history, training datasets, background mood detection, or a separate image archive.
 
 The camera stays local. Snapshot and roast mode use a saved JPEG file as the user-visible image contract; MCP image bytes are not treated as directly inspectable model vision input.
 
@@ -193,6 +198,14 @@ Roast me in 400 characters or fewer.
 
 The plugin cannot touch objects, move the camera, choose a different camera, or infer anything outside the returned image. If the camera cannot see it, Agent Vision cannot see it either. This is still software, not a dramatic scene from a hacking movie.
 
+Estimate current interaction state for response delivery:
+
+```text
+/agent-vision mood
+```
+
+Mood mode is opt-in. It uses the same saved JPEG frame path as snapshot and roast, then asks a separate image-input Codex pass for strict JSON. The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
+
 ## Architecture
 
 ```mermaid
@@ -242,6 +255,15 @@ Roast mode:
 3. Codex runs `codex exec --ephemeral -i "$OUTPUT" -- "...roast prompt..."`.
 4. Codex returns the saved JPEG link and the roast text from that image-input pass.
 
+Mood mode:
+
+1. Codex runs `agent-vision-capture-file --output "$OUTPUT" --json`.
+2. The file materializer writes one usable JPEG to `$OUTPUT`.
+3. Codex runs `codex exec --ephemeral -i "$OUTPUT" -- "...mood JSON prompt..."`.
+4. Codex parses the strict JSON from that image-input pass.
+5. Codex applies permitted response-shape adjustments only to the current response or task phase.
+6. Codex does not display the captured image, raw JSON, confidence band, or visual-analysis rationale unless the user explicitly asks to debug mood mode.
+
 Streaming mode:
 
 1. Codex calls `agent_vision_start`.
@@ -249,15 +271,15 @@ Streaming mode:
 3. Codex calls `agent_vision_frame` whenever visual context would help.
 4. Codex calls `agent_vision_stop` when the user asks to stop camera use.
 
-The user-visible invariant is simple: snapshot should blink the camera on briefly; streaming should keep the camera indicator on until stopped.
+The user-visible invariant is simple: snapshot, roast, and mood should blink the camera on briefly; streaming should keep the camera indicator on until stopped.
 
 ## Privacy
 
-Agent Vision is explicit and pull-based. Snapshot mode starts the camera only for one frame. Streaming mode starts only when Codex calls `agent_vision_start`; frames are returned only when Codex calls `agent_vision_frame`; the session stops when Codex calls `agent_vision_stop`.
+Agent Vision is explicit and pull-based. Snapshot, roast, and mood mode start the camera only for one frame. Streaming mode starts only when Codex calls `agent_vision_start`; frames are returned only when Codex calls `agent_vision_frame`; the session stops when Codex calls `agent_vision_stop`.
 
 macOS asks for camera permission for the signed `AgentVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
 
-Version 1.0.1 does not implement background recording, cloud upload, device selection, audio capture, or unsolicited streaming into Codex context.
+Version 1.0.1 does not implement background recording, cloud upload, device selection, audio capture, unsolicited streaming into Codex context, mood history, training datasets, or a separate mood image archive.
 
 See [PRIVACY.md](PRIVACY.md) for the standalone policy.
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-File materialization is the normal Agent Vision image-access path for `/agent-vision snapshot` and `/agent-vision roast`.
+File materialization is the normal Agent Vision image-access path for `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`.
 
 The tested Codex path does not make MCP image content directly available to the assistant as inspectable vision input. The MCP result can contain base64 JPEG image content, but the user-visible slash command contract must not depend on the assistant inspecting that MCP payload in memory.
 
@@ -62,6 +62,19 @@ Requirements:
 
 3. Return the saved image link and the roast text from that image-input pass.
 
+`/agent-vision mood`:
+
+1. Materialize a JPEG with the same file helper.
+2. Run:
+
+   ```bash
+   codex exec --ephemeral -i "$OUTPUT" -- "Analyze the attached Agent Vision camera image for current interaction-state calibration only. Return strict JSON and no prose. Use exactly these keys: presence, interaction_state, confidence, observable_basis, assistant_adjustments. presence must be one of present, absent, uncertain. interaction_state must be one of focused_neutral, frustrated_or_blocked, tired_or_overloaded, curious_or_exploratory, skeptical_or_evaluating, high_stakes_or_cautious, absent, uncertain. confidence must be a number from 0 to 1. observable_basis and assistant_adjustments must be arrays of strings. Apply these gates: if the user is absent, occluded, multiple people are visible, image quality is unusable, or confidence is below 0.40, return interaction_state uncertain or absent and use no mood-conditioned behavior; if confidence is from 0.40 through 0.69, include only low-risk clarity adjustments; if confidence is 0.70 or higher, include state-specific response delivery adjustments. Do not infer medical, psychological, intoxication, crisis, protected-trait, identity, or safety-state categories. Mood changes only pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior; it must not change facts, permissions, approval behavior, user intent, or task scope."
+   ```
+
+3. Parse the strict JSON from that image-input pass.
+4. Use the JSON only as ephemeral delivery calibration for the current response or current task phase.
+5. Do not display the saved image, raw JSON, confidence band, or visual-analysis rationale in the normal response.
+
 `/agent-vision streaming` remains an MCP streaming-mode command and calls `agent_vision_start`.
 
 ## Process Lifecycle
@@ -90,6 +103,8 @@ The slash-command matrix must fail if:
 - Streaming does not call `agent_vision_start`.
 - Roast does not run the file materializer.
 - Roast does not run a separate `codex exec -i` image-input pass.
+- Mood does not run the file materializer.
+- Mood does not run a separate `codex exec -i` image-input pass that requires strict JSON fields.
 - Any Agent Vision process remains after the matrix completes.
 - File-backed snapshot cannot materialize a JPEG while streaming mode is active.
 - Streaming mode cannot still return `agent_vision_frame` image content after a file-backed snapshot.

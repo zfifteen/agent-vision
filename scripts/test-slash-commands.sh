@@ -137,6 +137,26 @@ def assert_markdown_image():
     if "![" not in final_text or ".jpg" not in final_text:
         raise SystemExit(f"{name}: final response did not include a Markdown JPEG image link")
 
+def assert_mood_is_internal():
+    final_text = "\n".join(final_messages)
+    lower = final_text.lower()
+    forbidden_fragments = [
+        "![",
+        ".jpg",
+        "presence",
+        "interaction_state",
+        "confidence",
+        "observable_basis",
+        "assistant_adjustments",
+        "strict json",
+        "confidence band",
+        "contract held",
+        "mood analysis",
+    ]
+    for fragment in forbidden_fragments:
+        if fragment in lower:
+            raise SystemExit(f"{name}: final response leaked mood internals: {fragment}")
+
 def assert_streaming_tool():
     matches = [item for item in tool_results if item.get("tool") == "agent_vision_start"]
     if not matches:
@@ -164,6 +184,18 @@ try:
             observed = "\n".join(item.get("command") or "<missing>" for item in command_results) or "<none>"
             raise SystemExit(f"{name}: expected separate codex exec -i image-input pass, observed {observed}")
         assert_markdown_image()
+    elif expected_contract == "mood":
+        assert_capture_file()
+        image_passes = [
+            item for item in command_results
+            if "codex exec" in (item.get("command") or "")
+            and " -i " in (item.get("command") or "")
+            and "presence, interaction_state, confidence, observable_basis, assistant_adjustments" in (item.get("command") or "")
+        ]
+        if not image_passes:
+            observed = "\n".join(item.get("command") or "<missing>" for item in command_results) or "<none>"
+            raise SystemExit(f"{name}: expected separate codex exec -i mood JSON image-input pass, observed {observed}")
+        assert_mood_is_internal()
     else:
         raise SystemExit(f"{name}: unknown expected contract {expected_contract}")
 finally:
@@ -188,11 +220,27 @@ check_no_agent_vision_processes() {
   fi
 }
 
+cleanup_agent_vision_processes() {
+  local pids
+  pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp/ && !/awk/ {print $1}')"
+  if [[ -z "$pids" ]]; then
+    return 0
+  fi
+  kill $pids 2>/dev/null || true
+  sleep 1
+  pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp/ && !/awk/ {print $1}')"
+  if [[ -n "$pids" ]]; then
+    kill -9 $pids 2>/dev/null || true
+  fi
+}
+
 failures=0
 
 run_case "snapshot" "/agent-vision snapshot" "capture-file" || failures=$((failures + 1))
 run_case "streaming" "/agent-vision streaming" "streaming" || failures=$((failures + 1))
+cleanup_agent_vision_processes
 run_case "roast" "/agent-vision roast" "roast" || failures=$((failures + 1))
+run_case "mood" "/agent-vision mood" "mood" || failures=$((failures + 1))
 check_no_agent_vision_processes || failures=$((failures + 1))
 
 if [[ "$failures" -ne 0 ]]; then

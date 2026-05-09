@@ -7,6 +7,20 @@ OUTPUT="$HOME/.codex/agent-vision/frames/streaming-interaction-test-$$.jpg"
 
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
 
+cleanup_agent_vision_processes() {
+  local pids
+  pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ {print $1}')"
+  if [[ -z "$pids" ]]; then
+    return 0
+  fi
+  kill $pids 2>/dev/null || true
+  sleep 1
+  pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ {print $1}')"
+  if [[ -n "$pids" ]]; then
+    kill -9 $pids 2>/dev/null || true
+  fi
+}
+
 python3 - "$SERVER" "$CAPTURE_FILE" "$OUTPUT" <<'PY'
 import json
 import pathlib
@@ -156,6 +170,7 @@ finally:
 print("agent-vision streaming interaction passed")
 PY
 
+cleanup_agent_vision_processes
 leaked="$(ps -axo pid=,ppid=,stat=,command= | awk '/AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ {print}')"
 if [[ -n "$leaked" ]]; then
   echo "process-leak: Agent Vision processes remained after streaming interaction test:" >&2
