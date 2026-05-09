@@ -11,9 +11,9 @@ Codex should download the packaged release from that repository, extract it, run
 Manual package install:
 
 ```bash
-curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
-tar -xzf agent-vision-1.0.1.tar.gz
-cd agent-vision-1.0.1
+curl -L -o agent-vision-1.0.2.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.2/agent-vision-1.0.2.tar.gz
+tar -xzf agent-vision-1.0.2.tar.gz
+cd agent-vision-1.0.2
 ./install.sh
 ```
 

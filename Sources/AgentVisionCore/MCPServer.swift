@@ -132,7 +132,7 @@ public final class MCPServer {
             ],
             "serverInfo": [
                 "name": "agent-vision",
-                "version": "1.0.1"
+                "version": "1.0.2"
             ]
         ]
     }

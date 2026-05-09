@@ -29,7 +29,7 @@ The plugin already has a signed native app that owns camera permission and retur
 Invocation:
 
 ```bash
-"$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+"$HOME/.codex/plugins/cache/local/agent-vision/1.0.2/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 Requirements:

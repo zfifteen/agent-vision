@@ -8,11 +8,13 @@ else
   ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 OLD_SLUG="codex""-vision"
-OLD_VERSION="1.0.0"
-VERSION="1.0.1"
+OLD_VERSION="1.0.1"
+LEGACY_VERSION="1.0.0"
+VERSION="1.0.2"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
+LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$LEGACY_VERSION"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
@@ -73,7 +75,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME" "$OLD_CACHE_HOME"
+rm -rf "$CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -151,6 +153,7 @@ rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
   "$OLD_CACHE_HOME" \
+  "$LEGACY_CACHE_HOME" \
   "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \
   "$HOME/.codex/.tmp/plugins/plugins/agent-vision" \
   "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \

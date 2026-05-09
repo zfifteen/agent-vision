@@ -14,7 +14,7 @@ Agent Vision camera requests are not repository tasks. Do not orient on the work
 For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, the first shell command must be the camera capture command:
 
 ```bash
-mkdir -p "$HOME/.codex/agent-vision/frames" && OUTPUT="$HOME/.codex/agent-vision/frames/agent-vision-$(date +%Y%m%d-%H%M%S).jpg" && "$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+mkdir -p "$HOME/.codex/agent-vision/frames" && OUTPUT="$HOME/.codex/agent-vision/frames/agent-vision-$(date +%Y%m%d-%H%M%S).jpg" && "$HOME/.codex/plugins/cache/local/agent-vision/1.0.2/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 If this rule is violated, report that as command-dispatch behavior. Do not reinterpret repository inspection as part of the camera workflow.
@@ -28,7 +28,7 @@ For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, t
 For one-shot camera context, materialize the camera image to a JPEG file. Create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it, then run:
 
 ```bash
-"$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+"$HOME/.codex/plugins/cache/local/agent-vision/1.0.2/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 This is the normal image-access path. It calls the installed Agent Vision capture stack, decodes the returned image content, writes exactly one JPEG file, and prints JSON with the saved path and metadata.
@@ -39,7 +39,7 @@ For roast mode, materialize a JPEG file with the same command, then run a separa
 codex exec --ephemeral -i "$OUTPUT" -- "Write exactly one playful roast of 400 characters or fewer based only on visible non-sensitive details in the attached image. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes."
 ```
 
-Return the saved image link and the roast text from that image-input pass. Do not write the roast in the current agent from Markdown, metadata, or memory. If the separate image-input pass fails, report that exact failure instead of roasting from metadata.
+Return the saved image link and the roast text from that image-input pass. The final response must include a Markdown image link using the captured absolute JPEG path, followed by the roast text. Do not write the roast in the current agent from Markdown, metadata, or memory. If the separate image-input pass fails, report that exact failure instead of roasting from metadata.
 
 For mood mode, materialize a JPEG file with the same command, then run a separate image-input pass:
 
@@ -60,7 +60,7 @@ For streaming mode:
 
 - `/agent-vision snapshot`: materialize one JPEG file, then display it with a Markdown image link using the absolute path.
 - `/agent-vision streaming`: call `agent_vision_start`.
-- `/agent-vision roast`: materialize one JPEG file, run `codex exec --ephemeral -i "$OUTPUT" -- "...roast prompt..."`, then return the saved image link and the roast text.
+- `/agent-vision roast`: materialize one JPEG file, run `codex exec --ephemeral -i "$OUTPUT" -- "...roast prompt..."`, then return the saved image link and the roast text. The final response must include a Markdown image link using the captured absolute JPEG path.
 - `/agent-vision mood`: materialize one JPEG file, run `codex exec --ephemeral -i "$OUTPUT" -- "...mood JSON prompt..."`, then silently apply only permitted response-shape adjustments to the current response or task phase. Do not display the saved image or raw JSON unless the user explicitly asks to debug the mood analysis.
 
 While streaming mode is active, use snapshot file mode whenever current visual context would help. When the user asks to stop camera use, call `agent_vision_stop`.
@@ -70,7 +70,7 @@ Treat requests such as "streaming off", "stop streaming", or "turn off the camer
 ## Guardrails
 
 - Agent Vision is macOS-only.
-- The plugin uses the built-in Mac camera only in version 1.0.1.
+- The plugin uses the built-in Mac camera only in version 1.0.2.
 - Snapshot, roast, and mood mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts before returning an error.
 - If streaming mode is already active, snapshot, roast, and mood mode must not stop the streaming session.
 - If snapshot file mode fails during streaming mode, report the exact command error.

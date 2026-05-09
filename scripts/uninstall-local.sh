@@ -3,8 +3,9 @@ set -euo pipefail
 
 OLD_SLUG="codex""-vision"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
-CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.1"
-OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.2"
+OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.1"
+LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 
@@ -14,6 +15,7 @@ rm -rf \
   "$PLUGIN_HOME" \
   "$CACHE_HOME" \
   "$OLD_CACHE_HOME" \
+  "$LEGACY_CACHE_HOME" \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
   "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \

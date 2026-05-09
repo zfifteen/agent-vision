@@ -11,14 +11,14 @@ Install the packaged release. Do not clone the repository and run `scripts/insta
 1. Download the release archive:
 
 ```bash
-curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
+curl -L -o agent-vision-1.0.2.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.2/agent-vision-1.0.2.tar.gz
 ```
 
 2. Extract the release archive:
 
 ```bash
-tar -xzf agent-vision-1.0.1.tar.gz
-cd agent-vision-1.0.1
+tar -xzf agent-vision-1.0.2.tar.gz
+cd agent-vision-1.0.2
 ```
 
 3. Inspect the packaged app signature:
@@ -56,7 +56,7 @@ Or use the bundled slash commands:
 /agent-vision roast
 ```
 
-Version 1.0.1 is pull-based:
+Version 1.0.2 is pull-based:
 
 - `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
 - `/agent-vision streaming` starts a live camera session. The Mac camera indicator should stay on while this session is active.

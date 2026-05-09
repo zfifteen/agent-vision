@@ -12,7 +12,7 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 
 ## What It Does
 
-Version 1.0.1 gives Codex five explicit MCP tools:
+Version 1.0.2 gives Codex five explicit MCP tools:
 
 - `agent_vision_snapshot`
 - `agent_vision_mood`
@@ -33,7 +33,7 @@ Snapshot mode starts the camera if needed, waits for a usable JPEG frame, materi
 
 Streaming mode keeps the camera session active so Codex can pull frames when visual context would help. The Mac camera indicator should stay on while streaming mode is active.
 
-Roast mode is snapshot plus prose: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, and returns one opt-in playful roast of 400 characters or fewer. There is no separate roast MCP tool in version 1.0.1.
+Roast mode is snapshot plus prose: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, and returns one opt-in playful roast of 400 characters or fewer. There is no separate roast MCP tool in version 1.0.2.
 
 Mood mode is snapshot plus delivery calibration: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, parses strict JSON with `presence`, `interaction_state`, `confidence`, `observable_basis`, and `assistant_adjustments`, and applies that result internally. The normal user experience shows neither the captured image nor the raw JSON. The result shapes only the current response or task phase: pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior. It does not change facts, permissions, approval behavior, user intent, or task scope.
 
@@ -92,9 +92,9 @@ For QA evidence that the install and uninstall lifecycle maps to the available O
 Manual package install:
 
 ```bash
-curl -L -o agent-vision-1.0.1.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.1/agent-vision-1.0.1.tar.gz
-tar -xzf agent-vision-1.0.1.tar.gz
-cd agent-vision-1.0.1
+curl -L -o agent-vision-1.0.2.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.2/agent-vision-1.0.2.tar.gz
+tar -xzf agent-vision-1.0.2.tar.gz
+cd agent-vision-1.0.2
 ./install.sh
 ```
 
@@ -235,7 +235,7 @@ The plugin package contains:
 
 The native app owns the camera permission. The MCP wrapper launches the signed app bundle and bridges JSON-RPC over named FIFOs. The file materializer calls the wrapper, decodes exactly one returned JPEG image, writes it to an explicit absolute path, and prints JSON. This preserves the macOS app identity that Camera permission is attached to while giving Codex an inspectable local file.
 
-The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.1`, registers the home-local marketplace and `agent-vision@local` plugin entry in `~/.codex/config.toml`, removes legacy duplicate `mcp_servers.agent_vision` config, verifies the MCP tool list, and runs a Codex admission check before exiting.
+The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.2`, registers the home-local marketplace and `agent-vision@local` plugin entry in `~/.codex/config.toml`, removes legacy duplicate `mcp_servers.agent_vision` config, verifies the MCP tool list, and runs a Codex admission check before exiting.
 
 ## Camera Modes
 
@@ -279,7 +279,7 @@ Agent Vision is explicit and pull-based. Snapshot, roast, and mood mode start th
 
 macOS asks for camera permission for the signed `AgentVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
 
-Version 1.0.1 does not implement background recording, cloud upload, device selection, audio capture, unsolicited streaming into Codex context, mood history, training datasets, or a separate mood image archive.
+Version 1.0.2 does not implement background recording, cloud upload, device selection, audio capture, unsolicited streaming into Codex context, mood history, training datasets, or a separate mood image archive.
 
 See [PRIVACY.md](PRIVACY.md) for the standalone policy.
 
@@ -335,7 +335,7 @@ The source installer is for development and release production. It builds and si
 If the slash command does not appear, verify the local plugin cache exists:
 
 ```bash
-ls ~/.codex/plugins/cache/local/agent-vision/1.0.1
+ls ~/.codex/plugins/cache/local/agent-vision/1.0.2
 ```
 
 If macOS repeatedly asks for camera permission, rerun the installer. Camera permission is tied to the signed `AgentVision.app` identity.

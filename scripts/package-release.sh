@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="1.0.1"
+VERSION="1.0.2"
 OUT="$ROOT/release/agent-vision-$VERSION"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -38,7 +38,7 @@ cat > "$OUT/dist/AgentVision.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.1</string>
+  <string>1.0.2</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVER="$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-mcp"
-CAPTURE_FILE="$HOME/.codex/plugins/cache/local/agent-vision/1.0.1/dist/agent-vision-capture-file"
+SERVER="$HOME/.codex/plugins/cache/local/agent-vision/1.0.2/dist/agent-vision-mcp"
+CAPTURE_FILE="$HOME/.codex/plugins/cache/local/agent-vision/1.0.2/dist/agent-vision-capture-file"
 OUTPUT="$HOME/.codex/agent-vision/frames/streaming-interaction-test-$$.jpg"
 
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
@@ -106,7 +106,7 @@ try:
         "params": {
             "protocolVersion": "2024-11-05",
             "capabilities": {},
-            "clientInfo": {"name": "agent-vision-streaming-interaction-test", "version": "1.0.1"},
+            "clientInfo": {"name": "agent-vision-streaming-interaction-test", "version": "1.0.2"},
         },
     })
     assert_tool_ok(read_until(1), "initialize")
