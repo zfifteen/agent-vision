@@ -7,10 +7,14 @@ OUTPUT="$HOME/.codex/agent-vision/frames/streaming-interaction-test-$$.jpg"
 
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
 
+baseline_pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ {print $1}' | paste -sd, -)"
+
 python3 - "$SERVER" "$CAPTURE_FILE" "$OUTPUT" <<'PY'
 import json
+import os
 import pathlib
 import select
+import signal
 import subprocess
 import sys
 import time
@@ -27,11 +31,14 @@ if output.exists():
     raise SystemExit(f"Test output already exists: {output}")
 
 output.parent.mkdir(parents=True, exist_ok=True)
+process = None
+stopped_cleanly = False
 process = subprocess.Popen(
     [str(server)],
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE,
+    start_new_session=True,
     text=True,
 )
 
@@ -70,6 +77,26 @@ def assert_tool_ok(response, label):
         ).strip()
         raise SystemExit(f"{label} tool error: {text}")
     return result
+
+def close_stdin():
+    try:
+        if process is not None and process.stdin is not None:
+            process.stdin.close()
+    except Exception:
+        pass
+
+def cleanup_process_group():
+    if process is None or process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=2)
 
 try:
     send({
@@ -136,27 +163,32 @@ try:
         "params": {"name": "agent_vision_stop", "arguments": {}},
     })
     assert_tool_ok(read_until(4), "agent_vision_stop")
-finally:
+    close_stdin()
     try:
-        if process.stdin is not None:
-            process.stdin.close()
-    except Exception:
-        pass
-    try:
-        process.wait(timeout=2)
+        process.wait(timeout=3)
     except subprocess.TimeoutExpired:
-        process.terminate()
-        try:
-            process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=2)
+        raise SystemExit("agent-vision-mcp did not exit after agent_vision_stop")
+    stopped_cleanly = True
+finally:
+    close_stdin()
+    if not stopped_cleanly:
+        cleanup_process_group()
     output.unlink(missing_ok=True)
 
 print("agent-vision streaming interaction passed")
 PY
 
-leaked="$(ps -axo pid=,ppid=,stat=,command= | awk '/AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ {print}')"
+leaked="$(ps -axo pid=,ppid=,stat=,command= | awk -v baseline="$baseline_pids" '
+  BEGIN {
+    split(baseline, ids, /,/)
+    for (i in ids) {
+      if (ids[i] != "") {
+        seen[ids[i]] = 1
+      }
+    }
+  }
+  /AgentVision|agent-vision-mcp|agent-vision-capture-file/ && !/awk/ && !seen[$1] {print}
+')"
 if [[ -n "$leaked" ]]; then
   echo "process-leak: Agent Vision processes remained after streaming interaction test:" >&2
   echo "$leaked" >&2

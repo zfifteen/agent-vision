@@ -6,6 +6,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 command -v codex >/dev/null || { echo "codex CLI is required." >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
 
+baseline_agent_vision_pids="$(ps -axo pid=,command= | awk '/AgentVision|agent-vision-mcp/ && !/awk/ {print $1}' | paste -sd, -)"
+
 run_case() {
   local name="$1"
   local prompt="$2"
@@ -137,6 +139,26 @@ def assert_markdown_image():
     if "![" not in final_text or ".jpg" not in final_text:
         raise SystemExit(f"{name}: final response did not include a Markdown JPEG image link")
 
+def assert_mood_is_internal():
+    final_text = "\n".join(final_messages)
+    lower = final_text.lower()
+    forbidden_fragments = [
+        "![",
+        ".jpg",
+        "presence",
+        "interaction_state",
+        "confidence",
+        "observable_basis",
+        "assistant_adjustments",
+        "strict json",
+        "confidence band",
+        "contract held",
+        "mood analysis",
+    ]
+    for fragment in forbidden_fragments:
+        if fragment in lower:
+            raise SystemExit(f"{name}: final response leaked mood internals: {fragment}")
+
 def assert_streaming_tool():
     matches = [item for item in tool_results if item.get("tool") == "agent_vision_start"]
     if not matches:
@@ -146,6 +168,15 @@ def assert_streaming_tool():
         if item.get("error"):
             raise SystemExit(f"{name}: MCP tool agent_vision_start errored: {item['error']}")
 
+def assert_stop_streaming_tool():
+    matches = [item for item in tool_results if item.get("tool") == "agent_vision_stop"]
+    if not matches:
+        actual = ", ".join(item.get("tool", "<missing>") for item in tool_results) or "<none>"
+        raise SystemExit(f"{name}: expected MCP tool agent_vision_stop, observed {actual}")
+    for item in matches:
+        if item.get("error"):
+            raise SystemExit(f"{name}: MCP tool agent_vision_stop errored: {item['error']}")
+
 try:
     assert_no_failure_terms()
     warn_repository_detour()
@@ -154,6 +185,8 @@ try:
         assert_markdown_image()
     elif expected_contract == "streaming":
         assert_streaming_tool()
+    elif expected_contract == "stop-streaming":
+        assert_stop_streaming_tool()
     elif expected_contract == "roast":
         assert_capture_file()
         image_passes = [
@@ -164,6 +197,18 @@ try:
             observed = "\n".join(item.get("command") or "<missing>" for item in command_results) or "<none>"
             raise SystemExit(f"{name}: expected separate codex exec -i image-input pass, observed {observed}")
         assert_markdown_image()
+    elif expected_contract == "mood":
+        assert_capture_file()
+        image_passes = [
+            item for item in command_results
+            if "codex exec" in (item.get("command") or "")
+            and " -i " in (item.get("command") or "")
+            and "presence, interaction_state, confidence, observable_basis, assistant_adjustments" in (item.get("command") or "")
+        ]
+        if not image_passes:
+            observed = "\n".join(item.get("command") or "<missing>" for item in command_results) or "<none>"
+            raise SystemExit(f"{name}: expected separate codex exec -i mood JSON image-input pass, observed {observed}")
+        assert_mood_is_internal()
     else:
         raise SystemExit(f"{name}: unknown expected contract {expected_contract}")
 finally:
@@ -180,7 +225,17 @@ PY
 
 check_no_agent_vision_processes() {
   local leaked
-  leaked="$(ps -axo pid=,ppid=,stat=,command= | awk '/AgentVision|agent-vision-mcp/ && !/awk/ {print}')"
+  leaked="$(ps -axo pid=,ppid=,stat=,command= | awk -v baseline="$baseline_agent_vision_pids" '
+    BEGIN {
+      split(baseline, ids, /,/)
+      for (i in ids) {
+        if (ids[i] != "") {
+          seen[ids[i]] = 1
+        }
+      }
+    }
+    /AgentVision|agent-vision-mcp/ && !/awk/ && !seen[$1] {print}
+  ')"
   if [[ -n "$leaked" ]]; then
     echo "process-leak: Agent Vision processes remained after slash command matrix:" >&2
     echo "$leaked" >&2
@@ -192,7 +247,9 @@ failures=0
 
 run_case "snapshot" "/agent-vision snapshot" "capture-file" || failures=$((failures + 1))
 run_case "streaming" "/agent-vision streaming" "streaming" || failures=$((failures + 1))
+run_case "stop-streaming" "/agent-vision stop streaming" "stop-streaming" || failures=$((failures + 1))
 run_case "roast" "/agent-vision roast" "roast" || failures=$((failures + 1))
+run_case "mood" "/agent-vision mood" "mood" || failures=$((failures + 1))
 check_no_agent_vision_processes || failures=$((failures + 1))
 
 if [[ "$failures" -ne 0 ]]; then

@@ -101,6 +101,14 @@ public final class MCPServer {
             case "agent_vision_snapshot":
                 let frame = try camera.snapshot()
                 return toolFrameResponse(id: id, frame: frame)
+            case "agent_vision_mood":
+                let frame = try camera.snapshot()
+                return toolFrameResponse(
+                    id: id,
+                    frame: frame,
+                    audience: ["assistant"],
+                    text: "Agent Vision mood frame \(frame.width)x\(frame.height) captured at \(frame.timestamp). Analyze this frame through the slash-command file materialization path before applying mood calibration."
+                )
             case "agent_vision_start":
                 return toolTextResponse(id: id, text: try camera.start())
             case "agent_vision_frame":
@@ -135,6 +143,12 @@ public final class MCPServer {
                 "name": "agent_vision_snapshot",
                 "title": "Snapshot",
                 "description": "Take one Agent Vision snapshot: start the built-in macOS camera if needed, return one JPEG frame, then stop only if snapshot started the camera.",
+                "inputSchema": emptyInputSchema()
+            ],
+            [
+                "name": "agent_vision_mood",
+                "title": "Mood Frame",
+                "description": "Capture one consented Agent Vision JPEG frame for opt-in mood analysis. The MCP server returns image content only; Codex must use the file-backed slash-command path for semantic interaction-state inference.",
                 "inputSchema": emptyInputSchema()
             ],
             [
@@ -178,7 +192,12 @@ public final class MCPServer {
         ])
     }
 
-    private func toolFrameResponse(id: Any?, frame: CameraFrame) -> String {
+    private func toolFrameResponse(
+        id: Any?,
+        frame: CameraFrame,
+        audience: [String] = ["assistant", "user"],
+        text: String? = nil
+    ) -> String {
         let metadata: [String: Any] = [
             "timestamp": frame.timestamp,
             "mimeType": "image/jpeg",
@@ -195,13 +214,13 @@ public final class MCPServer {
                     "data": frame.jpegData.base64EncodedString(),
                     "mimeType": "image/jpeg",
                     "annotations": [
-                        "audience": ["assistant", "user"],
+                        "audience": audience,
                         "priority": 1.0
                     ]
                 ],
                 [
                     "type": "text",
-                    "text": "Agent Vision frame \(frame.width)x\(frame.height) captured at \(frame.timestamp)."
+                    "text": text ?? "Agent Vision frame \(frame.width)x\(frame.height) captured at \(frame.timestamp)."
                 ]
             ],
             "structuredContent": metadata,

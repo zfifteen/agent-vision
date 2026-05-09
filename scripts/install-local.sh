@@ -40,9 +40,9 @@ command = root / "commands" / "agent-vision.md"
 text = command.read_text(encoding="utf-8")
 if not text.startswith("---\n"):
     raise SystemExit("commands/agent-vision.md must start with YAML frontmatter so Codex can index the slash command")
-if "\ndescription: Snapshot, stream, or roast with the Agent Vision camera.\n" not in text:
+if "\ndescription: Snapshot, stream, roast, or estimate mood with the Agent Vision camera.\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command description")
-if "\nargument-hint: snapshot|streaming|roast\n" not in text:
+if "\nargument-hint: snapshot|streaming|roast|mood\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
 required_command_snippets = [
     "Agent Vision camera requests are not repository tasks.",
@@ -52,9 +52,14 @@ required_command_snippets = [
     "- `snapshot`: take one usable image and turn the camera off.",
     "- `streaming`: start streaming mode.",
     "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
+    "- `mood`: take one usable image, turn the camera off, and estimate current interaction state for response delivery calibration only.",
     "For `snapshot`, create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it",
     "For `streaming`, call `agent_vision_start`.",
     "For `roast`, materialize a JPEG file with the same command, then run `codex exec --ephemeral -i",
+    "For `mood`, materialize a JPEG file with the same command, then run `codex exec --ephemeral -i",
+    "do not display the saved JPEG, do not display the JSON",
+    "Use exactly these keys: presence, interaction_state, confidence, observable_basis, assistant_adjustments.",
+    "User correction overrides the visual estimate.",
     "If snapshot file mode fails, report the exact command error.",
     "When the user asks to stop camera use, call `agent_vision_stop`.",
 ]
@@ -65,7 +70,7 @@ for snippet in required_command_snippets:
 skill = root / "skills" / "camera-control" / "SKILL.md"
 skill_text = skill.read_text(encoding="utf-8")
 required_skill_snippets = [
-    "description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast",
+    "description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, /agent-vision mood",
     "## Execution Discipline",
     "Agent Vision camera requests are not repository tasks.",
     "If this rule is violated, report that as command-dispatch behavior.",
@@ -76,8 +81,12 @@ required_skill_snippets = [
     "`/agent-vision snapshot`: materialize one JPEG file",
     "`/agent-vision streaming`: call `agent_vision_start`.",
     "`/agent-vision roast`: materialize one JPEG file",
+    "`/agent-vision mood`: materialize one JPEG file",
+    "Do not display the saved image, do not display the strict JSON",
     "Do not write the roast in the current agent from Markdown, metadata, or memory.",
     "If the separate image-input pass fails, report that exact failure instead of roasting from metadata.",
+    "Use the JSON only as ephemeral response delivery calibration for the current response or current task phase.",
+    "Mood mode must not create mood history, a training dataset, background recording, separate image archive",
 ]
 for snippet in required_skill_snippets:
     if snippet not in skill_text:
@@ -85,7 +94,7 @@ for snippet in required_skill_snippets:
 PY
 
 if [[ "$DRY_RUN" == "1" ]]; then
-  swift build -c release --package-path "$ROOT" >/dev/null
+  swift build --disable-sandbox -c release --package-path "$ROOT" >/dev/null
   echo "Agent Vision dry-run validation succeeded."
   exit 0
 fi
@@ -97,8 +106,8 @@ if [[ -z "$SIGN_IDENTITY" ]]; then
   exit 1
 fi
 
-BUILD_DIR="$(swift build -c release --package-path "$ROOT" --show-bin-path)"
-swift build -c release --package-path "$ROOT"
+BUILD_DIR="$(swift build --disable-sandbox -c release --package-path "$ROOT" --show-bin-path)"
+swift build --disable-sandbox -c release --package-path "$ROOT"
 APP="$ROOT/dist/AgentVision.app"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
@@ -305,6 +314,7 @@ try:
     }
     expected = {
         "agent_vision_snapshot",
+        "agent_vision_mood",
         "agent_vision_start",
         "agent_vision_frame",
         "agent_vision_stop",
@@ -341,4 +351,4 @@ PY
 echo "Agent Vision installed at $PLUGIN_HOME"
 echo "Agent Vision cached at $CACHE_HOME"
 echo "Agent Vision plugin registered in $CODEX_CONFIG"
-echo "Use /agent-vision snapshot, /agent-vision streaming, or /agent-vision roast."
+echo "Use /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, or /agent-vision mood."

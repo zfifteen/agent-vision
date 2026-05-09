@@ -51,8 +51,8 @@ private final class FakeCamera: CameraControlling {
     let tools = try #require(result["tools"] as? [[String: Any]])
     let names = tools.compactMap { $0["name"] as? String }
     let titles = tools.compactMap { $0["title"] as? String }
-    #expect(names == ["agent_vision_snapshot", "agent_vision_start", "agent_vision_frame", "agent_vision_stop"])
-    #expect(titles == ["Snapshot", "Start Streaming", "Latest Frame", "Stop Streaming"])
+    #expect(names == ["agent_vision_snapshot", "agent_vision_mood", "agent_vision_start", "agent_vision_frame", "agent_vision_stop"])
+    #expect(titles == ["Snapshot", "Mood Frame", "Start Streaming", "Latest Frame", "Stop Streaming"])
     #expect(result["nextCursor"] is NSNull)
 }
 
@@ -85,6 +85,25 @@ private final class FakeCamera: CameraControlling {
     #expect(image["mimeType"] as? String == "image/jpeg")
     #expect(annotations["audience"] as? [String] == ["assistant", "user"])
     #expect(annotations["priority"] as? Double == 1.0)
+    #expect(metadata["width"] as? Int == 2)
+    #expect(metadata["height"] as? Int == 1)
+    #expect(metadata["meanBrightness"] as? Double == 0.5)
+}
+
+@Test func moodToolReturnsImageContentWithoutSemanticInference() throws {
+    let server = MCPServer(camera: FakeCamera())
+    let response = try decode(server.handleLine(#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"agent_vision_mood","arguments":{}}}"#))
+    let result = try #require(response["result"] as? [String: Any])
+    let content = try #require(result["content"] as? [[String: Any]])
+    let image = try #require(content.first)
+    let text = try #require(content.last)
+    let metadata = try #require(result["structuredContent"] as? [String: Any])
+    let annotations = try #require(image["annotations"] as? [String: Any])
+    #expect(image["type"] as? String == "image")
+    #expect(image["mimeType"] as? String == "image/jpeg")
+    #expect(annotations["audience"] as? [String] == ["assistant"])
+    #expect(annotations["priority"] as? Double == 1.0)
+    #expect(text["text"] as? String == "Agent Vision mood frame 2x1 captured at 2026-05-05T20:00:00Z. Analyze this frame through the slash-command file materialization path before applying mood calibration.")
     #expect(metadata["width"] as? Int == 2)
     #expect(metadata["height"] as? Int == 1)
     #expect(metadata["meanBrightness"] as? Double == 0.5)
