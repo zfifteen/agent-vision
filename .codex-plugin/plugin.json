@@ -41,8 +41,8 @@
     "termsOfServiceURL": "https://github.com/zfifteen/agent-vision/blob/main/LICENSE",
     "defaultPrompt": [
       "/agent-vision snapshot",
-      "/agent-vision roast",
-      "/agent-vision mood"
+      "/agent-vision streaming",
+      "/agent-vision roast"
     ],
     "brandColor": "#00D4FF",
     "composerIcon": "./assets/composer-icon.png",

@@ -106,6 +106,7 @@ public final class MCPServer {
                 return toolFrameResponse(
                     id: id,
                     frame: frame,
+                    audience: ["assistant"],
                     text: "Agent Vision mood frame \(frame.width)x\(frame.height) captured at \(frame.timestamp). Analyze this frame through the slash-command file materialization path before applying mood calibration."
                 )
             case "agent_vision_start":
@@ -194,6 +195,7 @@ public final class MCPServer {
     private func toolFrameResponse(
         id: Any?,
         frame: CameraFrame,
+        audience: [String] = ["assistant", "user"],
         text: String? = nil
     ) -> String {
         let metadata: [String: Any] = [
@@ -212,7 +214,7 @@ public final class MCPServer {
                     "data": frame.jpegData.base64EncodedString(),
                     "mimeType": "image/jpeg",
                     "annotations": [
-                        "audience": ["assistant", "user"],
+                        "audience": audience,
                         "priority": 1.0
                     ]
                 ],
