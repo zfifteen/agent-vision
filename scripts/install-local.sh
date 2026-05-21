@@ -3,9 +3,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OLD_SLUG="codex""-vision"
+OLD_RUNTIME_VERSION="1.0.2"
 OLD_VERSION="1.0.1"
 LEGACY_VERSION="1.0.0"
-VERSION="1.0.2"
+VERSION="1.0.3"
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
@@ -30,18 +31,17 @@ for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if rel == ".codex-plugin/plugin.json" and data["name"] != "agent-vision":
         raise SystemExit(f"{rel} has wrong plugin name")
+    if rel == ".codex-plugin/plugin.json" and "mcpServers" in data:
+        raise SystemExit(f"{rel} must not advertise Agent Vision MCP servers in 1.0.3")
     if rel == ".mcp.json":
-        server = data.get("mcpServers", {}).get("agent-vision")
-        if server is None:
-            raise SystemExit(f"{rel} has no agent-vision MCP server")
-        if server.get("command") != "./dist/agent-vision-mcp":
-            raise SystemExit(f"{rel} has wrong agent-vision MCP command")
+        if data.get("mcpServers", {}).get("agent-vision") is not None:
+            raise SystemExit(f"{rel} must not register an agent-vision MCP server in 1.0.3")
 
 command = root / "commands" / "agent-vision.md"
 text = command.read_text(encoding="utf-8")
 if not text.startswith("---\n"):
     raise SystemExit("commands/agent-vision.md must start with YAML frontmatter so Codex can index the slash command")
-if "\ndescription: Snapshot, stream, roast, or estimate mood with the Agent Vision camera.\n" not in text:
+if "\ndescription: Snapshot, roast, or estimate mood with the Agent Vision camera.\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command description")
 if "\nargument-hint: snapshot|streaming|roast|mood\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
@@ -51,18 +51,18 @@ required_command_snippets = [
     "Do not inspect or roast the repository",
     "the first shell command must create the frame directory and run `agent-vision-capture-file`",
     "- `snapshot`: take one usable image and turn the camera off.",
-    "- `streaming`: start streaming mode.",
+    "- `streaming`: report that streaming is temporarily disabled in Agent Vision 1.0.3.",
     "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
     "- `mood`: take one usable image, turn the camera off, and estimate current interaction state for response delivery calibration only.",
     "For `snapshot`, create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it",
-    "For `streaming`, call `agent_vision_start`.",
-    "For `roast`, materialize a JPEG file with the same command, then run `codex exec --ephemeral -i",
-    "For `mood`, materialize a JPEG file with the same command, then run `codex exec --ephemeral -i",
+    "For `streaming`, do not call any tool and do not launch any Agent Vision process.",
+    "For `roast`, materialize a JPEG file with the same command, then run `codex exec --ephemeral --skip-git-repo-check -i",
+    "For `mood`, materialize a JPEG file with the same command, then run `codex exec --ephemeral --skip-git-repo-check -i",
     "do not display the saved JPEG, do not display the JSON",
     "Use exactly these keys: presence, interaction_state, confidence, observable_basis, assistant_adjustments.",
     "User correction overrides the visual estimate.",
     "If snapshot file mode fails, report the exact command error.",
-    "When the user asks to stop camera use, call `agent_vision_stop`.",
+    "When the user asks to stop camera use or stop streaming, do not call any tool",
 ]
 for snippet in required_command_snippets:
     if snippet not in text:
@@ -80,9 +80,10 @@ required_skill_snippets = [
     "the first shell command must create the frame directory and run `agent-vision-capture-file`",
     "This is the normal image-access path.",
     "`/agent-vision snapshot`: materialize one JPEG file",
-    "`/agent-vision streaming`: call `agent_vision_start`.",
+    "`/agent-vision streaming`: report the temporary disabled message and launch no process.",
     "`/agent-vision roast`: materialize one JPEG file",
     "`/agent-vision mood`: materialize one JPEG file",
+    "--skip-git-repo-check",
     "Do not display the saved image, do not display the strict JSON",
     "Do not write the roast in the current agent from Markdown, metadata, or memory.",
     "If the separate image-input pass fails, report that exact failure instead of roasting from metadata.",
@@ -113,6 +114,7 @@ APP="$ROOT/dist/AgentVision.app"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
+OLD_RUNTIME_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_RUNTIME_VERSION"
 LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$LEGACY_VERSION"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
@@ -135,20 +137,19 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.2</string>
+  <string>1.0.3</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
 </dict>
 </plist>
 PLIST
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$APP" >/dev/null
-cp "$ROOT/scripts/agent-vision-mcp.sh" "$ROOT/dist/agent-vision-mcp"
-chmod +x "$ROOT/dist/agent-vision-mcp"
+rm -f "$ROOT/dist/agent-vision-mcp"
 cp "$ROOT/scripts/agent-vision-capture-file.sh" "$ROOT/dist/agent-vision-capture-file"
 chmod +x "$ROOT/dist/agent-vision-capture-file"
 
@@ -161,7 +162,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
+rm -rf "$CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -246,6 +247,7 @@ PY
 rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$OLD_RUNTIME_CACHE_HOME" \
   "$OLD_CACHE_HOME" \
   "$LEGACY_CACHE_HOME" \
   "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \
@@ -253,89 +255,8 @@ rm -rf \
   "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/openai-curated/agent-vision"
 
-python3 - "$CACHE_HOME/dist/agent-vision-mcp" <<'PY'
-import json
-import pathlib
-import select
-import subprocess
-import sys
-import time
-
-server = pathlib.Path(sys.argv[1])
-if not server.exists():
-    raise SystemExit(f"Installed MCP wrapper is missing: {server}")
-
-process = subprocess.Popen(
-    [str(server)],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True,
-)
-
-try:
-    requests = [
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "agent-vision-install-check", "version": "1.0.2"},
-            },
-        },
-        {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}},
-        {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
-    ]
-    for request in requests:
-        process.stdin.write(json.dumps(request, separators=(",", ":")) + "\n")
-        process.stdin.flush()
-    process.stdin.close()
-
-    responses = {}
-    deadline = time.time() + 10
-    while time.time() < deadline and 2 not in responses:
-        readable, _, _ = select.select([process.stdout], [], [], 0.2)
-        for stream in readable:
-            line = stream.readline()
-            if not line:
-                continue
-            response = json.loads(line)
-            if "id" in response:
-                responses[response["id"]] = response
-
-    tools_response = responses.get(2)
-    if tools_response is None:
-        raise SystemExit("Agent Vision MCP tools/list check timed out")
-    if "error" in tools_response:
-        raise SystemExit(f"Agent Vision MCP tools/list failed: {tools_response['error']}")
-
-    actual = {
-        tool.get("name")
-        for tool in tools_response.get("result", {}).get("tools", [])
-    }
-    expected = {
-        "agent_vision_snapshot",
-        "agent_vision_mood",
-        "agent_vision_start",
-        "agent_vision_frame",
-        "agent_vision_stop",
-    }
-    missing = sorted(expected - actual)
-    if missing:
-        raise SystemExit(f"Agent Vision MCP tools/list missing tools: {', '.join(missing)}")
-finally:
-    try:
-        process.wait(timeout=2)
-    except subprocess.TimeoutExpired:
-        process.terminate()
-        try:
-            process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=2)
-PY
+test ! -e "$CACHE_HOME/dist/agent-vision-mcp"
+test -x "$CACHE_HOME/dist/agent-vision-capture-file"
 
 PROMPT_CHECK="$(mktemp "${TMPDIR:-/tmp}/agent-vision-prompt-input.XXXXXX.json")"
 trap 'rm -f "$PROMPT_CHECK"' EXIT
@@ -354,4 +275,4 @@ PY
 echo "Agent Vision installed at $PLUGIN_HOME"
 echo "Agent Vision cached at $CACHE_HOME"
 echo "Agent Vision plugin registered in $CODEX_CONFIG"
-echo "Use /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, or /agent-vision mood."
+echo "Use /agent-vision snapshot, /agent-vision roast, or /agent-vision mood. Streaming is disabled in 1.0.3."

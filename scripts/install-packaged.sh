@@ -8,12 +8,14 @@ else
   ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 OLD_SLUG="codex""-vision"
+OLD_RUNTIME_VERSION="1.0.2"
 OLD_VERSION="1.0.1"
 LEGACY_VERSION="1.0.0"
-VERSION="1.0.2"
+VERSION="1.0.3"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
+OLD_RUNTIME_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_RUNTIME_VERSION"
 LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$LEGACY_VERSION"
 MARKETPLACE="$HOME/.agents/plugins/marketplace.json"
 CODEX_CONFIG="$HOME/.codex/config.toml"
@@ -33,7 +35,6 @@ for path in \
   "$ROOT/commands" \
   "$ROOT/skills" \
   "$ROOT/dist/AgentVision.app" \
-  "$ROOT/dist/agent-vision-mcp" \
   "$ROOT/dist/agent-vision-capture-file"
 do
   if [[ ! -e "$path" ]]; then
@@ -56,15 +57,18 @@ function run(argv) {
   if (plugin.name !== "agent-vision") {
     throw new Error(".codex-plugin/plugin.json has wrong plugin name")
   }
+  if (Object.prototype.hasOwnProperty.call(plugin, "mcpServers")) {
+    throw new Error(".codex-plugin/plugin.json must not advertise Agent Vision MCP servers in 1.0.3")
+  }
   const mcp = readJSON(root + "/.mcp.json")
-  const server = (((mcp || {}).mcpServers || {})["agent-vision"])
-  if (!server || server.command !== "./dist/agent-vision-mcp") {
-    throw new Error(".mcp.json has wrong agent-vision MCP command")
+  const servers = ((mcp || {}).mcpServers || {})
+  if (Object.prototype.hasOwnProperty.call(servers, "agent-vision")) {
+    throw new Error(".mcp.json must not register an agent-vision MCP server in 1.0.3")
   }
 }
 JXA
 /usr/bin/codesign --verify --deep --strict "$ROOT/dist/AgentVision.app" >/dev/null
-chmod +x "$ROOT/dist/agent-vision-mcp" "$ROOT/dist/agent-vision-capture-file"
+chmod +x "$ROOT/dist/agent-vision-capture-file"
 
 rm -rf "$PLUGIN_HOME"
 mkdir -p "$PLUGIN_HOME"
@@ -75,7 +79,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
+rm -rf "$CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -126,32 +130,51 @@ codex plugin marketplace add "$HOME" >/dev/null
 
 mkdir -p "$(dirname "$CODEX_CONFIG")"
 touch "$CODEX_CONFIG"
-CONFIG_TMP="$(mktemp "${TMPDIR:-/tmp}/agent-vision-config.XXXXXX")"
-awk -v old_slug="$OLD_SLUG" '
-  /^\[/ {
-    skip = (
-      $0 == "[plugins.\"agent-vision@local\"]" ||
-      $0 == "[plugins.\"agent-vision@openai-curated\"]" ||
-      $0 == "[plugins.\"" old_slug "@local\"]" ||
-      $0 == "[plugins.\"" old_slug "@openai-curated\"]" ||
-      $0 == "[mcp_servers.agent_vision]" ||
-      $0 == "[mcp_servers.\"agent-vision\"]" ||
-      $0 == "[mcp_servers.codex_vision]" ||
-      $0 == "[mcp_servers.\"" old_slug "\"]"
-    )
+osascript -l JavaScript - "$CODEX_CONFIG" "$OLD_SLUG" <<'JXA'
+ObjC.import('Foundation')
+
+function readText(path) {
+  if (!$.NSFileManager.defaultManager.fileExistsAtPath(path)) {
+    return ""
   }
-  !skip { print }
-' "$CODEX_CONFIG" > "$CONFIG_TMP"
-{
-  sed -e '${/^$/d;}' "$CONFIG_TMP"
-  printf '\n[plugins."agent-vision@local"]\n'
-  printf 'enabled = true\n'
-} > "$CODEX_CONFIG"
-rm -f "$CONFIG_TMP"
+  return ObjC.unwrap($.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, null))
+}
+
+function writeText(path, text) {
+  $(text).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null)
+}
+
+function removeSection(text, header) {
+  const escaped = header.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const pattern = new RegExp("^\\[" + escaped + "\\]\\n[\\s\\S]*?(?=^\\[|\\s*$)", "gm")
+  return text.replace(pattern, "")
+}
+
+function run(argv) {
+  const path = argv[0]
+  const oldSlug = argv[1]
+  let text = readText(path)
+  const headers = [
+    'plugins."agent-vision@local"',
+    'plugins."agent-vision@openai-curated"',
+    'plugins."' + oldSlug + '@local"',
+    'plugins."' + oldSlug + '@openai-curated"',
+    'mcp_servers.agent_vision',
+    'mcp_servers."agent-vision"',
+    'mcp_servers.codex_vision',
+    'mcp_servers."' + oldSlug + '"'
+  ]
+  for (const header of headers) {
+    text = removeSection(text, header)
+  }
+  writeText(path, text.replace(/\s+$/g, "") + "\n[plugins.\"agent-vision@local\"]\nenabled = true\n")
+}
+JXA
 
 rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$OLD_RUNTIME_CACHE_HOME" \
   "$OLD_CACHE_HOME" \
   "$LEGACY_CACHE_HOME" \
   "$HOME/.codex/.tmp/plugins/plugins/$OLD_SLUG" \
@@ -159,7 +182,6 @@ rm -rf \
   "$HOME/.codex/plugins/cache/openai-curated/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/openai-curated/agent-vision"
 
-test -x "$CACHE_HOME/dist/agent-vision-mcp"
 test -x "$CACHE_HOME/dist/agent-vision-capture-file"
 /usr/bin/codesign --verify --deep --strict "$CACHE_HOME/dist/AgentVision.app" >/dev/null
 

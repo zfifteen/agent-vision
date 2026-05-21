@@ -41,7 +41,7 @@ private final class FakeCamera: CameraControlling {
     let result = try #require(response["result"] as? [String: Any])
     let serverInfo = try #require(result["serverInfo"] as? [String: Any])
     #expect(serverInfo["name"] as? String == "agent-vision")
-    #expect(serverInfo["version"] as? String == "1.0.2")
+    #expect(serverInfo["version"] as? String == "1.0.3")
 }
 
 @Test func toolsListIncludesCameraTools() throws {

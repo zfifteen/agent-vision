@@ -40,7 +40,7 @@ Add `agent_vision_mood` to the MCP server, but do not pretend the Swift MCP serv
 - Preserve streaming behavior.
 - Add `mood` to `/agent-vision` argument handling and frontmatter.
 - For `/agent-vision mood`, materialize a JPEG under `$HOME/.codex/agent-vision/frames`.
-- Run image analysis with `codex exec --ephemeral -i "$OUTPUT"` if that remains the repo's proven image-input path.
+- Run image analysis with `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT"` if that remains the repo's proven image-input path.
 - Require strict JSON fields: `presence`, `interaction_state`, `confidence`, `observable_basis`, `assistant_adjustments`.
 - Apply confidence gates from the technical note.
 - Update skill, docs, installer validation snippets, and slash-command tests as needed.

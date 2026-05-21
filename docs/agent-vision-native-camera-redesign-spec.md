@@ -285,7 +285,7 @@ Command behavior:
 4. Invoke the proven local image input path:
 
 ```bash
-codex exec --ephemeral -i /absolute/path/frame.jpg -- "Write one playful roast of 400 characters or fewer based only on visible non-sensitive details. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes."
+codex exec --ephemeral --skip-git-repo-check -i /absolute/path/frame.jpg -- "Write one playful roast of 400 characters or fewer based only on visible non-sensitive details. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes."
 ```
 
 5. Return the Markdown image link and the nested Codex roast text.

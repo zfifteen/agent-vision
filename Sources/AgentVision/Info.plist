@@ -7,10 +7,10 @@
   <key>CFBundleName</key>
   <string>Agent Vision</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.2</string>
+  <string>1.0.3</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
 </dict>
 </plist>

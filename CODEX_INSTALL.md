@@ -11,14 +11,14 @@ Install the packaged release. Do not clone the repository and run `scripts/insta
 1. Download the release archive:
 
 ```bash
-curl -L -o agent-vision-1.0.2.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.2/agent-vision-1.0.2.tar.gz
+curl -L -o agent-vision-1.0.3.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.3/agent-vision-1.0.3.tar.gz
 ```
 
 2. Extract the release archive:
 
 ```bash
-tar -xzf agent-vision-1.0.2.tar.gz
-cd agent-vision-1.0.2
+tar -xzf agent-vision-1.0.3.tar.gz
+cd agent-vision-1.0.3
 ```
 
 3. Inspect the packaged app signature:
@@ -35,34 +35,32 @@ codesign --verify --deep --strict dist/AgentVision.app
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
-The installer removes legacy duplicate `mcp_servers.agent_vision` config and relies on the plugin `.mcp.json` entry for `agent_vision_snapshot`, `agent_vision_start`, `agent_vision_frame`, and `agent_vision_stop`. Open a new Codex chat or session after install so the plugin tool registry refreshes.
+The installer removes legacy duplicate `mcp_servers.agent_vision` and `mcp_servers."agent-vision"` config. Agent Vision 1.0.3 does not register an MCP server, and the installed package must not contain `dist/agent-vision-mcp`.
 
 For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
 
-5. Use the MCP tools:
-
-```text
-agent_vision_snapshot
-agent_vision_start
-agent_vision_frame
-agent_vision_stop
-```
-
-Or use the bundled slash commands:
+5. Use the bundled slash command:
 
 ```text
 /agent-vision snapshot
 /agent-vision streaming
 /agent-vision roast
+/agent-vision mood
 ```
 
-Version 1.0.2 is pull-based:
+Version 1.0.3 is explicit and one-shot:
 
-- `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
-- `/agent-vision streaming` starts a live camera session. The Mac camera indicator should stay on while this session is active.
+- `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera.
+- `/agent-vision streaming` is temporarily disabled and launches no Agent Vision process.
 - `/agent-vision roast` is snapshot plus prose: it materializes one usable JPEG, passes that exact file to `codex exec -i`, displays the saved image, and returns one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
-- While streaming is active, Codex may call `agent_vision_frame` whenever visual context would help, without asking for each frame.
-- When the user asks to stop streaming or stop camera use, call `agent_vision_stop`.
+- `/agent-vision mood` materializes one usable JPEG, passes that exact file to `codex exec -i`, and uses strict JSON internally for current-response delivery only.
+- Stop-streaming requests report that there is no Agent Vision streaming session to stop and launch no Agent Vision process.
+
+Required idle invariant:
+
+```bash
+! pgrep -f 'agent-vision-mcp|AgentVision .*mcp-fifo'
+```
 
 To uninstall the local plugin deterministically:
 

@@ -4,24 +4,24 @@ Agent Vision is a local macOS camera plugin for Codex.
 
 ## Data Handling
 
-Agent Vision captures images from the built-in Mac camera only when Codex calls one of its MCP tools or when the installed slash-command skill runs the local file materializer.
+Agent Vision captures images from the built-in Mac camera only when the installed slash-command skill runs the local file materializer for an explicit one-shot request.
 
 - Snapshot mode starts the camera, captures one JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera.
-- Streaming mode starts a local camera session. Codex may request the latest JPEG frame while that session is active.
 - Roast mode uses snapshot file materialization, then passes the saved JPEG to `codex exec -i` for the opt-in roast text.
-- Stopping streaming releases the camera and clears the cached frame.
+- Mood mode uses snapshot file materialization, then passes the saved JPEG to `codex exec -i` for strict JSON used only as current-response delivery calibration.
+- Streaming mode is temporarily disabled in Agent Vision 1.0.3 and launches no Agent Vision process.
 
-Agent Vision does not implement cloud upload, background recording, audio capture, device selection, telemetry, analytics, or remote logging.
+Agent Vision does not implement cloud upload, background recording, audio capture, device selection, telemetry, analytics, remote logging, an installed MCP server, or an idle camera-capable background process.
 
 ## Permissions
 
-macOS asks for camera permission for the signed `AgentVision.app` the first time the capture session starts.
+macOS asks for camera permission for the signed `AgentVision.app` the first time an explicit one-shot capture starts.
 
-The Mac camera indicator should be on while streaming mode is active. Snapshot mode should turn the camera on only long enough to capture one frame.
+Install, plugin enablement, idle Codex startup, unrelated prompts, streaming requests, and stop-streaming requests must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process.
 
 ## Storage
 
-Agent Vision keeps only the latest frame in process memory while a streaming session is active. Snapshot and roast mode intentionally write requested frames to `~/.codex/agent-vision/frames` so Codex can display or inspect the JPEG through a proven local image-input path. The plugin does not upload or remotely log those files.
+Snapshot, roast, and mood mode intentionally write requested frames to `~/.codex/agent-vision/frames` so Codex can display or inspect the JPEG through a proven local image-input path. The plugin does not upload or remotely log those files.
 
 ## Contact
 

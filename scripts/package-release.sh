@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="1.0.2"
+VERSION="1.0.3"
 OUT="$ROOT/release/agent-vision-$VERSION"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -38,20 +38,18 @@ cat > "$OUT/dist/AgentVision.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.2</string>
+  <string>1.0.3</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its MCP tools.</string>
+  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
 </dict>
 </plist>
 PLIST
 plutil -lint "$OUT/dist/AgentVision.app/Contents/Info.plist" >/dev/null
 /usr/bin/codesign --force --sign "$SIGN_IDENTITY" "$OUT/dist/AgentVision.app" >/dev/null
-cp "$ROOT/scripts/agent-vision-mcp.sh" "$OUT/dist/agent-vision-mcp"
-chmod +x "$OUT/dist/agent-vision-mcp"
 cp "$ROOT/scripts/agent-vision-capture-file.sh" "$OUT/dist/agent-vision-capture-file"
 chmod +x "$OUT/dist/agent-vision-capture-file"
 cp "$ROOT/scripts/install-packaged.sh" "$OUT/install.sh"
@@ -68,6 +66,7 @@ cp "$ROOT/README.md" "$OUT/README.md"
 cp "$ROOT/INSTALL.md" "$OUT/INSTALL.md"
 cp "$ROOT/CODEX_INSTALL.md" "$OUT/CODEX_INSTALL.md"
 cp "$ROOT/PRIVACY.md" "$OUT/PRIVACY.md"
+cp "$ROOT/RELEASE_NOTES.md" "$OUT/RELEASE_NOTES.md"
 cp "$ROOT/LICENSE" "$OUT/LICENSE"
 
 tar -C "$ROOT/release" -czf "$OUT.tar.gz" "agent-vision-$VERSION"
