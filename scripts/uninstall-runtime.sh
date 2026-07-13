@@ -40,12 +40,16 @@ assert_safe_runtime_home() {
       exit 64
       ;;
   esac
-  # Require a recognizable agent-vision leaf (or explicit INSTALL_META).
-  local base
-  base="$(basename "$path")"
-  if [[ "$base" != "agent-vision" && ! -f "${path}/INSTALL_META.txt" && ! -d "${path}/dist/AgentVision.app" ]]; then
-    echo "ERROR: refusing to delete path that does not look like an Agent Vision runtime home: $path" >&2
-    echo "  Expected basename agent-vision, INSTALL_META.txt, or dist/AgentVision.app." >&2
+  # Never treat a git work tree / source checkout as a runtime home.
+  if [[ -d "${path}/.git" || -f "${path}/.git" ]]; then
+    echo "ERROR: refusing to delete a git work tree as runtime home: $path" >&2
+    exit 64
+  fi
+  # Require positive evidence of an *installed* runtime — not basename alone
+  # (basename agent-vision would match a source clone path).
+  if [[ ! -f "${path}/INSTALL_META.txt" && ! -d "${path}/dist/AgentVision.app" ]]; then
+    echo "ERROR: refusing to delete path that is not an Agent Vision runtime home: $path" >&2
+    echo "  Expected INSTALL_META.txt and/or dist/AgentVision.app under the path." >&2
     exit 64
   fi
 }

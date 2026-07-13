@@ -15,7 +15,9 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 | Host | Status | Features | Frames | Install |
 | --- | --- | --- | --- | --- |
 | **Codex** | Stable (package **1.0.3**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
-| **Grok Build** | Public **Ship A** (experimental feature set) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | `install-runtime.sh` + `install-grok.sh` from this repo |
+| **Grok Build** | Public **Ship A** (`1.0.4-ship-a` runtime/plugin meta) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | `install-runtime.sh` + `install-grok.sh` from this repo |
+
+Version triad: Codex package remains **1.0.3**; Grok Ship A runtime/plugin use **1.0.4-ship-a**; full multi-host **1.1.0** is reserved for a later dual-host product release.
 
 Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
 

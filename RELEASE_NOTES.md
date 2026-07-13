@@ -4,6 +4,14 @@
 
 Adds an experimental **Grok Build** host adapter alongside the stable Codex 1.0.3 package. Codex behavior is unchanged.
 
+### Version strings (Ship A)
+
+| Surface | String | Meaning |
+| --- | --- | --- |
+| Codex package / `.codex-plugin` / `Info.plist` | **1.0.3** | Stable Codex-packaged release (unchanged) |
+| Shared runtime `INSTALL_META` / Grok `plugin.json` | **1.0.4-ship-a** | Grok Ship A adapter + runtime install track |
+| Full multi-host product claim | **not used** | Reserved for future `1.1.0` (Ship B) |
+
 ### Grok Build (Ship A)
 
 - Shared runtime installer: `scripts/install-runtime.sh` → `~/.local/share/agent-vision` + `~/.local/bin/agent-vision-capture-file` shim.

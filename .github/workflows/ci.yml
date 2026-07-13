@@ -46,3 +46,10 @@ jobs:
         run: scripts/install-local.sh --dry-run
       - name: Grok adapter static tests
         run: scripts/test-grok-adapter.sh
+      - name: Stage capture helper for CLI error-path tests
+        run: |
+          mkdir -p dist
+          cp scripts/agent-vision-capture-file.sh dist/agent-vision-capture-file
+          chmod +x dist/agent-vision-capture-file
+      - name: Capture helper CLI error paths
+        run: scripts/test-capture-file-cli.sh

@@ -116,6 +116,7 @@ Frames are written under `~/.agent-vision/frames`. Grok inspects the JPEG with m
 Dry-run checks (no install):
 
 ```bash
+# Requires a codesigned dist/AgentVision.app in the tree (release dist/ or local package build).
 scripts/install-runtime.sh --dry-run
 scripts/install-grok.sh --dry-run
 scripts/test-grok-adapter.sh

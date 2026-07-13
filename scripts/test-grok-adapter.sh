@@ -52,12 +52,17 @@ do
   fi
 done
 
-# Optional: installed skill matches if present
+# Optional: installed skill matches if present.
+# During install preflight (AGENT_VISION_INSTALL_PREFLIGHT=1), drift is warn-only so
+# install-grok can upgrade an older/drifted skill instead of self-blocking.
 if [[ -f "${HOME}/.grok/skills/agent-vision/SKILL.md" ]]; then
   if diff -q "$SKILL" "${HOME}/.grok/skills/agent-vision/SKILL.md" >/dev/null; then
     pass "installed user skill matches repo"
+  elif [[ "${AGENT_VISION_INSTALL_PREFLIGHT:-0}" == "1" ]]; then
+    echo "WARN: installed user skill differs from repo; install will overwrite it." >&2
+    pass "installed skill drift ignored during install preflight"
   else
-    fail "installed user skill differs from repo (re-run install-grok.sh)"
+    fail "installed user skill differs from repo (re-run install-grok.sh to upgrade)"
   fi
 fi
 

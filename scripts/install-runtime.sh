@@ -4,7 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="1.0.3-grok-ship-a"
+# Ship A public string (align with hosts/grok/plugin.json). Codex package remains 1.0.3.
+VERSION="1.0.4-ship-a"
 DEFAULT_HOME="${HOME}/.local/share/agent-vision"
 AGENT_VISION_HOME="${AGENT_VISION_HOME:-$DEFAULT_HOME}"
 FRAME_ROOT="${HOME}/.agent-vision"
@@ -87,11 +88,16 @@ if [[ "$DRY_RUN" == "1" ]]; then
   echo "  Would install to: $AGENT_VISION_HOME"
   echo "  Would create frames root: $FRAME_ROOT (mode 0700)"
   echo "  Would install PATH shim: $BIN_DIR/agent-vision-capture-file"
+  echo "  Note: dry-run still requires a codesigned dist/AgentVision.app under --source-dist (default: repo dist/)."
   exit 0
 fi
 
+normalize_pids() {
+  printf '%s\n' "$1" | sed '/^$/d' | sort -u
+}
+
 # Baseline process check: install must not start camera-capable helpers.
-baseline_pids="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+baseline_pids="$(normalize_pids "$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)")"
 
 mkdir -p "$AGENT_VISION_HOME/dist"
 mkdir -p -m 700 "$FRAME_ROOT"
@@ -132,7 +138,7 @@ frames=${FRAME_ROOT}/frames
 shim=${SHIM}
 EOF
 
-after_pids="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+after_pids="$(normalize_pids "$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)")"
 if [[ "$after_pids" != "$baseline_pids" ]]; then
   echo "ERROR: install-runtime started an Agent Vision process (lifecycle violation)." >&2
   echo "baseline: $baseline_pids" >&2

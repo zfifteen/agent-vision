@@ -24,6 +24,11 @@ Run scripts/install-runtime.sh first (or ensure AGENT_VISION_HOME is populated).
 EOF
 }
 
+normalize_pids() {
+  # Stable compare: sort unique PID lines so process list order cannot false-trip.
+  printf '%s\n' "$1" | sed '/^$/d' | sort -u
+}
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --dry-run)
@@ -60,8 +65,17 @@ if [[ ! -f "${PLUGIN_SRC}/plugin.json" ]]; then
   exit 66
 fi
 
-# Static contract checks (same suite as CI-friendly L1 tests).
-bash "${ROOT}/scripts/test-grok-adapter.sh"
+# Refuse MCP registration before any skill/plugin mutation (no partial tree on exit 70).
+if [[ -f "${HOME}/.grok/config.toml" ]]; then
+  if grep -E -q '\[mcp_servers\.agent-vision\]|\[mcp_servers\."agent-vision"\]' "${HOME}/.grok/config.toml"; then
+    echo "ERROR: ~/.grok/config.toml already registers an agent-vision MCP server. Remove it before installing." >&2
+    exit 70
+  fi
+fi
+
+# Repo-static contracts only for install preflight: do not fail on installed-skill drift
+# (that check would block upgrades of older/drifted installs).
+AGENT_VISION_INSTALL_PREFLIGHT=1 bash "${ROOT}/scripts/test-grok-adapter.sh"
 
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "Dry-run OK. Would install:"
@@ -72,7 +86,8 @@ if [[ "$DRY_RUN" == "1" ]]; then
   exit 0
 fi
 
-baseline_pids="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+baseline_raw="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+baseline_pids="$(normalize_pids "$baseline_raw")"
 
 mkdir -p "${HOME}/.grok/skills"
 rm -rf "$USER_SKILL_DIR"
@@ -87,15 +102,8 @@ if [[ "$SKIP_PLUGIN" != "1" ]]; then
   cp "${SKILL_SRC}/SKILL.md" "${USER_PLUGIN_DIR}/skills/agent-vision/SKILL.md"
 fi
 
-# Refuse to install when Agent Vision MCP is already registered (no ripgrep required).
-if [[ -f "${HOME}/.grok/config.toml" ]]; then
-  if grep -E -q '\[mcp_servers\.agent-vision\]|\[mcp_servers\."agent-vision"\]' "${HOME}/.grok/config.toml"; then
-    echo "ERROR: ~/.grok/config.toml already registers an agent-vision MCP server. Remove it before installing." >&2
-    exit 70
-  fi
-fi
-
-after_pids="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+after_raw="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
+after_pids="$(normalize_pids "$after_raw")"
 if [[ "$after_pids" != "$baseline_pids" ]]; then
   echo "ERROR: install-grok started an Agent Vision process (lifecycle violation)." >&2
   exit 70
