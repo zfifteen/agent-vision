@@ -7,6 +7,10 @@ Status: implemented in host skills + `scripts/agent-vision-sticky.sh`
 
 Agent Vision is **mood-first vision-in-the-loop**: when armed, the agent captures local camera image(s), figures out what is in the image, and incorporates that into reasoning before responding or completing tasks.
 
+## HARD GATE (non-optional)
+
+While ARMED, capture + image understand is **mandatory** on every user turn except a **closed skip whitelist** (pure off, pure status-only, pure streaming). **Topic is irrelevant** — code, docs, planning, brainstorming, and meta all require the loop. Agents must not skip because the topic is “non-visual.” Skill text: `HARD GATE`, `FORBIDDEN while ARMED`, end-of-turn checklist.
+
 ## Session model
 
 | Event | Result |
@@ -14,7 +18,7 @@ Agent Vision is **mood-first vision-in-the-loop**: when armed, the agent capture
 | New chat / conversation | **OFF** (always). Leftover `~/.agent-vision/session-state.json` alone does **not** arm. |
 | `/agent-vision` or `/agent-vision mood` | **ARM** + mood vision loop |
 | `/agent-vision snapshot` \| `roast` | **ARM** + that mode |
-| Substantive user turn while ARMED | Capture → understand → reason → respond |
+| Any non-whitelist user turn while ARMED | Capture → understand → reason → respond (**required**) |
 | `/agent-vision off`, stop, disable, “turn off the camera”, “agent vision off” | **DISARM** |
 | `/agent-vision streaming` | Disabled message; **do not arm** |
 

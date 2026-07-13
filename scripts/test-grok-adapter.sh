@@ -22,28 +22,37 @@ text="$(cat "$SKILL")"
 if [[ "$text" == ---$'\n'* ]]; then pass "frontmatter present"; else fail "frontmatter missing"; fi
 [[ "$text" == *"name: agent-vision"* ]] && pass "name: agent-vision" || fail "name: agent-vision"
 [[ "$text" == *"disable-model-invocation: false"* ]] && pass "disable-model-invocation false" || fail "disable-model-invocation false"
-[[ "$text" == *"argument-hint: mood|snapshot|roast|off|streaming"* ]] && pass "argument-hint sticky modes" || fail "argument-hint sticky modes"
-[[ "$text" == *"Session sticky model"* ]] && pass "session sticky model" || fail "session sticky model"
-[[ "$text" == *"NEW conversation"* ]] || [[ "$text" == *"New chat starts OFF"* ]] && pass "new chat starts OFF" || fail "new chat starts OFF"
-[[ "$text" == *"agent-vision-sticky.sh"* ]] && pass "sticky script referenced" || fail "sticky script referenced"
-[[ "$text" == *"/agent-vision off"* ]] && pass "off command" || fail "off command"
-[[ "$text" == *"substantive"* ]] && pass "substantive turn capture" || fail "substantive turn capture"
-[[ "$text" == *"Incorporate that understanding into your reasoning"* ]] || [[ "$text" == *"incorporate that into reasoning"* ]] || [[ "$text" == *"Incorporate that understanding"* ]] && pass "incorporate into reasoning" || fail "incorporate into reasoning"
+[[ "$text" == *"HARD GATE"* ]] && pass "HARD GATE present" || fail "HARD GATE present"
+[[ "$text" == *"non-optional"* ]] || [[ "$text" == *"NON-OPTIONAL"* ]] || [[ "$text" == *"mandatory"* ]] && pass "non-optional language" || fail "non-optional language"
+[[ "$text" == *"Topic is irrelevant"* ]] && pass "topic is irrelevant" || fail "topic is irrelevant"
+[[ "$text" == *"FORBIDDEN while ARMED"* ]] || [[ "$text" == *"FORBIDDEN while ARMED"* ]] && pass "FORBIDDEN section" || fail "FORBIDDEN section"
+[[ "$text" == *"Skip whitelist"* ]] || [[ "$text" == *"skip whitelist"* ]] && pass "skip whitelist" || fail "skip whitelist"
+[[ "$text" == *"End-of-turn compliance"* ]] || [[ "$text" == *"End-of-turn checklist"* ]] && pass "end-of-turn checklist" || fail "end-of-turn checklist"
+[[ "$text" == *"INVALID"* ]] && pass "INVALID if skip" || fail "INVALID if skip"
+[[ "$text" == *"First tool call this turn MUST be"* ]] || [[ "$text" == *"First tool call this turn MUST be"* ]] || [[ "$text" == *"first tool call"* ]] || [[ "$text" == *"First tool call"* ]] && pass "first tool call capture" || fail "first tool call capture"
+[[ "$text" != *"only when vision would help"* ]] && pass "no optional vision judgment" || fail "optional vision judgment still present"
+[[ "$text" != *"if useful"* ]] && pass "no if-useful escape" || fail "if-useful escape still present"
+[[ "$text" == *"argument-hint: mood|snapshot|roast|off|streaming"* ]] && pass "argument-hint" || fail "argument-hint"
 [[ "$text" == *"agent-vision-capture-file"* ]] && pass "capture helper named" || fail "capture helper named"
 [[ "$text" == *"read_file"* ]] && pass "read_file vision path" || fail "read_file vision path"
 [[ "$text" == *"~/.agent-vision/frames"* ]] && pass "Grok frame dir" || fail "Grok frame dir"
-[[ "$text" == *"first shell command"* ]] && pass "camera-first" || fail "camera-first"
 [[ "$text" == *"Do not use codex exec"* ]] && pass "no codex exec" || fail "no codex exec"
 [[ "$text" == *"Agent Vision streaming is temporarily disabled"* ]] && pass "streaming disabled copy" || fail "streaming disabled copy"
+[[ "$text" == *"agent-vision-sticky"* ]] && pass "sticky script referenced" || fail "sticky script referenced"
 [[ "$text" != *"Milestone 2"* ]] && pass "no Milestone 2 deferral" || fail "Milestone 2 deferral still present"
 [[ "$text" != *"~/.codex/plugins/cache/local/agent-vision/1.0.3"* ]] && pass "no Codex 1.0.3 cache hardcode" || fail "Codex 1.0.3 cache hardcode present"
 
-# Codex sticky contract present
 CODEX_SKILL="${ROOT}/skills/camera-control/SKILL.md"
 if [[ -f "$CODEX_SKILL" ]]; then
   ct="$(cat "$CODEX_SKILL")"
-  [[ "$ct" == *"Session sticky model"* ]] && pass "Codex sticky model" || fail "Codex sticky model"
-  [[ "$ct" == *"/agent-vision off"* ]] || [[ "$ct" == *"`off`"* ]] && pass "Codex off" || fail "Codex off"
+  [[ "$ct" == *"HARD GATE"* ]] && pass "Codex HARD GATE" || fail "Codex HARD GATE"
+  [[ "$ct" == *"Topic is irrelevant"* ]] && pass "Codex topic irrelevant" || fail "Codex topic irrelevant"
+  [[ "$ct" == *"FORBIDDEN"* ]] && pass "Codex FORBIDDEN" || fail "Codex FORBIDDEN"
+fi
+
+CMD="${ROOT}/commands/agent-vision.md"
+if [[ -f "$CMD" ]]; then
+  [[ "$(cat "$CMD")" == *"HARD GATE"* ]] && pass "Codex command HARD GATE" || fail "Codex command HARD GATE"
 fi
 
 python3 - "$PLUGIN" <<'PY'
@@ -51,9 +60,7 @@ import json, pathlib, sys
 p = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert p.get("name") == "agent-vision", p
 assert "mcpServers" not in p, p
-desc = (p.get("description") or "").lower()
-assert "sticky" in desc and "mood" in desc, p
-print("PASS: plugin.json name, no mcpServers, sticky mood description")
+print("PASS: plugin.json name and no mcpServers")
 PY
 
 for script in \

@@ -40,7 +40,9 @@ jobs:
               text = skill.read_text(encoding="utf-8")
               assert "name: agent-vision" in text
               assert "disable-model-invocation: false" in text
-              assert "Session sticky model" in text
+              assert "HARD GATE" in text
+              assert "Topic is irrelevant" in text
+              assert "FORBIDDEN" in text
           print("manifest validation OK")
           PY
       - name: Install dry-run
