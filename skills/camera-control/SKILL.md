@@ -1,80 +1,130 @@
 ---
 name: camera-control
-description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, /agent-vision mood, or asks Codex to snapshot, inspect, roast, estimate mood, stream, or stop the local macOS camera through Agent Vision.
+description: >
+  Sticky local Mac camera vision for Codex via Agent Vision. Primary purpose:
+  ascertain mood/disposition from camera image(s), understand what is in the
+  image, and incorporate that into reasoning before responding or completing
+  tasks. Arm with /agent-vision (default mood). Stay armed until /agent-vision off.
+  Also snapshot and roast. Streaming disabled.
 ---
 
-# Agent Vision
+# Agent Vision (Codex)
 
-Use Agent Vision when the user explicitly asks for local Mac camera context.
+## Purpose (read this first)
 
-## Execution Discipline
+**Main product value: mood/disposition + vision-in-the-loop reasoning.**
 
-Agent Vision camera requests are not repository tasks. Do not orient on the workspace, inspect files, check git state, read README or AGENTS files, or summarize the project before acting.
+When armed, for each **substantive** user turn:
 
-For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, the first shell command must be the camera capture command:
+1. Capture one or more usable JPEGs via `agent-vision-capture-file` (usually one).
+2. Understand **what is in the image** (Codex: `codex exec -i` on the file for mood/roast; display path for snapshot).
+3. **Incorporate that understanding into reasoning** before the answer or task work.
+4. Mood shapes delivery fit only — not facts, permissions, approval, intent, or task scope.
+
+## Session sticky model (mandatory)
+
+```text
+NEW conversation / chat  →  OFF  (always; leftover state file alone is NOT enough)
+
+/agent-vision            →  ARM + mood vision loop
+/agent-vision mood       →  ARM + mood vision loop
+/agent-vision snapshot   →  ARM + snapshot
+/agent-vision roast      →  ARM + roast
+
+While ARMED in THIS conversation:
+  each substantive user turn → capture → understand image → reason with it → respond
+
+/agent-vision off
+  or: stop | disable | "turn off the camera" | "agent vision off"
+  →  DISARM
+```
+
+### Hard gates
+
+**Never capture** unless:
+
+1. This message explicitly invokes `/agent-vision` (or a mode), or  
+2. Sticky is armed **in this conversation** (prior slash arm in this chat) and the turn is substantive.
+
+**New chat starts OFF.** Do not trust a leftover state file alone.
+
+After arming, optionally:
+
+```bash
+# if available from a clone:
+scripts/agent-vision-sticky.sh on --host codex --mode mood
+scripts/agent-vision-sticky.sh off --host codex
+```
+
+## Execution discipline
+
+Camera requests are not repository tasks. Do not inspect the repo before capture.
+
+For capture turns, the **first shell command** must be:
 
 ```bash
 mkdir -p "$HOME/.codex/agent-vision/frames" && OUTPUT="$HOME/.codex/agent-vision/frames/agent-vision-$(date +%Y%m%d-%H%M%S).jpg" && "$HOME/.codex/plugins/cache/local/agent-vision/1.5.0/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
-If this rule is violated, report that as command-dispatch behavior. Do not reinterpret repository inspection as part of the camera workflow.
+Do not run `git status`, `rg`, `find`, `ls`, `sed`, `cat`, or workspace inspection before that command.
 
-## Workflow
+## Capture
 
-This skill controls the local camera. Do not inspect or roast the repository, source files, git state, README, or workspace unless the capture command fails and the exact failure requires local debugging.
+Materialize one JPEG with the command above. Verify `ok: true` and path exists. Each look is one-shot process lifecycle (camera brief on, then off). Sticky is **not** an always-on camera daemon.
 
-For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, the first shell command must create the frame directory and run `agent-vision-capture-file`. Do not run `git status`, `rg`, `find`, `ls`, `sed`, `cat`, or any repository/workspace inspection command before the capture command.
+## Mood (primary; bare `/agent-vision`)
 
-For one-shot camera context, materialize the camera image to a JPEG file. Create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it, then run:
-
-```bash
-"$HOME/.codex/plugins/cache/local/agent-vision/1.5.0/dist/agent-vision-capture-file" --output "$OUTPUT" --json
-```
-
-This is the normal image-access path. It calls the installed Agent Vision capture stack, decodes the returned image content, writes exactly one JPEG file, and prints JSON with the saved path and metadata.
-
-For roast mode, materialize a JPEG file with the same command, then run a separate image-input pass:
-
-```bash
-codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "Write exactly one playful roast of 400 characters or fewer based only on visible non-sensitive details in the attached image. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes."
-```
-
-Return the saved image link and the roast text from that image-input pass. The final response must include a Markdown image link using the captured absolute JPEG path, followed by the roast text. Do not write the roast in the current agent from Markdown, metadata, or memory. If the separate image-input pass fails, report that exact failure instead of roasting from metadata.
-
-For mood mode, materialize a JPEG file with the same command, then run a separate image-input pass:
+1. Capture as above.
+2. Run:
 
 ```bash
 codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "Analyze the attached Agent Vision camera image for current interaction-state calibration only. Return strict JSON and no prose. Use exactly these keys: presence, interaction_state, confidence, observable_basis, assistant_adjustments. presence must be one of present, absent, uncertain. interaction_state must be one of focused_neutral, frustrated_or_blocked, tired_or_overloaded, curious_or_exploratory, skeptical_or_evaluating, high_stakes_or_cautious, absent, uncertain. confidence must be a number from 0 to 1. observable_basis and assistant_adjustments must be arrays of strings. Apply these gates: if the user is absent, occluded, multiple people are visible, image quality is unusable, or confidence is below 0.40, return interaction_state uncertain or absent and use no mood-conditioned behavior; if confidence is from 0.40 through 0.69, include only low-risk clarity adjustments; if confidence is 0.70 or higher, include state-specific response delivery adjustments. Do not infer medical, psychological, intoxication, crisis, protected-trait, identity, or safety-state categories. Mood changes only pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior; it must not change facts, permissions, approval behavior, user intent, or task scope."
 ```
 
-Do not display the saved image, do not display the strict JSON, and do not explain the visual analysis or confidence band in the final response. Use the JSON only as ephemeral response delivery calibration for the current response or current task phase. User correction overrides the visual estimate. If the separate image-input pass fails or returns invalid JSON, report that exact failure instead of estimating mood from metadata, Markdown, or memory.
+3. Parse JSON. On success: **do not display** image or JSON; incorporate into reasoning; then answer/task.
+4. On failure: report the exact failure; do not invent mood from metadata.
+5. User correction overrides until the next capture.
 
-For streaming mode:
+## Snapshot
 
-1. Do not call a tool.
-2. Do not launch `AgentVision.app`, `agent-vision-mcp`, or `agent-vision-capture-file`.
-3. Reply exactly: `Agent Vision streaming is temporarily disabled in 1.5.0 while the runtime is being moved to an explicit start/stop design. Snapshot, roast, and mood still use one-shot capture and exit after the requested frame.`
-4. For stop-streaming requests, reply exactly: `Agent Vision streaming is disabled in 1.5.0, so there is no Agent Vision streaming session to stop.`
+Capture, then display Markdown image link with the absolute path. Use scene understanding in the reply when relevant.
 
-## Slash Commands
+## Roast
 
-- `/agent-vision snapshot`: materialize one JPEG file, then display it with a Markdown image link using the absolute path.
-- `/agent-vision streaming`: report the temporary disabled message and launch no process.
-- `/agent-vision roast`: materialize one JPEG file, run `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...roast prompt..."`, then return the saved image link and the roast text. The final response must include a Markdown image link using the captured absolute JPEG path.
-- `/agent-vision mood`: materialize one JPEG file, run `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...mood JSON prompt..."`, then silently apply only permitted response-shape adjustments to the current response or task phase. Do not display the saved image or raw JSON unless the user explicitly asks to debug the mood analysis.
+Capture, then:
 
-Agent Vision 1.5.0 has no streaming session. When the user asks to stop camera use or stop streaming, report that there is no Agent Vision streaming session to stop.
+```bash
+codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "Write exactly one playful roast of 400 characters or fewer based only on visible non-sensitive details in the attached image. Do not infer or attack protected traits, body size, age, disability, or other sensitive attributes."
+```
 
-Treat requests such as "streaming off", "stop streaming", or "turn off the camera" as stop-streaming requests that launch no Agent Vision process.
+Final response: Markdown image link + roast text. Do not roast from metadata/memory without a successful image pass.
+
+## Disarm (`off`)
+
+On `/agent-vision off`, `stop`, `disable`, “turn off the camera”, “agent vision off”:
+
+1. Sticky off (script if available).
+2. Disarm this conversation.
+3. No capture.
+4. Brief confirmation that Agent Vision is off until the next `/agent-vision` invoke.
+
+## Streaming (disabled)
+
+`/agent-vision streaming` only — do **not** arm; no process; reply exactly:
+
+`Agent Vision streaming is temporarily disabled in 1.5.0 while the runtime is being moved to an explicit start/stop design. Snapshot, roast, and mood still use one-shot capture and exit after the requested frame.`
 
 ## Guardrails
 
-- Agent Vision is macOS-only.
-- The plugin uses the built-in Mac camera only in version 1.5.0.
-- Snapshot, roast, and mood mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts before returning an error.
-- Agent Vision 1.5.0 must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process at install, plugin load, idle Codex startup, unrelated prompts, streaming requests, or stop-streaming requests.
-- Streaming is temporarily disabled until it has an explicit start/stop runtime independent of Codex plugin-load MCP lifecycle.
-- Snapshot mode captures one usable frame, saves it as a JPEG file, and turns the camera off.
-- Mood mode captures one usable frame, saves it as a JPEG file, analyzes that file through `codex exec -i`, and changes response delivery only. It must not change factual standards, permissions, approval behavior, user intent, or task scope.
-- Mood mode must not create mood history, a training dataset, background recording, separate image archive, or any raw-image persistence beyond the existing saved JPEG frame path.
-- Do not mention internal readiness metadata such as brightness values unless reporting an error.
+- macOS only; built-in camera; version 1.5.0 package path.
+- Install / idle / plugin load / disarmed: no `agent-vision-mcp`, no `AgentVision.app`, no capture helper.
+- No production MCP server.
+- No mood history dataset; frames only under the normal frame path.
+- Do not mention internal readiness metadata unless reporting an error.
+
+## Slash summary
+
+- `/agent-vision` | `mood` — arm + mood loop (primary).
+- `snapshot` | `roast` — arm + mode.
+- `off` — disarm.
+- `streaming` — disabled; do not arm.
