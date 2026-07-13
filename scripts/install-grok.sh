@@ -87,9 +87,9 @@ if [[ "$SKIP_PLUGIN" != "1" ]]; then
   cp "${SKILL_SRC}/SKILL.md" "${USER_PLUGIN_DIR}/skills/agent-vision/SKILL.md"
 fi
 
-# Refuse to add Agent Vision MCP to Grok config if present.
+# Refuse to install when Agent Vision MCP is already registered (no ripgrep required).
 if [[ -f "${HOME}/.grok/config.toml" ]]; then
-  if rg -n '\[mcp_servers\.agent-vision\]|\[mcp_servers\."agent-vision"\]' "${HOME}/.grok/config.toml" >/dev/null 2>&1; then
+  if grep -E -q '\[mcp_servers\.agent-vision\]|\[mcp_servers\."agent-vision"\]' "${HOME}/.grok/config.toml"; then
     echo "ERROR: ~/.grok/config.toml already registers an agent-vision MCP server. Remove it before installing." >&2
     exit 70
   fi

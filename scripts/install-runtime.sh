@@ -24,6 +24,16 @@ Does not launch the camera or register MCP servers.
 EOF
 }
 
+require_value() {
+  local opt="$1"
+  local val="${2:-}"
+  if [[ -z "$val" || "$val" == -* ]]; then
+    echo "ERROR: $opt requires a path argument." >&2
+    usage >&2
+    exit 64
+  fi
+}
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --dry-run)
@@ -31,10 +41,12 @@ while [[ "$#" -gt 0 ]]; do
       shift
       ;;
     --home)
+      require_value "--home" "${2:-}"
       AGENT_VISION_HOME="$2"
       shift 2
       ;;
     --source-dist)
+      require_value "--source-dist" "${2:-}"
       SOURCE_DIST="$2"
       shift 2
       ;;
@@ -96,18 +108,18 @@ chmod +x "${AGENT_VISION_HOME}/dist/agent-vision-capture-file"
 echo "Verifying codesign on installed app..."
 /usr/bin/codesign --verify --deep --strict "${AGENT_VISION_HOME}/dist/AgentVision.app"
 
-# PATH shim: thin wrapper so skill text can call agent-vision-capture-file.
+# PATH shim: evaluate HOME / AGENT_VISION_HOME at runtime (quoted heredoc).
 SHIM="${BIN_DIR}/agent-vision-capture-file"
-cat >"$SHIM" <<EOF
+cat >"$SHIM" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-HOME_DIR="\${AGENT_VISION_HOME:-$DEFAULT_HOME}"
-HELPER="\${HOME_DIR}/dist/agent-vision-capture-file"
-if [[ ! -x "\$HELPER" ]]; then
-  echo "{\"ok\":false,\"error\":{\"code\":\"runtime_missing\",\"message\":\"Agent Vision runtime helper not found at \$HELPER. Run scripts/install-runtime.sh (or install the packaged runtime).\"}}" >&2
+HOME_DIR="${AGENT_VISION_HOME:-$HOME/.local/share/agent-vision}"
+HELPER="${HOME_DIR}/dist/agent-vision-capture-file"
+if [[ ! -x "$HELPER" ]]; then
+  echo "{\"ok\":false,\"error\":{\"code\":\"runtime_missing\",\"message\":\"Agent Vision runtime helper not found at $HELPER. Run scripts/install-runtime.sh (or install the packaged runtime).\"}}" >&2
   exit 66
 fi
-exec "\$HELPER" "\$@"
+exec "$HELPER" "$@"
 EOF
 chmod +x "$SHIM"
 

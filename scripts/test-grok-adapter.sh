@@ -10,6 +10,11 @@ FAIL=0
 pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1" >&2; FAIL=1; }
 
+command -v python3 >/dev/null || {
+  echo "python3 is required for plugin.json validation." >&2
+  exit 1
+}
+
 [[ -f "$SKILL" ]] || { echo "Missing $SKILL" >&2; exit 1; }
 [[ -f "$PLUGIN" ]] || { echo "Missing $PLUGIN" >&2; exit 1; }
 

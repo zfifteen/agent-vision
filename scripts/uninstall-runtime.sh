@@ -9,9 +9,51 @@ BIN_DIR="${HOME}/.local/bin"
 SHIM="${BIN_DIR}/agent-vision-capture-file"
 REMOVE_FRAMES=0
 
+usage() {
+  echo "Usage: scripts/uninstall-runtime.sh [--home DIR] [--remove-frames]"
+}
+
+require_value() {
+  local opt="$1"
+  local val="${2:-}"
+  if [[ -z "$val" || "$val" == -* ]]; then
+    echo "ERROR: $opt requires a path argument." >&2
+    usage >&2
+    exit 64
+  fi
+}
+
+# Refuse paths that would make rm -rf catastrophic or ambiguous.
+assert_safe_runtime_home() {
+  local path="$1"
+  if [[ -z "$path" ]]; then
+    echo "ERROR: runtime home path is empty." >&2
+    exit 64
+  fi
+  if [[ "$path" != /* ]]; then
+    echo "ERROR: runtime home must be an absolute path: $path" >&2
+    exit 64
+  fi
+  case "$path" in
+    /|/Users|/home|"$HOME"|"$HOME/"|"$HOME/."|"$HOME/..")
+      echo "ERROR: refusing to delete unsafe runtime home path: $path" >&2
+      exit 64
+      ;;
+  esac
+  # Require a recognizable agent-vision leaf (or explicit INSTALL_META).
+  local base
+  base="$(basename "$path")"
+  if [[ "$base" != "agent-vision" && ! -f "${path}/INSTALL_META.txt" && ! -d "${path}/dist/AgentVision.app" ]]; then
+    echo "ERROR: refusing to delete path that does not look like an Agent Vision runtime home: $path" >&2
+    echo "  Expected basename agent-vision, INSTALL_META.txt, or dist/AgentVision.app." >&2
+    exit 64
+  fi
+}
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --home)
+      require_value "--home" "${2:-}"
       AGENT_VISION_HOME="$2"
       shift 2
       ;;
@@ -20,23 +62,40 @@ while [[ "$#" -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "Usage: scripts/uninstall-runtime.sh [--home DIR] [--remove-frames]"
+      usage
       exit 0
       ;;
     *)
       echo "Unknown argument: $1" >&2
+      usage >&2
       exit 64
       ;;
   esac
 done
 
+assert_safe_runtime_home "$AGENT_VISION_HOME"
+
 if [[ -e "$SHIM" ]]; then
-  # Only remove shim if it points at our runtime or is our generated wrapper.
-  if grep -q 'agent-vision-capture-file' "$SHIM" 2>/dev/null || [[ -L "$SHIM" ]]; then
+  remove_shim=0
+  if [[ -L "$SHIM" ]]; then
+    target="$(readlink "$SHIM" 2>/dev/null || true)"
+    case "$target" in
+      *agent-vision*/*agent-vision-capture-file|*agent-vision/dist/agent-vision-capture-file)
+        remove_shim=1
+        ;;
+    esac
+  elif [[ -f "$SHIM" ]] && grep -q 'Agent Vision runtime helper not found' "$SHIM" 2>/dev/null; then
+    # Generated wrapper text from install-runtime.sh
+    remove_shim=1
+  elif [[ -f "$SHIM" ]] && grep -q 'HOME/\.local/share/agent-vision' "$SHIM" 2>/dev/null && grep -q 'agent-vision-capture-file' "$SHIM" 2>/dev/null; then
+    remove_shim=1
+  fi
+
+  if [[ "$remove_shim" == "1" ]]; then
     rm -f "$SHIM"
     echo "Removed shim: $SHIM"
   else
-    echo "Left unexpected file in place: $SHIM" >&2
+    echo "Left non-Agent-Vision file/symlink in place: $SHIM" >&2
   fi
 fi
 
