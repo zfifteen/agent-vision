@@ -2,7 +2,9 @@
 
 Date: 2026-05-08
 
-Status: validation draft
+Status: validation draft  
+
+**Host scope:** Codex mood path only. Grok Build Ship A does not ship mood (Milestone 2).
 
 ## Purpose
 

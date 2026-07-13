@@ -11,6 +11,6 @@
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
+  <string>Agent Vision captures a camera frame when you explicitly run its slash command in a local assistant session (for example Codex or Grok Build).</string>
 </dict>
 </plist>

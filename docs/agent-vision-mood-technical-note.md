@@ -2,7 +2,9 @@
 
 Date: 2026-05-06
 
-Status: concept note
+Status: concept note  
+
+**Host scope:** Public **Codex** path only today. Grok Build Ship A does **not** implement mood (Milestone 2). See [agent-vision-grok-build-compatibility.md](./agent-vision-grok-build-compatibility.md).
 
 ## Abstract
 

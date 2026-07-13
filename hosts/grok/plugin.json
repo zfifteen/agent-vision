@@ -1,0 +1,22 @@
+{
+  "name": "agent-vision",
+  "version": "1.0.4-ship-a",
+  "description": "macOS Agent Vision for Grok Build: explicit one-shot local camera snapshot (Ship A).",
+  "author": {
+    "name": "Velocity Works",
+    "email": "velocityworks@users.noreply.github.com",
+    "url": "https://github.com/zfifteen"
+  },
+  "homepage": "https://github.com/zfifteen/agent-vision",
+  "repository": "https://github.com/zfifteen/agent-vision",
+  "license": "MIT",
+  "keywords": [
+    "grok",
+    "grok-build",
+    "macos",
+    "camera",
+    "avfoundation",
+    "local-first",
+    "agent-vision"
+  ]
+}
