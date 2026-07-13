@@ -44,7 +44,14 @@ jobs:
               assert "Topic is irrelevant" in text
               assert "FORBIDDEN" in text
               assert "USE THE IMAGE IN REASONING" in text or "use in reasoning" in text.lower()
-              assert "as if blind" in text or "identical-to-blind" in text or "never looked" in text
+              # Accept hyphenated or prose forms used in the skill HARD GATE.
+              assert (
+                  "as if blind" in text
+                  or "identical-to-blind" in text
+                  or "identical to a blind" in text
+                  or "Blind-identical" in text
+                  or "never looked" in text
+              ), "skill must ban blind-identical answers"
           print("manifest validation OK")
           PY
       - name: Install dry-run

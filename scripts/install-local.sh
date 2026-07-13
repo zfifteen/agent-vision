@@ -42,28 +42,20 @@ command = root / "commands" / "agent-vision.md"
 text = command.read_text(encoding="utf-8")
 if not text.startswith("---\n"):
     raise SystemExit("commands/agent-vision.md must start with YAML frontmatter so Codex can index the slash command")
-if "\ndescription: Snapshot, roast, or estimate mood with the Agent Vision camera.\n" not in text:
+if "\ndescription: HARD GATE sticky Agent Vision" not in text and "HARD GATE sticky Agent Vision" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command description")
-if "\nargument-hint: snapshot|streaming|roast|mood\n" not in text:
+if "\nargument-hint: mood|snapshot|roast|off|status|streaming\n" not in text:
     raise SystemExit("commands/agent-vision.md has wrong slash command argument hint")
 required_command_snippets = [
-    "Agent Vision camera requests are not repository tasks.",
-    "This slash command is camera control only.",
-    "Do not inspect or roast the repository",
-    "the first shell command must create the frame directory and run `agent-vision-capture-file`",
-    "- `snapshot`: take one usable image and turn the camera off.",
-    "- `streaming`: report that streaming is temporarily disabled in Agent Vision 1.5.0.",
-    "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
-    "- `mood`: take one usable image, turn the camera off, and estimate current interaction state for response delivery calibration only.",
-    "For `snapshot`, create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it",
-    "For `streaming`, do not call any tool and do not launch any Agent Vision process.",
-    "For `roast`, materialize a JPEG file with the same command, then run `codex exec --ephemeral --skip-git-repo-check -i",
-    "For `mood`, materialize a JPEG file with the same command, then run `codex exec --ephemeral --skip-git-repo-check -i",
-    "do not display the saved JPEG, do not display the JSON",
-    "Use exactly these keys: presence, interaction_state, confidence, observable_basis, assistant_adjustments.",
-    "User correction overrides the visual estimate.",
-    "If snapshot file mode fails, report the exact command error.",
-    "When the user asks to stop camera use or stop streaming, do not call any tool",
+    "HARD GATE",
+    "turn-gate begin",
+    "USE image in reasoning",
+    "ready` is single-use",
+    "Topic irrelevant",
+    "Blind-identical INVALID",
+    "Ambiguity burst",
+    "Playbooks",
+    "agent-vision-purge-frames",
 ]
 for snippet in required_command_snippets:
     if snippet not in text:
@@ -72,24 +64,17 @@ for snippet in required_command_snippets:
 skill = root / "skills" / "camera-control" / "SKILL.md"
 skill_text = skill.read_text(encoding="utf-8")
 required_skill_snippets = [
-    "description: Use when the user invokes /agent-vision, /agent-vision snapshot, /agent-vision streaming, /agent-vision roast, /agent-vision mood",
-    "## Execution Discipline",
-    "Agent Vision camera requests are not repository tasks.",
-    "If this rule is violated, report that as command-dispatch behavior.",
-    "This skill controls the local camera.",
-    "Do not inspect or roast the repository",
-    "the first shell command must create the frame directory and run `agent-vision-capture-file`",
-    "This is the normal image-access path.",
-    "`/agent-vision snapshot`: materialize one JPEG file",
-    "`/agent-vision streaming`: report the temporary disabled message and launch no process.",
-    "`/agent-vision roast`: materialize one JPEG file",
-    "`/agent-vision mood`: materialize one JPEG file",
-    "--skip-git-repo-check",
-    "Do not display the saved image, do not display the strict JSON",
-    "Do not write the roast in the current agent from Markdown, metadata, or memory.",
-    "If the separate image-input pass fails, report that exact failure instead of roasting from metadata.",
-    "Use the JSON only as ephemeral response delivery calibration for the current response or current task phase.",
-    "Mood mode must not create mood history, a training dataset, background recording, separate image archive",
+    "CRITICAL WHILE ARMED",
+    "HARD GATE",
+    "USE",
+    "turn-gate",
+    "Disposition playbooks",
+    "Ambiguity burst",
+    "agent-vision-capture-file",
+    "frustrated_or_blocked",
+    "codex exec",
+    "Topic irrelevant",
+    "FORBIDDEN",
 ]
 for snippet in required_skill_snippets:
     if snippet not in skill_text:
