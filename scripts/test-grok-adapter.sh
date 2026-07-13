@@ -22,6 +22,7 @@ text="$(cat "$SKILL")"
 if [[ "$text" == ---$'\n'* ]]; then pass "frontmatter present"; else fail "frontmatter missing"; fi
 [[ "$text" == *"name: agent-vision"* ]] && pass "name: agent-vision" || fail "name: agent-vision"
 [[ "$text" == *"disable-model-invocation: true"* ]] && pass "disable-model-invocation" || fail "disable-model-invocation"
+[[ "$text" == *"argument-hint: snapshot|streaming|roast|mood"* ]] && pass "argument-hint full modes" || fail "argument-hint full modes"
 [[ "$text" == *"agent-vision-capture-file"* ]] && pass "capture helper named" || fail "capture helper named"
 [[ "$text" == *"read_file"* ]] && pass "read_file vision path" || fail "read_file vision path"
 [[ "$text" == *"~/.agent-vision/frames"* ]] && pass "Grok frame dir" || fail "Grok frame dir"
@@ -30,7 +31,13 @@ if [[ "$text" == ---$'\n'* ]]; then pass "frontmatter present"; else fail "front
 [[ "$text" == *"Agent Vision streaming is temporarily disabled"* ]] && pass "streaming disabled copy" || fail "streaming disabled copy"
 [[ "$text" == *"there is no Agent Vision streaming session to stop"* ]] && pass "stop-streaming copy" || fail "stop-streaming copy"
 [[ "$text" == *"Do not use codex exec"* ]] && pass "no codex exec" || fail "no codex exec"
-[[ "$text" == *"Ship A"* ]] && pass "Ship A scope marked" || fail "Ship A scope marked"
+[[ "$text" == *"## Roast workflow"* ]] && pass "roast workflow present" || fail "roast workflow present"
+[[ "$text" == *"## Mood workflow"* ]] && pass "mood workflow present" || fail "mood workflow present"
+[[ "$text" == *"400 characters or fewer"* ]] && pass "roast length limit" || fail "roast length limit"
+[[ "$text" == *"interaction_state"* ]] && pass "mood JSON keys" || fail "mood JSON keys"
+[[ "$text" == *"Do not display"* ]] || [[ "$text" == *"**Do not display**"* ]] && pass "mood no display" || fail "mood no display"
+[[ "$text" != *"Milestone 2"* ]] && pass "no Milestone 2 roast/mood deferral" || fail "Milestone 2 deferral still present"
+[[ "$text" != *"Not in Ship A"* ]] && pass "no Ship A roast exclusion" || fail "Ship A roast exclusion still present"
 [[ "$text" != *"~/.codex/plugins/cache/local/agent-vision/1.0.3"* ]] && pass "no Codex 1.0.3 cache hardcode" || fail "Codex 1.0.3 cache hardcode present"
 
 python3 - "$PLUGIN" <<'PY'
@@ -38,7 +45,9 @@ import json, pathlib, sys
 p = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert p.get("name") == "agent-vision", p
 assert "mcpServers" not in p, p
-print("PASS: plugin.json name and no mcpServers")
+desc = (p.get("description") or "").lower()
+assert "roast" in desc and "mood" in desc, p
+print("PASS: plugin.json name, no mcpServers, roast+mood description")
 PY
 
 for script in \

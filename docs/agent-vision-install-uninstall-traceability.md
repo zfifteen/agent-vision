@@ -1,9 +1,9 @@
 # Agent Vision Install/Uninstall Traceability Matrix
 
 Date: 2026-07-13  
-**Scope: Codex package 1.5.0.** For Grok Build Ship A, see [agent-vision-grok-install-uninstall-traceability.md](./agent-vision-grok-install-uninstall-traceability.md).
+**Scope: Codex package 1.5.0.** For Grok Build, see [agent-vision-grok-install-uninstall-traceability.md](./agent-vision-grok-install-uninstall-traceability.md).
 
-Agent Vision 1.5.0 is the multi-host package release (Codex + Grok Build Ship A). It preserves the 1.0.3 privacy hotfix: no production MCP server, and no camera-capable process on install, enable, idle startup, unrelated prompts, streaming, or stop-streaming.
+Agent Vision 1.5.0 is the multi-host package release (Codex + Grok Build). It preserves the 1.0.3 privacy hotfix: no production MCP server, and no camera-capable process on install, enable, idle startup, unrelated prompts, streaming, or stop-streaming.
 
 ## Runtime Invariant
 
@@ -59,5 +59,5 @@ test ! -e "$HOME/.codex/plugins/cache/local/agent-vision/1.0.2"
 
 - `1.0.2` is affected by the eager MCP launch bug.
 - `1.0.3` removes the production Agent Vision MCP server and disables streaming.
-- `1.5.0` unifies Codex + Grok Build Ship A under one package version; Codex keeps the no-MCP lifecycle.
+- `1.5.0` unifies Codex + Grok Build under one package version; Codex keeps the no-MCP lifecycle. Grok roast/mood parity lands on main after the initial 1.5.0 snapshot cut.
 - A future streaming design must use an explicit user-started runtime with deterministic stop and no plugin-load process.

@@ -4,7 +4,7 @@ Date: 2026-05-08
 
 Status: validation draft  
 
-**Host scope:** Codex mood path only. Grok Build Ship A does not ship mood (Milestone 2).
+**Host scope:** Codex mood path (`codex exec -i`) and Grok mood path (multimodal `read_file`). Same JSON keys, gates, and silent-display rules on both hosts.
 
 ## Purpose
 

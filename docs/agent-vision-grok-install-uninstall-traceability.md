@@ -1,7 +1,7 @@
 # Agent Vision Grok Build Install/Uninstall Traceability
 
 Date: 2026-07-13  
-Scope: **Grok Build Ship A** (snapshot + disabled streaming)
+Scope: **Grok Build** (snapshot, roast, mood + disabled streaming)
 
 Codex package lifecycle remains documented in [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md).
 
@@ -12,25 +12,27 @@ Install, Grok skill/plugin enablement, idle Grok startup, unrelated prompts, `/a
 ```text
 agent-vision-mcp
 AgentVision.app
-agent-vision-capture-file   # except during explicit /agent-vision snapshot
+agent-vision-capture-file   # except during explicit /agent-vision snapshot|roast|mood
 mcp-fifo
 ```
 
-Camera-capable code runs only for explicit `/agent-vision snapshot` through the installed capture helper.
+Camera-capable code runs only for explicit `/agent-vision snapshot`, `/agent-vision roast`, or `/agent-vision mood` through the installed capture helper.
 
 ## Traceability matrix
 
-| Requirement | Ship A mapping | QA check |
+| Requirement | Mapping | QA check |
 | --- | --- | --- |
 | Shared runtime installable | `scripts/install-runtime.sh` → `$AGENT_VISION_HOME` (default `~/.local/share/agent-vision`) | `test -x "$HOME/.local/share/agent-vision/dist/agent-vision-capture-file"` |
 | Codesign preserved | Copy without re-sign when possible; `codesign --verify --deep --strict` | Verify after install |
 | PATH shim | `~/.local/bin/agent-vision-capture-file` | `command -v agent-vision-capture-file` with `~/.local/bin` on PATH |
-| Frame directory | `~/.agent-vision/frames` (dirs mode `0700`) | Exists after install or first snapshot |
+| Frame directory | `~/.agent-vision/frames` (dirs mode `0700`) | Exists after install or first one-shot mode |
 | Grok skill installed | `~/.grok/skills/agent-vision/SKILL.md` | `scripts/install-grok.sh`; `test -f` skill path |
-| Skill contracts | `disable-model-invocation: true`, camera-first, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
+| Skill contracts | `disable-model-invocation: true`, camera-first, roast+mood workflows, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
 | No MCP | Empty/absent Agent Vision MCP in Grok config; plugin has no `mcpServers` | `test-grok-adapter.sh`; inspect `~/.grok/config.toml` |
 | Install starts no camera | Baseline PID check in install scripts | Install scripts fail if new Agent Vision PIDs appear |
 | Snapshot works | Helper + `read_file` | Manual `/agent-vision snapshot`; optional `AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh` |
+| Roast works | Capture + `read_file` + roast text; Markdown image link | Manual `/agent-vision roast` |
+| Mood works | Capture + `read_file` + silent calibration; no image/JSON display | Manual `/agent-vision mood` |
 | Streaming safe | Fixed disabled copy; no process | Manual slash / stop phrases |
 | Uninstall adapter | `scripts/uninstall-grok.sh` | Skill/plugin dirs gone; runtime may remain |
 | Uninstall runtime | `scripts/uninstall-runtime.sh` | Runtime home and shim removed |

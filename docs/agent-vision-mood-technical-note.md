@@ -4,7 +4,7 @@ Date: 2026-05-06
 
 Status: concept note  
 
-**Host scope:** Public **Codex** path only today. Grok Build Ship A does **not** implement mood (Milestone 2). See [agent-vision-grok-build-compatibility.md](./agent-vision-grok-build-compatibility.md).
+**Host scope:** Codex mood path (`codex exec -i`) and Grok mood path (multimodal `read_file`). Same JSON contract and silent-display rules. See [agent-vision-grok-build-compatibility.md](./agent-vision-grok-build-compatibility.md).
 
 ## Abstract
 

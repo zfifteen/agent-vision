@@ -5,7 +5,7 @@ Agent Vision supports two hosts. Pick the section that matches your assistant.
 | Host | Status | What you get |
 | --- | --- | --- |
 | [Codex](#codex-stable-package) | Stable package **1.5.0** | snapshot, roast, mood; streaming disabled |
-| [Grok Build](#grok-build-ship-a) | Public **Ship A** (**1.5.0**) | **snapshot** only; streaming disabled |
+| [Grok Build](#grok-build) | Public (**1.5.0**+) | snapshot, roast, mood; streaming disabled |
 
 Shared rules on both hosts:
 
@@ -81,9 +81,9 @@ Or from a clone: `scripts/uninstall-local.sh` / packaged uninstall scripts. Remo
 
 ---
 
-## Grok Build (Ship A)
+## Grok Build
 
-Public Grok support is **Ship A**: explicit **snapshot** plus disabled streaming. Roast and mood are **not** available on Grok yet.
+Public Grok support includes the same one-shot modes as Codex: **snapshot**, **roast**, and **mood**. Streaming is disabled. Image analysis uses multimodal `read_file` on the saved JPEG.
 
 ### Requirements
 
@@ -130,14 +130,17 @@ scripts/test-grok-adapter.sh
 QA traceability: [docs/agent-vision-grok-install-uninstall-traceability.md](docs/agent-vision-grok-install-uninstall-traceability.md).  
 Host adapter notes: [hosts/grok/README.md](hosts/grok/README.md).
 
+After upgrading the skill (roast/mood), open a **new** Grok session so the skill reloads.
+
 ### Grok first use
 
 | Command | Result |
 | --- | --- |
-| `/agent-vision snapshot` | One JPEG, camera off, image in chat |
+| `/agent-vision snapshot` | One JPEG, camera off, image in chat after `read_file` |
+| `/agent-vision roast` | Capture + `read_file` + playful roast; image + roast text |
+| `/agent-vision mood` | Capture + `read_file` + silent delivery calibration (no image/JSON display) |
 | `/agent-vision streaming` | Disabled message; no process |
 | stop streaming / turn off camera | No session message; no process |
-| `/agent-vision roast` or `mood` | Not in Ship A — use Codex, or wait for Milestone 2 |
 
 ### Grok uninstall
 

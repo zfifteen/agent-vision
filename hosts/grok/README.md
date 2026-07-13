@@ -1,15 +1,18 @@
-# Agent Vision — Grok Build host adapter (Ship A)
+# Agent Vision — Grok Build host adapter
 
-Public experimental adapter for [Grok Build](https://github.com/xai-org) on macOS.
+Public adapter for [Grok Build](https://github.com/xai-org) on macOS.
 
 ## Scope
 
-| Feature | Ship A |
+| Feature | Status |
 | --- | --- |
 | `/agent-vision snapshot` | Yes — JPEG under `~/.agent-vision/frames` |
+| `/agent-vision roast` | Yes — capture + `read_file` + playful roast |
+| `/agent-vision mood` | Yes — capture + `read_file` + silent delivery calibration |
 | Streaming | Disabled (fixed message, no process) |
-| Roast / mood | Not yet (Milestone 2) |
 | Production MCP | No |
+
+Image analysis on Grok uses multimodal `read_file` on the saved JPEG (not `codex exec -i`).
 
 ## Install
 
@@ -24,9 +27,9 @@ scripts/install-grok.sh      # ~/.grok/skills/agent-vision
 - Put `~/.local/bin` on `PATH`.
 - Use Grok with **sandbox off** (default).
 - Open a **new** Grok session after install.
-- Run `/agent-vision snapshot`.
+- Run `/agent-vision snapshot`, `/agent-vision roast`, or `/agent-vision mood`.
 
-Full user instructions: [INSTALL.md](../../INSTALL.md#grok-build-ship-a).  
+Full user instructions: [INSTALL.md](../../INSTALL.md#grok-build).  
 QA matrix: [docs/agent-vision-grok-install-uninstall-traceability.md](../../docs/agent-vision-grok-install-uninstall-traceability.md).
 
 ## Layout

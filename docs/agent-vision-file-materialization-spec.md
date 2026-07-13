@@ -7,7 +7,7 @@
 | Host | Materialize | Vision / display ingest |
 | --- | --- | --- |
 | Codex (1.5.0) | `agent-vision-capture-file` → `~/.codex/agent-vision/frames` | Markdown image link; roast/mood use `codex exec -i` |
-| Grok Build (Ship A) | `agent-vision-capture-file` → `~/.agent-vision/frames` | Multimodal `read_file` on the absolute path + Markdown image link |
+| Grok Build | `agent-vision-capture-file` → `~/.agent-vision/frames` | Multimodal `read_file` on the absolute path; Markdown for snapshot/roast; mood silent |
 
 The tested Codex path does not make MCP image content directly available to the assistant as inspectable vision input. Production Grok and Codex user contracts therefore **must not** depend on MCP image payloads in memory.
 
@@ -76,7 +76,7 @@ Codex 1.5.0 package:
 
 ### Roast / mood (Codex only in current public cut)
 
-Materialize JPEG, then `codex exec -i` with the host skill prompts. Grok Ship A does not implement roast/mood.
+Materialize JPEG, then analyze with the host vision path: Codex uses `codex exec -i`; Grok uses multimodal `read_file` on the absolute path with the same roast/mood prompts and gates.
 
 ### Streaming
 

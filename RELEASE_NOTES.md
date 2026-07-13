@@ -1,12 +1,23 @@
 # Release Notes
 
+## Unreleased — Grok roast + mood parity
+
+Grok Build now has the same one-shot feature set as Codex:
+
+- `/agent-vision roast` — capture + multimodal `read_file` + playful roast (≤400 chars, non-sensitive details only)
+- `/agent-vision mood` — capture + `read_file` + silent delivery calibration (same JSON keys/gates as Codex)
+- Streaming still disabled; no production MCP; camera-first capture discipline unchanged
+- Image analysis path on Grok remains `read_file` (not `codex exec -i`)
+
+Upgrade: re-run `scripts/install-grok.sh` (and open a new Grok session). Shared runtime need not be reinstalled if already on 1.5.0.
+
 ## 1.5.0 — Grok Build support
 
 Unified multi-host release: **Codex** and **Grok Build** both ship as first-class hosts under package version **1.5.0**.
 
 ### Highlights
 
-- **Grok Build (Ship A):** `/agent-vision snapshot` via shared runtime + Grok skill adapter.
+- **Grok Build (initial):** `/agent-vision snapshot` via shared runtime + Grok skill adapter (roast/mood landed in the Unreleased cut above).
 - **Codex:** same one-shot snapshot, roast, and mood paths; plugin cache moves to `.../1.5.0`.
 - **Shared invariants preserved:** no production MCP server, no camera process on install/idle/unrelated prompts/streaming/stop-streaming.
 - Streaming remains disabled with version-aligned fixed copy until an explicit start/stop runtime lands.
@@ -27,7 +38,7 @@ Unified multi-host release: **Codex** and **Grok Build** both ship as first-clas
 - Streaming disabled (fixed copy, no process); stop-streaming launches no process.
 - No production MCP on Grok; `disable-model-invocation: true` on the skill.
 - Supported capture environment: Grok **sandbox off** (default).
-- Roast and mood on Grok are **not** included yet (Milestone 2).
+- Initial Grok cut was snapshot-first; roast and mood follow in the Unreleased section above.
 - Release tarball includes `hosts/grok/` and runtime/Grok install scripts under `scripts/`.
 
 ### Codex

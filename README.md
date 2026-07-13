@@ -15,9 +15,9 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 | Host | Status | Features | Frames | Install |
 | --- | --- | --- | --- | --- |
 | **Codex** | Stable (package **1.5.0**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
-| **Grok Build** | Public **Ship A** (package **1.5.0**) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | Release package or clone: `install-runtime.sh` + `install-grok.sh` |
+| **Grok Build** | Public (package **1.5.0**+) | snapshot, roast, mood; streaming disabled | `~/.agent-vision/frames` | Release package or clone: `install-runtime.sh` + `install-grok.sh` |
 
-Both hosts share package version **1.5.0**. Roast/mood on Grok remain Milestone 2.
+Both hosts share the same one-shot modes (snapshot, roast, mood). Streaming is disabled on both. Grok uses multimodal `read_file` for image analysis; Codex uses `codex exec -i`.
 
 Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
 
@@ -32,17 +32,17 @@ Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, 
 ```text
 /agent-vision snapshot
 /agent-vision streaming
-/agent-vision roast    # Codex only (Grok: Milestone 2)
-/agent-vision mood     # Codex only (Grok: Milestone 2)
+/agent-vision roast
+/agent-vision mood
 ```
 
 **Snapshot** starts the camera if needed, waits for a usable JPEG, saves it under the host frame directory, displays it (Markdown image link; Grok also uses multimodal `read_file`), and stops the camera. Black warm-up frames: keep camera on, wait 5 seconds between attempts, up to 3 attempts.
 
 **Streaming** is disabled on both hosts. Fixed message; **no process** launched. Stop-streaming requests also launch no process.
 
-**Roast** (Codex): snapshot + `codex exec -i` playful roast (≤400 characters, non-sensitive details only).
+**Roast**: snapshot + image analysis → playful roast (≤400 characters, non-sensitive details only). Codex: `codex exec -i`. Grok: `read_file` on the saved JPEG.
 
-**Mood** (Codex): snapshot + `codex exec -i` strict JSON for response-delivery calibration only (silent by default; does not change facts, permissions, approvals, intent, or task scope).
+**Mood**: snapshot + image analysis → strict JSON for response-delivery calibration only (silent by default; does not change facts, permissions, approvals, intent, or task scope). Codex: `codex exec -i`. Grok: `read_file` on the saved JPEG.
 
 ## What It Does Not Do
 
@@ -57,7 +57,7 @@ Agent Vision does not implement:
 - Automatic frame ingestion.
 - Mood history, training datasets, background mood detection, or a separate image archive.
 
-The camera stays local. Snapshot (and Codex roast/mood) use a saved JPEG file as the user-visible image contract.
+The camera stays local. Snapshot and roast use a saved JPEG file as the user-visible image contract on both hosts.
 
 ## Who This Is For
 
@@ -99,9 +99,9 @@ cd agent-vision-1.5.0
 ./install.sh
 ```
 
-### Grok Build (Ship A)
+### Grok Build
 
-Grok Build support is public as **Ship A** in **1.5.0**: **snapshot** + disabled streaming. Roast and mood are not available on Grok yet (Milestone 2).
+Grok Build gets the same one-shot modes as Codex: **snapshot**, **roast**, **mood** (streaming still disabled). Image analysis uses multimodal `read_file` on the saved JPEG.
 
 From the packaged release (or a clone with signed `dist/AgentVision.app`):
 
@@ -117,6 +117,8 @@ Ensure `~/.local/bin` is on your `PATH` so `agent-vision-capture-file` resolves.
 
 ```text
 /agent-vision snapshot
+/agent-vision roast
+/agent-vision mood
 ```
 
 Frames: `~/.agent-vision/frames`. Uninstall: `scripts/uninstall-grok.sh` (adapter) and/or `scripts/uninstall-runtime.sh` (camera runtime).
@@ -229,7 +231,7 @@ Estimate current interaction state for response delivery:
 /agent-vision mood
 ```
 
-Mood mode is opt-in. It uses the same saved JPEG frame path as snapshot and roast, then asks a separate image-input Codex pass for strict JSON. The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
+Mood mode is opt-in. It uses the same saved JPEG frame path as snapshot and roast, then analyzes that image for strict JSON (Codex via `codex exec -i`; Grok via `read_file`). The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
 
 ## Architecture
 
@@ -272,23 +274,22 @@ Snapshot mode:
 
 Roast mode:
 
-1. Codex runs `agent-vision-capture-file --output "$OUTPUT" --json`.
+1. Host runs `agent-vision-capture-file --output "$OUTPUT" --json`.
 2. The file materializer writes one usable JPEG to `$OUTPUT`.
-3. Codex runs `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...roast prompt..."`.
-4. Codex returns the saved JPEG link and the roast text from that image-input pass.
+3. Host analyzes the image (Codex: `codex exec -i`; Grok: `read_file`).
+4. Host returns the saved JPEG link and the roast text from that image analysis.
 
 Mood mode:
 
-1. Codex runs `agent-vision-capture-file --output "$OUTPUT" --json`.
+1. Host runs `agent-vision-capture-file --output "$OUTPUT" --json`.
 2. The file materializer writes one usable JPEG to `$OUTPUT`.
-3. Codex runs `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...mood JSON prompt..."`.
-4. Codex parses the strict JSON from that image-input pass.
-5. Codex applies permitted response-shape adjustments only to the current response or task phase.
-6. Codex does not display the captured image, raw JSON, confidence band, or visual-analysis rationale unless the user explicitly asks to debug mood mode.
+3. Host analyzes the image for strict JSON (Codex: `codex exec -i`; Grok: `read_file`).
+4. Host applies permitted response-shape adjustments only to the current response or task phase.
+5. Host does not display the captured image, raw JSON, confidence band, or visual-analysis rationale unless the user explicitly asks to debug mood mode.
 
 Streaming is disabled on both hosts. `/agent-vision streaming`, `stop streaming`, and `turn off the camera` launch no Agent Vision process.
 
-**Invariant:** explicit snapshot (and Codex roast/mood) may blink the camera briefly; install, idle host startup, unrelated prompts, streaming, and stop-streaming create **no** Agent Vision process.
+**Invariant:** explicit snapshot, roast, and mood may blink the camera briefly; install, idle host startup, unrelated prompts, streaming, and stop-streaming create **no** Agent Vision process.
 
 ## Privacy
 
