@@ -9,7 +9,13 @@ Agent Vision is **mood-first vision-in-the-loop**: when armed, the agent capture
 
 ## HARD GATE (non-optional)
 
-While ARMED, capture + image understand is **mandatory** on every user turn except a **closed skip whitelist** (pure off, pure status-only, pure streaming). **Topic is irrelevant** — code, docs, planning, brainstorming, and meta all require the loop. Agents must not skip because the topic is “non-visual.” Skill text: `HARD GATE`, `FORBIDDEN while ARMED`, end-of-turn checklist.
+While ARMED, the full loop is **mandatory** on every user turn except a **closed skip whitelist** (pure off, pure status-only, pure streaming):
+
+```text
+capture → understand image (pixels) → USE image content in reasoning → respond
+```
+
+**Capture without use is a failure.** An answer identical to a blind answer is **INVALID**. **Topic is irrelevant.** Skill text: `HARD GATE`, `USE THE IMAGE IN REASONING`, `FORBIDDEN`, end-of-turn checklist including reasoning use.
 
 ## Session model
 

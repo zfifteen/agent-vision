@@ -1,5 +1,5 @@
 ---
-description: HARD GATE sticky Agent Vision — capture every non-whitelist turn while armed; off to disarm.
+description: HARD GATE sticky Agent Vision — capture, understand, and USE image in reasoning every armed turn.
 argument-hint: mood|snapshot|roast|off|streaming
 ---
 
@@ -7,30 +7,25 @@ argument-hint: mood|snapshot|roast|off|streaming
 
 ## HARD GATE (non-optional)
 
-While **ARMED** in this conversation (after any `/agent-vision` arm until `/agent-vision off`):
+**The point is reasoning with the image, not merely capturing a file.**
+
+While **ARMED** (after any `/agent-vision` arm until off):
 
 1. Do not answer yet.
-2. **First shell command** must be capture to `$HOME/.codex/agent-vision/frames` via `.../1.5.0/dist/agent-vision-capture-file --output "$OUTPUT" --json`.
-3. Then understand the image (mood/roast: `codex exec -i`; snapshot: show path).
-4. Then answer using what you saw.
+2. First shell: capture via `.../1.5.0/dist/agent-vision-capture-file`.
+3. Understand this turn’s image (`codex exec -i` for mood/roast; path for snapshot).
+4. **USE** what you saw in reasoning and response shape. Blind-identical answers are **INVALID**.
+5. Then answer.
 
-**Topic is irrelevant.** Code/docs/planning/brainstorm/meta all require capture while armed.
+**Topic is irrelevant.** FORBIDDEN: skip or capture-without-use.
 
-**FORBIDDEN:** skipping because “non-visual,” “wouldn’t help,” or “optional.”
+**Skip whitelist only:** pure off; pure status; pure streaming.
 
-**Skip whitelist only:** pure off/disarm; pure status-only; pure `/agent-vision streaming`.
-
-New chat starts OFF. Leftover state file alone does not arm.
+New chat starts OFF.
 
 ## Modes
 
-- bare / `mood` — arm + mood loop (primary)
-- `snapshot` / `roast` — arm + mode
-- `off` — disarm; no capture
+- bare / `mood` — arm + full loop (primary)
+- `snapshot` / `roast` — arm + mode (still use image)
+- `off` — disarm
 - `streaming` — disabled; do not arm
-
-Optional: `scripts/agent-vision-sticky.sh on|off --host codex`.
-
-## Privacy
-
-One-shot capture process per look. Install/idle/disarmed: no Agent Vision process. No production MCP.
