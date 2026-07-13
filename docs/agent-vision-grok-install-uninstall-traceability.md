@@ -1,7 +1,7 @@
 # Agent Vision Grok Build Install/Uninstall Traceability
 
 Date: 2026-07-13  
-Scope: **Grok Build** (snapshot, roast, mood + disabled streaming)
+Scope: **Grok Build** — primary mode **mood** (disposition → reason → respond); supporting snapshot/roast; streaming disabled
 
 Codex package lifecycle remains documented in [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md).
 
@@ -27,12 +27,12 @@ Camera-capable code runs only for explicit `/agent-vision snapshot`, `/agent-vis
 | PATH shim | `~/.local/bin/agent-vision-capture-file` | `command -v agent-vision-capture-file` with `~/.local/bin` on PATH |
 | Frame directory | `~/.agent-vision/frames` (dirs mode `0700`) | Exists after install or first one-shot mode |
 | Grok skill installed | `~/.grok/skills/agent-vision/SKILL.md` | `scripts/install-grok.sh`; `test -f` skill path |
-| Skill contracts | `disable-model-invocation: true`, camera-first, roast+mood workflows, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
+| Skill contracts | Mood-first purpose, reasoning loop, `disable-model-invocation: true`, camera-first, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
 | No MCP | Empty/absent Agent Vision MCP in Grok config; plugin has no `mcpServers` | `test-grok-adapter.sh`; inspect `~/.grok/config.toml` |
 | Install starts no camera | Baseline PID check in install scripts | Install scripts fail if new Agent Vision PIDs appear |
 | Snapshot works | Helper + `read_file` | Manual `/agent-vision snapshot`; optional `AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh` |
 | Roast works | Capture + `read_file` + roast text; Markdown image link | Manual `/agent-vision roast` |
-| Mood works | Capture + `read_file` + silent calibration; no image/JSON display | Manual `/agent-vision mood` |
+| Mood works (primary) | Capture + `read_file` + ascertain disposition + incorporate into reasoning before answer; silent | Manual `/agent-vision mood` (optionally with a work request) |
 | Streaming safe | Fixed disabled copy; no process | Manual slash / stop phrases |
 | Uninstall adapter | `scripts/uninstall-grok.sh` | Skill/plugin dirs gone; runtime may remain |
 | Uninstall runtime | `scripts/uninstall-runtime.sh` | Runtime home and shim removed |

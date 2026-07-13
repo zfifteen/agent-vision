@@ -126,5 +126,5 @@ if [[ "$SKIP_PLUGIN" != "1" ]]; then
   echo "    grok plugin install $USER_PLUGIN_DIR --trust"
   echo "  and ensure it is listed under [plugins] enabled when required."
 fi
-echo "  Slash:  /agent-vision snapshot | roast | mood"
-echo "  Modes:  snapshot, roast, mood (streaming disabled)."
+echo "  Primary: /agent-vision mood  (ascertain disposition → reason with it → respond)"
+echo "  Also:    /agent-vision snapshot | roast  (supporting; streaming disabled)"

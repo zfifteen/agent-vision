@@ -1,13 +1,13 @@
 # Release Notes
 
-## Unreleased — Grok roast + mood parity
+## Unreleased — Grok mood-first parity
 
-Grok Build now has the same one-shot feature set as Codex:
+Grok Build agent instructions are **mood-first**: the product value is ascertaining disposition from one explicit local frame and **incorporating that signal into reasoning before the response or task work**.
 
-- `/agent-vision roast` — capture + multimodal `read_file` + playful roast (≤400 chars, non-sensitive details only)
-- `/agent-vision mood` — capture + `read_file` + silent delivery calibration (same JSON keys/gates as Codex)
-- Streaming still disabled; no production MCP; camera-first capture discipline unchanged
-- Image analysis path on Grok remains `read_file` (not `codex exec -i`)
+- `/agent-vision mood` — **primary** (capture + `read_file` + ascertain + incorporate; silent)
+- `/agent-vision snapshot` / `roast` — supporting modes on the same capture path
+- Same JSON keys/gates as Codex mood; Grok vision path remains `read_file` (not `codex exec -i`)
+- Streaming still disabled; no production MCP; camera-first discipline unchanged
 
 Upgrade: re-run `scripts/install-grok.sh` (and open a new Grok session). Shared runtime need not be reinstalled if already on 1.5.0.
 

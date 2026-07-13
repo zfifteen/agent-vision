@@ -83,7 +83,7 @@ Or from a clone: `scripts/uninstall-local.sh` / packaged uninstall scripts. Remo
 
 ## Grok Build
 
-Public Grok support includes the same one-shot modes as Codex: **snapshot**, **roast**, and **mood**. Streaming is disabled. Image analysis uses multimodal `read_file` on the saved JPEG.
+**Primary value on Grok is mood:** one explicit local frame → ascertain disposition → incorporate into reasoning before the answer or task work. Snapshot and roast share the same capture path as supporting modes. Streaming is disabled. Image analysis uses multimodal `read_file` on the saved JPEG.
 
 ### Requirements
 
@@ -110,13 +110,13 @@ scripts/install-runtime.sh
 scripts/install-grok.sh
 ```
 
-Open a **new** Grok session, then:
+Open a **new** Grok session, then prefer:
 
 ```text
-/agent-vision snapshot
+/agent-vision mood
 ```
 
-Frames are written under `~/.agent-vision/frames`. Grok inspects the JPEG with multimodal `read_file` after capture.
+Optionally combine mood with a work request in the same turn so disposition shapes how Grok helps. Frames are written under `~/.agent-vision/frames`. Grok inspects the JPEG with multimodal `read_file` after capture.
 
 Dry-run checks (no install):
 
@@ -136,9 +136,9 @@ After upgrading the skill (roast/mood), open a **new** Grok session so the skill
 
 | Command | Result |
 | --- | --- |
-| `/agent-vision snapshot` | One JPEG, camera off, image in chat after `read_file` |
-| `/agent-vision roast` | Capture + `read_file` + playful roast; image + roast text |
-| `/agent-vision mood` | Capture + `read_file` + silent delivery calibration (no image/JSON display) |
+| `/agent-vision mood` | **Primary** — ascertain disposition, fold into reasoning, then respond/act (silent; no image/JSON dump) |
+| `/agent-vision snapshot` | Supporting — one JPEG, camera off, image in chat after `read_file` |
+| `/agent-vision roast` | Supporting — capture + `read_file` + playful roast; image + roast text |
 | `/agent-vision streaming` | Disabled message; no process |
 | stop streaming / turn off camera | No session message; no process |
 
