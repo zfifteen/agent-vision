@@ -2,42 +2,47 @@
 
 # Agent Vision
 
-Agent Vision is a macOS-only Codex plugin that lets a local Codex session capture camera frames through a signed local app and materialize them as JPEG files.
+Agent Vision is a macOS-only local camera appliance for AI coding agents. A signed native app captures one explicit JPEG frame when you ask; the host adapter (Codex or Grok Build) materializes that file and inspects it through a proven local path.
 
-It gives Codex a tiny, explicit window into the physical world around your Mac. Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product wearing a fake mustache and pretending to be productivity software. Just a signed native macOS app and a local JPEG file when you ask for one.
+Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product. Just a signed `AgentVision.app` and a local JPEG when you invoke `/agent-vision`.
 
 Some people will love this. Some people will absolutely hate it. Both reactions are reasonable.
 
-If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for the person who already trusts a local Codex session with real work and wants to say, "look at this thing," without taking a screenshot, emailing themself a photo, dragging files around, or performing the tiny office ritual where you hold a circuit board up to a laptop camera like you are negotiating with the future.
+If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for people who already trust a local assistant with real work and want to say, "look at this thing," without screenshot gymnastics.
+
+## Hosts
+
+| Host | Status | Features | Frames | Install |
+| --- | --- | --- | --- | --- |
+| **Codex** | Stable (package **1.0.3**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
+| **Grok Build** | Public **Ship A** (`1.0.4-ship-a` runtime/plugin meta) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | `install-runtime.sh` + `install-grok.sh` from this repo |
+
+Version triad: Codex package remains **1.0.3**; Grok Ship A runtime/plugin use **1.0.4-ship-a**; full multi-host **1.1.0** is reserved for a later dual-host product release.
+
+Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
+
+Design notes: [docs/agent-vision-grok-build-compatibility.md](docs/agent-vision-grok-build-compatibility.md).
 
 ## What It Does
 
-Version 1.0.3 gives Codex an explicit one-shot file capture path. Installing the plugin, enabling the plugin, opening Codex, or sending unrelated prompts must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process.
+Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper. The camera runs only for an explicit one-shot slash command.
 
-The user-facing slash command is intentionally small:
+### Slash command
 
 ```text
 /agent-vision snapshot
 /agent-vision streaming
-/agent-vision roast
-/agent-vision mood
+/agent-vision roast    # Codex only (Grok: Milestone 2)
+/agent-vision mood     # Codex only (Grok: Milestone 2)
 ```
 
-Snapshot mode starts the camera if needed, waits for a usable JPEG frame, materializes that frame under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera only if snapshot started it. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
+**Snapshot** starts the camera if needed, waits for a usable JPEG, saves it under the host frame directory, displays it (Markdown image link; Grok also uses multimodal `read_file`), and stops the camera. Black warm-up frames: keep camera on, wait 5 seconds between attempts, up to 3 attempts.
 
-Streaming mode is temporarily disabled in 1.0.3 while the runtime is being moved to an explicit start/stop design that does not depend on plugin-load MCP server lifecycle.
+**Streaming** is disabled on both hosts. Fixed message; **no process** launched. Stop-streaming requests also launch no process.
 
-Roast mode is snapshot plus prose: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, and returns one opt-in playful roast of 400 characters or fewer.
+**Roast** (Codex): snapshot + `codex exec -i` playful roast (≤400 characters, non-sensitive details only).
 
-Mood mode is snapshot plus delivery calibration: it materializes a usable JPEG frame, passes that exact file to `codex exec -i`, parses strict JSON with `presence`, `interaction_state`, `confidence`, `observable_basis`, and `assistant_adjustments`, and applies that result internally. The normal user experience shows neither the captured image nor the raw JSON. The result shapes only the current response or task phase: pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior. It does not change facts, permissions, approval behavior, user intent, or task scope.
-
-If you ask for streaming, Agent Vision reports the temporary disabled state and launches no Agent Vision process:
-
-```text
-Agent Vision streaming is temporarily disabled in 1.0.3 while the runtime is being moved to an explicit start/stop design.
-```
-
-Stop-streaming requests also launch no Agent Vision process because there is no streaming session to stop in 1.0.3.
+**Mood** (Codex): snapshot + `codex exec -i` strict JSON for response-delivery calibration only (silent by default; does not change facts, permissions, approvals, intent, or task scope).
 
 ## What It Does Not Do
 
@@ -52,11 +57,11 @@ Agent Vision does not implement:
 - Automatic frame ingestion.
 - Mood history, training datasets, background mood detection, or a separate image archive.
 
-The camera stays local. Snapshot, roast, and mood mode use a saved JPEG file as the user-visible image contract.
+The camera stays local. Snapshot (and Codex roast/mood) use a saved JPEG file as the user-visible image contract.
 
 ## Who This Is For
 
-Agent Vision is for local-first Codex users who want the assistant to inspect physical things near the computer.
+Agent Vision is for local-first Codex or Grok Build users who want the assistant to inspect physical things near the computer.
 
 It is useful when the thing you need help with is real, visible, and annoying to describe:
 
@@ -72,6 +77,8 @@ It is useful when the thing you need help with is real, visible, and annoying to
 It is not for people who want their camera to be completely absent from their AI workflow. That is a good boundary. Keep it. This plugin is deliberately explicit because the camera is not a casual permission.
 
 ## Install
+
+### Codex (stable package)
 
 Ask Codex to install Agent Vision from the repository URL:
 
@@ -91,6 +98,30 @@ tar -xzf agent-vision-1.0.3.tar.gz
 cd agent-vision-1.0.3
 ./install.sh
 ```
+
+### Grok Build (Ship A)
+
+Grok Build support is public as **Ship A**: **snapshot** + disabled streaming. Roast and mood are not available on Grok yet (Milestone 2). Full multi-host product branding (`1.1.0`) is reserved for a later dual-host lifecycle release.
+
+From a clone of this repository with a signed `dist/AgentVision.app` (release tree or local build):
+
+```bash
+# 1) Shared runtime (signed app + capture helper + PATH shim)
+scripts/install-runtime.sh
+
+# 2) Grok skill (+ optional user plugin tree under ~/.grok)
+scripts/install-grok.sh
+```
+
+Ensure `~/.local/bin` is on your `PATH` so `agent-vision-capture-file` resolves. Open a **new** Grok session with **sandbox off** (default), then:
+
+```text
+/agent-vision snapshot
+```
+
+Frames: `~/.agent-vision/frames`. Uninstall: `scripts/uninstall-grok.sh` (adapter) and/or `scripts/uninstall-runtime.sh` (camera runtime).
+
+See [INSTALL.md](INSTALL.md) and [docs/agent-vision-grok-install-uninstall-traceability.md](docs/agent-vision-grok-install-uninstall-traceability.md).
 
 ## Prompt Codex To Install This
 
@@ -204,7 +235,7 @@ Mood mode is opt-in. It uses the same saved JPEG frame path as snapshot and roas
 
 ```mermaid
 flowchart LR
-  A["Codex slash command"] --> B["agent-vision-capture-file"]
+  A["Host slash /agent-vision"] --> B["agent-vision-capture-file"]
   B --> C["AgentVision.app capture-file"]
   C --> D["AVFoundation"]
   D --> E["Built-in Mac camera"]
@@ -212,22 +243,21 @@ flowchart LR
   F --> C
   C --> B
   B --> G["Saved JPEG file"]
-  G --> A
-  A --> H["Markdown image link or codex exec -i"]
+  G --> H["Host ingest"]
+  H --> I["Markdown image / read_file / codex exec -i"]
 ```
 
-The plugin package contains:
+| Layer | Location |
+| --- | --- |
+| Shared runtime | `AgentVision.app` + `agent-vision-capture-file` (Codex plugin cache and/or `~/.local/share/agent-vision`) |
+| Codex host | `.codex-plugin/`, `commands/`, `skills/camera-control/` |
+| Grok host | `hosts/grok/` skill + `plugin.json` |
 
-- `.codex-plugin/plugin.json`
-- `.mcp.json`
-- `commands/agent-vision.md`
-- `skills/camera-control/SKILL.md`
-- `dist/AgentVision.app`
-- `dist/agent-vision-capture-file`
+The native app owns camera permission. Capture launches the signed app only for explicit one-shot requests, writes one JPEG to an absolute path, and prints JSON. Host adapters never depend on production MCP image content for the user-visible contract.
 
-The native app owns the camera permission. The file materializer launches the signed app bundle only for explicit one-shot capture, writes exactly one JPEG image to an explicit absolute path, and prints JSON. This preserves the macOS app identity that Camera permission is attached to while giving Codex an inspectable local file.
+**Codex package install** stages under `~/plugins/agent-vision` and `~/.codex/plugins/cache/local/agent-vision/1.0.3`, registers `agent-vision@local`, and removes legacy MCP config.
 
-The installer stages the plugin under `~/plugins/agent-vision`, caches it under `~/.codex/plugins/cache/local/agent-vision/1.0.3`, registers the home-local marketplace and `agent-vision@local` plugin entry in `~/.codex/config.toml`, removes legacy duplicate `mcp_servers.agent_vision` and `mcp_servers."agent-vision"` config, verifies that no Agent Vision MCP wrapper is installed, and runs a Codex admission check before exiting.
+**Grok install** is two-step: shared runtime home + PATH shim, then skill under `~/.grok/skills/agent-vision`.
 
 ## Camera Modes
 
@@ -256,74 +286,67 @@ Mood mode:
 5. Codex applies permitted response-shape adjustments only to the current response or task phase.
 6. Codex does not display the captured image, raw JSON, confidence band, or visual-analysis rationale unless the user explicitly asks to debug mood mode.
 
-Streaming mode is disabled in 1.0.3. `/agent-vision streaming`, `stop streaming`, and `turn off the camera` launch no Agent Vision process.
+Streaming is disabled on both hosts. `/agent-vision streaming`, `stop streaming`, and `turn off the camera` launch no Agent Vision process.
 
-The user-visible invariant is simple: snapshot, roast, and mood blink the camera on briefly; install, idle Codex startup, unrelated prompts, streaming requests, and stop-streaming requests create no Agent Vision process.
+**Invariant:** explicit snapshot (and Codex roast/mood) may blink the camera briefly; install, idle host startup, unrelated prompts, streaming, and stop-streaming create **no** Agent Vision process.
 
 ## Privacy
 
-Agent Vision is explicit and one-shot in 1.0.3. Snapshot, roast, and mood mode start the camera only for one frame. There is no installed Agent Vision MCP server and no streaming session.
+One-shot and explicit. No production Agent Vision MCP server. No streaming session. macOS asks for camera permission for signed `AgentVision.app` on first capture. Repeated prompts usually mean the app identity changed—rerun the relevant installer.
 
-macOS asks for camera permission for the signed `AgentVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
-
-Version 1.0.3 does not implement background recording, cloud upload, device selection, audio capture, unsolicited streaming into Codex context, streaming mode, mood history, training datasets, or a separate mood image archive.
-
-See [PRIVACY.md](PRIVACY.md) for the standalone policy.
+See [PRIVACY.md](PRIVACY.md).
 
 ## Development
 
-Run the test suite:
-
 ```bash
 swift test
-```
-
-Build the release executable:
-
-```bash
 swift build -c release
+scripts/install-local.sh --dry-run          # Codex source install checks
+scripts/test-slash-commands.sh              # Codex slash matrix
+scripts/test-grok-adapter.sh                # Grok static contracts
+AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh   # optional live capture
+scripts/install-runtime.sh --dry-run
+scripts/install-grok.sh --dry-run
 ```
 
-Validate manifests and release build without installing:
-
-```bash
-scripts/install-local.sh --dry-run
-```
-
-Run the slash-command matrix:
-
-```bash
-scripts/test-slash-commands.sh
-```
-
-Build a release archive:
+Build a Codex release archive:
 
 ```bash
 AGENT_VISION_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 scripts/package-release.sh
 ```
 
-Uninstall the local plugin:
+Uninstall Codex local plugin: `scripts/uninstall-local.sh`.  
+Uninstall Grok adapter / runtime: `scripts/uninstall-grok.sh`, `scripts/uninstall-runtime.sh`.
 
-```bash
-scripts/uninstall-local.sh
-```
-
-The source installer is for development and release production. It builds and signs `AgentVision.app` locally, so it requires Swift, Xcode command line tools, and a local signing identity. The default install path for users is the packaged release installer.
+Source Codex install builds and signs locally (Swift, Xcode CLT, signing identity). Packaged Codex install is the default for end users. Grok currently installs from a repo tree that already contains a signed `dist/AgentVision.app`.
 
 ## Troubleshooting
 
-If the slash command does not appear, verify the local plugin cache exists:
+**Codex — slash missing**
 
 ```bash
 ls ~/.codex/plugins/cache/local/agent-vision/1.0.3
 ```
 
-If macOS repeatedly asks for camera permission, rerun the installer. Camera permission is tied to the signed `AgentVision.app` identity.
+Open a new Codex session after install.
 
-If streaming is requested, Agent Vision 1.0.3 reports that streaming is temporarily disabled and launches no process.
+**Grok — slash missing or capture helper not found**
 
-If snapshot or roast mode sees a black frame, it treats that as camera warm-up and keeps the camera on. The 5-second wait happens between attempts, for 3 total attempts. After 3 black-frame attempts, it returns an error instead of handing Codex a useless image.
+```bash
+echo "$PATH" | tr ':' '\n' | grep local/bin
+ls ~/.local/bin/agent-vision-capture-file
+ls ~/.local/share/agent-vision/dist/agent-vision-capture-file
+ls ~/.grok/skills/agent-vision/SKILL.md
+```
+
+Re-run `scripts/install-runtime.sh` and `scripts/install-grok.sh`. Put `~/.local/bin` on `PATH`. Open a **new** Grok session. Use **sandbox off**.
+
+**Camera permission loops** — rerun the installer that staged `AgentVision.app` (identity changed).
+
+**Streaming** — disabled on both hosts; no process should start.
+
+**Black frames** — warm-up retries (3 attempts, 5s apart), then error instead of a useless JPEG.
 
 ## License
 

@@ -1,6 +1,7 @@
 # Agent Vision Install/Uninstall Traceability Matrix
 
-Date: 2026-05-20
+Date: 2026-05-20  
+**Scope: Codex package 1.0.3.** For Grok Build Ship A, see [agent-vision-grok-install-uninstall-traceability.md](./agent-vision-grok-install-uninstall-traceability.md).
 
 Agent Vision 1.0.3 is an emergency production hotfix. Version 1.0.2 registered an Agent Vision MCP server, and Codex could eagerly launch `agent-vision-mcp` and `AgentVision.app mcp-fifo` before the user invoked `/agent-vision`. Version 1.0.3 removes that production MCP registration.
 

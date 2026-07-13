@@ -1,14 +1,31 @@
 # Install Agent Vision
 
-Ask Codex to install Agent Vision from the repository URL:
+Agent Vision supports two hosts. Pick the section that matches your assistant.
+
+| Host | Status | What you get |
+| --- | --- | --- |
+| [Codex](#codex-stable-package) | Stable package **1.0.3** | snapshot, roast, mood; streaming disabled |
+| [Grok Build](#grok-build-ship-a) | Public **Ship A** | **snapshot** only; streaming disabled |
+
+Shared rules on both hosts:
+
+- No production Agent Vision MCP server.
+- Install, enable, idle startup, unrelated prompts, streaming, and stop-streaming must **not** start a camera-capable process.
+- Camera permission attaches to signed `AgentVision.app`.
+
+---
+
+## Codex (stable package)
+
+Ask Codex to install from the repository URL:
 
 ```text
 Install Agent Vision from https://github.com/zfifteen/agent-vision
 ```
 
-Codex should download the packaged release from that repository, extract it, run the package `install.sh`, and then open a new Codex session so `/agent-vision` is loaded.
+Codex should download the packaged release, extract it, run `./install.sh`, and open a **new** Codex session so `/agent-vision` is loaded.
 
-Manual package install:
+### Manual package install
 
 ```bash
 curl -L -o agent-vision-1.0.3.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.3/agent-vision-1.0.3.tar.gz
@@ -19,15 +36,16 @@ cd agent-vision-1.0.3
 
 The installer stages the signed packaged `AgentVision.app`, stages the plugin under `~/plugins/agent-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `agent-vision@local` in `~/.codex/config.toml`.
 
-Agent Vision 1.0.3 does not register an MCP server. Install, plugin enablement, idle Codex startup, unrelated prompts, `/agent-vision streaming`, and stop-streaming requests must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process.
+Agent Vision 1.0.3 does not register an MCP server.
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
-For QA traceability against the available OpenAI/Codex plugin guidance, see [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).
+QA traceability: [docs/agent-vision-install-uninstall-traceability.md](docs/agent-vision-install-uninstall-traceability.md).  
+Agent install script: [CODEX_INSTALL.md](CODEX_INSTALL.md).
 
-## Developer Source Install
+### Codex developer source install
 
-Source installs are for developers and release producers only. Do not use this path for a normal user install.
+For developers and release producers only (builds and signs locally):
 
 ```bash
 git clone https://github.com/zfifteen/agent-vision.git
@@ -35,11 +53,9 @@ cd agent-vision
 scripts/install-local.sh
 ```
 
-The source installer builds and signs `AgentVision.app` locally, so it requires Swift, Xcode command line tools, and a local signing identity.
+Requires Swift, Xcode command line tools, and a local signing identity.
 
-## First Use
-
-Agent Vision installs one slash command with four public arguments:
+### Codex first use
 
 ```text
 /agent-vision snapshot
@@ -48,30 +64,101 @@ Agent Vision installs one slash command with four public arguments:
 /agent-vision mood
 ```
 
-`/agent-vision snapshot` starts the camera if needed, waits for a usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera. If the camera returns a black warm-up frame, Agent Vision keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts.
+- **snapshot** — one usable JPEG under `~/.codex/agent-vision/frames`, Markdown image link, camera off.
+- **streaming** — disabled message; no process.
+- **roast** — snapshot + `codex exec -i` playful roast.
+- **mood** — snapshot + `codex exec -i` silent delivery calibration.
 
-`/agent-vision streaming` is temporarily disabled in 1.0.3 while the runtime is being moved to an explicit start/stop design. It launches no Agent Vision process.
+### Codex uninstall
 
-`/agent-vision roast` is snapshot plus prose: it materializes one usable JPEG, passes that exact file to `codex exec -i`, displays the saved image, and returns one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
-
-`/agent-vision mood` is snapshot plus delivery calibration: it materializes one usable JPEG, passes that exact file to `codex exec -i`, and uses strict JSON internally for current-response delivery only.
-
-To stop streaming, ask Codex to stop camera use:
-
-```text
-Agent Vision streaming off
-```
-
-In 1.0.3, Codex reports that there is no Agent Vision streaming session to stop and launches no Agent Vision process.
-
-macOS will ask for camera permission for `AgentVision.app` the first time the capture session starts. Repeated prompts usually mean the app identity changed and the local installer should be rerun.
-
-## Uninstall
-
-Run the deterministic local uninstaller:
+From the package tree:
 
 ```bash
 ./uninstall.sh
 ```
 
-The uninstaller removes `~/plugins/agent-vision`, the local Codex plugin cache, the local marketplace entry, the `agent-vision@local` plugin config entry, legacy `mcp_servers.agent_vision` config, and legacy `codex-vision` rebrand artifacts.
+Or from a clone: `scripts/uninstall-local.sh` / packaged uninstall scripts. Removes Codex plugin staging, cache, marketplace entry, and legacy MCP config. Does **not** remove a separately installed Grok runtime home unless you also run `scripts/uninstall-runtime.sh`.
+
+---
+
+## Grok Build (Ship A)
+
+Public Grok support is **Ship A**: explicit **snapshot** plus disabled streaming. Roast and mood are **not** available on Grok yet.
+
+### Requirements
+
+- macOS with a working built-in camera
+- A tree that contains a **signed** `dist/AgentVision.app` and `dist/agent-vision-capture-file` (this repository after a release build, or a checkout that already has `dist/`)
+- Grok Build CLI with **sandbox off** (default) for capture
+- `~/.local/bin` on your `PATH` (so the `agent-vision-capture-file` shim resolves)
+
+### Install
+
+```bash
+git clone https://github.com/zfifteen/agent-vision.git
+cd agent-vision
+
+# 1) Shared camera runtime → ~/.local/share/agent-vision + PATH shim
+scripts/install-runtime.sh
+
+# 2) Grok skill (+ optional ~/.grok/plugins/agent-vision tree)
+scripts/install-grok.sh
+```
+
+Open a **new** Grok session, then:
+
+```text
+/agent-vision snapshot
+```
+
+Frames are written under `~/.agent-vision/frames`. Grok inspects the JPEG with multimodal `read_file` after capture.
+
+Dry-run checks (no install):
+
+```bash
+# Requires a codesigned dist/AgentVision.app in the tree (release dist/ or local package build).
+scripts/install-runtime.sh --dry-run
+scripts/install-grok.sh --dry-run
+scripts/test-grok-adapter.sh
+```
+
+QA traceability: [docs/agent-vision-grok-install-uninstall-traceability.md](docs/agent-vision-grok-install-uninstall-traceability.md).  
+Host adapter notes: [hosts/grok/README.md](hosts/grok/README.md).
+
+### Grok first use
+
+| Command | Result |
+| --- | --- |
+| `/agent-vision snapshot` | One JPEG, camera off, image in chat |
+| `/agent-vision streaming` | Disabled message; no process |
+| stop streaming / turn off camera | No session message; no process |
+| `/agent-vision roast` or `mood` | Not in Ship A — use Codex, or wait for Milestone 2 |
+
+### Grok uninstall
+
+```bash
+# Remove Grok skill/plugin only (keep shared runtime for Codex or later use)
+scripts/uninstall-grok.sh
+
+# Remove shared runtime + PATH shim
+scripts/uninstall-runtime.sh
+
+# Also delete saved Grok frames
+scripts/uninstall-runtime.sh --remove-frames
+```
+
+`uninstall-grok.sh --with-runtime` removes the adapter and the runtime in one step.
+
+---
+
+## First capture and permissions
+
+macOS asks for camera permission for **Agent Vision** (`AgentVision.app`) the first time capture runs. Repeated prompts usually mean the app identity changed—rerun `install-runtime.sh` or the Codex installer that restaged the app.
+
+Black warm-up frames: Agent Vision retries up to 3 times with 5 seconds between attempts, then errors instead of returning a useless image.
+
+---
+
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md). Frames stay local. No cloud upload. No production MCP. No idle camera process.

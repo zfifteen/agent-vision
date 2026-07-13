@@ -1,5 +1,7 @@
 # Codex Installation Instructions
 
+**Codex only.** For Grok Build, use [INSTALL.md](INSTALL.md#grok-build-ship-a) (`scripts/install-runtime.sh` + `scripts/install-grok.sh`). Do not run this Codex package flow when the user asked for Grok.
+
 These instructions are for a local Codex agent asked to install Agent Vision from:
 
 ```text
