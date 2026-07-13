@@ -40,8 +40,9 @@ scripts/agent-vision-sticky.sh off [--host grok|codex]
 scripts/agent-vision-sticky.sh status   # sticky + last_capture_age_seconds
 scripts/agent-vision-sticky.sh is-on
 
+scripts/agent-vision-turn-gate.sh begin
 scripts/agent-vision-turn-gate.sh record --path /path/to.jpg
-scripts/agent-vision-turn-gate.sh ready [--max-age SEC]   # fail-closed
+scripts/agent-vision-turn-gate.sh ready [--max-age SEC]   # fail-closed; single-use per turn
 scripts/agent-vision-turn-gate.sh status|clear
 
 scripts/agent-vision-purge-frames.sh --ttl-days 7 --all|--grok|--codex [--dry-run]

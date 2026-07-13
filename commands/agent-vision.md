@@ -7,7 +7,7 @@ argument-hint: mood|snapshot|roast|off|status|streaming
 
 ## HARD GATE
 
-While ARMED: capture → understand → **USE image in reasoning** → `agent-vision-turn-gate record` + `ready` → answer. Topic irrelevant. Blind-identical INVALID.
+While ARMED: `turn-gate begin` → capture → understand → **USE image in reasoning** → `record` + `ready` → answer. `ready` is single-use (new turn needs new record). Topic irrelevant. Blind-identical INVALID.
 
 **Ambiguity burst:** one second one-shot capture if first unusable.
 

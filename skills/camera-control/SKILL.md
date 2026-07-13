@@ -20,7 +20,7 @@ ARMED after `/agent-vision` until off. New chat OFF.
 3. **Ambiguity burst:** one second capture if first unusable.
 4. Understand image (`codex exec -i` for mood/roast; path for snapshot).
 5. **USE** what you saw in reasoning/delivery (not identical-to-blind).
-6. `agent-vision-turn-gate record --path "$OUTPUT"` then `agent-vision-turn-gate ready` (fail-closed).
+6. `agent-vision-turn-gate begin` then after capture `record --path "$OUTPUT"` then `ready` (fail-closed, single-use; next turn needs a new record).
 7. Then answer.
 
 **FORBIDDEN:** skip for non-visual; capture-without-use; skip turn-gate ready.

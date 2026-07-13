@@ -40,14 +40,16 @@ mkdir -p -m 700 "$HOME/.agent-vision/frames" && OUTPUT="$HOME/.agent-vision/fram
 3. **Ambiguity burst:** if capture fails or frame unusable after `read_file`, run **one** second capture+`read_file` (still one-shot; no daemon). Details in references.
 4. **`read_file`** the new JPEG path (pixels, not path guessing).
 5. **USE THE IMAGE IN REASONING:** internal account of presence/disposition/scene; condition delivery and any scene-grounded facts. Answer must not be identical to a blind answer.
-6. **Turn-gate (mechanical):**
+6. **Turn-gate (mechanical, per-turn):**
 
 ```bash
+agent-vision-turn-gate begin
+# after successful capture + read_file:
 agent-vision-turn-gate record --path "$OUTPUT"
 agent-vision-turn-gate ready
 ```
 
-If `ready` fails, do not send the final answer — fix capture/record first.
+`ready` is **single-use**: after a successful ready, the next turn must `begin` + capture + `record` again. Reusing an old capture within max-age without a new record is fail-closed. If `ready` fails, do not send the final answer.
 
 7. Then answer. Skip of 2–6 → **INVALID**.
 
