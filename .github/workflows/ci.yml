@@ -18,15 +18,31 @@ jobs:
           python3 - <<'PY'
           import json
           import pathlib
-          for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
-              path = pathlib.Path(rel)
-              data = json.loads(path.read_text(encoding="utf-8"))
-              assert data
-          plugin = json.loads(pathlib.Path(".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+
+          plugin_path = pathlib.Path(".codex-plugin/plugin.json")
+          mcp_path = pathlib.Path(".mcp.json")
+          plugin = json.loads(plugin_path.read_text(encoding="utf-8"))
+          mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
+
           assert plugin["name"] == "agent-vision"
-          assert plugin["mcpServers"] == "./.mcp.json"
-          mcp = json.loads(pathlib.Path(".mcp.json").read_text(encoding="utf-8"))
-          assert mcp["mcpServers"]["agent-vision"]["command"] == "./dist/agent-vision-mcp"
+          assert plugin.get("version") == "1.0.3"
+          # 1.0.3 / Ship A: no production MCP advertisement (eager-start hotfix).
+          assert "mcpServers" not in plugin, "plugin.json must not advertise mcpServers"
+          assert mcp.get("mcpServers", {}) == {}, ".mcp.json must have empty mcpServers"
+
+          grok_plugin = pathlib.Path("hosts/grok/plugin.json")
+          if grok_plugin.exists():
+              gp = json.loads(grok_plugin.read_text(encoding="utf-8"))
+              assert gp["name"] == "agent-vision"
+              assert "mcpServers" not in gp
+          skill = pathlib.Path("hosts/grok/skills/agent-vision/SKILL.md")
+          if skill.exists():
+              text = skill.read_text(encoding="utf-8")
+              assert "name: agent-vision" in text
+              assert "disable-model-invocation: true" in text
+          print("manifest validation OK")
           PY
       - name: Install dry-run
         run: scripts/install-local.sh --dry-run
+      - name: Grok adapter static tests
+        run: scripts/test-grok-adapter.sh
