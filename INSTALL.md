@@ -83,7 +83,7 @@ Or from a clone: `scripts/uninstall-local.sh` / packaged uninstall scripts. Remo
 
 ## Grok Build
 
-**Primary value on Grok is mood:** one explicit local frame → ascertain disposition → incorporate into reasoning before the answer or task work. Snapshot and roast share the same capture path as supporting modes. Streaming is disabled. Image analysis uses multimodal `read_file` on the saved JPEG.
+**Primary value is sticky mood-first vision:** arm with `/agent-vision` (default mood), then each substantive turn captures a local frame, understands the image, and folds that into reasoning until `/agent-vision off`. Snapshot and roast are supporting modes. Streaming is disabled. Image analysis uses multimodal `read_file`. New chat always starts **OFF**.
 
 ### Requirements
 
@@ -110,13 +110,19 @@ scripts/install-runtime.sh
 scripts/install-grok.sh
 ```
 
-Open a **new** Grok session, then prefer:
+Open a **new** Grok session, then:
 
 ```text
-/agent-vision mood
+/agent-vision
 ```
 
-Optionally combine mood with a work request in the same turn so disposition shapes how Grok helps. Frames are written under `~/.agent-vision/frames`. Grok inspects the JPEG with multimodal `read_file` after capture.
+or `/agent-vision mood`. That **arms** sticky vision for the conversation. Later substantive turns re-capture and re-use vision until:
+
+```text
+/agent-vision off
+```
+
+Frames under `~/.agent-vision/frames`. Multimodal `read_file` after each capture.
 
 Dry-run checks (no install):
 
@@ -136,11 +142,11 @@ After upgrading the skill (roast/mood), open a **new** Grok session so the skill
 
 | Command | Result |
 | --- | --- |
-| `/agent-vision mood` | **Primary** — ascertain disposition, fold into reasoning, then respond/act (silent; no image/JSON dump) |
-| `/agent-vision snapshot` | Supporting — one JPEG, camera off, image in chat after `read_file` |
-| `/agent-vision roast` | Supporting — capture + `read_file` + playful roast; image + roast text |
-| `/agent-vision streaming` | Disabled message; no process |
-| stop streaming / turn off camera | No session message; no process |
+| `/agent-vision` or `mood` | **Primary** — arm sticky + disposition → reason → respond (silent) |
+| `/agent-vision snapshot` \| `roast` | Arm sticky + supporting mode |
+| Substantive turn while armed | Capture → understand → reason → respond |
+| `/agent-vision off` (also stop / turn off camera) | Disarm; no further captures |
+| `/agent-vision streaming` | Disabled; does not arm |
 
 ### Grok uninstall
 

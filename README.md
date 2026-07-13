@@ -17,7 +17,7 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 | **Codex** | Stable (package **1.5.0**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
 | **Grok Build** | Public (package **1.5.0**+) | snapshot, roast, mood; streaming disabled | `~/.agent-vision/frames` | Release package or clone: `install-runtime.sh` + `install-grok.sh` |
 
-Both hosts share the same one-shot modes (snapshot, roast, mood). Streaming is disabled on both. Grok uses multimodal `read_file` for image analysis; Codex uses `codex exec -i`.
+Both hosts share mood-first **sticky** sessions: arm with `/agent-vision` (default mood), re-capture on substantive turns until `/agent-vision off`. New chat starts off. Streaming is disabled. Grok uses multimodal `read_file`; Codex uses `codex exec -i` for mood/roast.
 
 Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
 
@@ -36,13 +36,13 @@ Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, 
 /agent-vision mood
 ```
 
-**Snapshot** starts the camera if needed, waits for a usable JPEG, saves it under the host frame directory, displays it (Markdown image link; Grok also uses multimodal `read_file`), and stops the camera. Black warm-up frames: keep camera on, wait 5 seconds between attempts, up to 3 attempts.
+**Mood** (primary; bare `/agent-vision`): arm sticky → capture → understand image → ascertain disposition → incorporate into reasoning → respond (silent). Re-captures on each substantive turn until off.
 
-**Streaming** is disabled on both hosts. Fixed message; **no process** launched. Stop-streaming requests also launch no process.
+**Snapshot** / **roast**: arm sticky and use the same capture stack (show image / playful roast).
 
-**Roast**: snapshot + image analysis → playful roast (≤400 characters, non-sensitive details only). Codex: `codex exec -i`. Grok: `read_file` on the saved JPEG.
+**Off**: `/agent-vision off` (also stop / turn off camera) disarms sticky; no further captures. New chat always starts off.
 
-**Mood**: snapshot + image analysis → strict JSON for response-delivery calibration only (silent by default; does not change facts, permissions, approvals, intent, or task scope). Codex: `codex exec -i`. Grok: `read_file` on the saved JPEG.
+**Streaming** is disabled (fixed message; does not arm). Each look is still one-shot process lifecycle—not an always-on camera.
 
 ## What It Does Not Do
 

@@ -1,7 +1,7 @@
 # Agent Vision Grok Build Install/Uninstall Traceability
 
 Date: 2026-07-13  
-Scope: **Grok Build** — primary mode **mood** (disposition → reason → respond); supporting snapshot/roast; streaming disabled
+Scope: **Grok Build** — sticky mood-first session (arm → capture each substantive turn → off); supporting snapshot/roast; streaming disabled
 
 Codex package lifecycle remains documented in [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md).
 

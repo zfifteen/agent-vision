@@ -1,15 +1,16 @@
 # Release Notes
 
-## Unreleased — Grok mood-first parity
+## Unreleased — Sticky vision session (Grok + Codex)
 
-Grok Build agent instructions are **mood-first**: the product value is ascertaining disposition from one explicit local frame and **incorporating that signal into reasoning before the response or task work**.
+Mood-first **sticky** session: arm with `/agent-vision` (default mood), then on each **substantive** turn capture → understand the image → incorporate into reasoning until `/agent-vision off`.
 
-- `/agent-vision mood` — **primary** (capture + `read_file` + ascertain + incorporate; silent)
-- `/agent-vision snapshot` / `roast` — supporting modes on the same capture path
-- Same JSON keys/gates as Codex mood; Grok vision path remains `read_file` (not `codex exec -i`)
-- Streaming still disabled; no production MCP; camera-first discipline unchanged
+- New chat always starts **OFF** (leftover state file alone does not arm)
+- Disarm: `off`, stop, disable, “turn off the camera”
+- `scripts/agent-vision-sticky.sh` for session state (never starts camera)
+- Grok: `read_file` vision path; Codex: `codex exec -i` for mood/roast
+- Still one-shot capture process per look (not always-on daemon); streaming disabled; no production MCP
 
-Upgrade: re-run `scripts/install-grok.sh` (and open a new Grok session). Shared runtime need not be reinstalled if already on 1.5.0.
+Upgrade: re-run host install (`scripts/install-grok.sh` and/or Codex plugin reinstall). Open a **new** session.
 
 ## 1.5.0 — Grok Build support
 

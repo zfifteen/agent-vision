@@ -1,7 +1,7 @@
 {
   "name": "agent-vision",
   "version": "1.5.0",
-  "description": "macOS Agent Vision for Grok Build: primary mode is mood — ascertain disposition from one explicit local camera frame and incorporate it into reasoning before responding. Snapshot and roast share the same capture path; streaming disabled.",
+  "description": "macOS Agent Vision for Grok Build: sticky mood-first camera vision. Arm with /agent-vision, capture and reason each substantive turn, disarm with /agent-vision off. Snapshot and roast supported; streaming disabled.",
   "author": {
     "name": "Velocity Works",
     "email": "velocityworks@users.noreply.github.com",
@@ -17,6 +17,7 @@
     "camera",
     "mood",
     "disposition",
+    "sticky",
     "avfoundation",
     "local-first",
     "agent-vision"

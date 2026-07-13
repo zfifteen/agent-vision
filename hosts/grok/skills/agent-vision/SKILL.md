@@ -128,7 +128,7 @@ Each look is **one-shot process lifecycle**: capture helper starts camera briefl
 After capture + `read_file`:
 
 1. Ascertain presence + interaction disposition from the image.
-2. Internally form JSON keys: `presence`, `interaction_state`, `confidence`, `observable_basis`, `assistant_adjustments` (same enums/gates as before: &lt;0.40 no mood behavior; 0.40–0.69 low-risk clarity; ≥0.70 state-specific delivery).
+2. Internally form JSON keys: `presence`, `interaction_state`, `confidence`, `observable_basis`, `assistant_adjustments` (same enums/gates as before: below 0.40 no mood behavior; 0.40–0.69 low-risk clarity; 0.70 or higher state-specific delivery).
 3. Do **not** infer medical, psychological, intoxication, crisis, protected-trait, identity, or safety-state categories.
 4. **Incorporate into reasoning before the user-facing answer**, then respond/act.
 5. Mood may change pacing, verbosity, clarification threshold, evidence density, tone, and repair behavior only.

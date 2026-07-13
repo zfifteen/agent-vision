@@ -1,64 +1,46 @@
 # Agent Vision — Grok Build host adapter
 
-Public adapter for [Grok Build](https://github.com/xai-org) on macOS.
-
 ## Purpose
 
-**Mood is the product.** Agent Vision lets Grok take one explicit local camera frame, ascertain the user’s current disposition, and **fold that signal into reasoning before answering or finishing the task** — without changing facts, permissions, or intent.
+**Mood-first sticky vision.** Arm once; each substantive turn captures a local frame, understands the image, and folds that into reasoning until `/agent-vision off`.
 
 | Mode | Role |
 | --- | --- |
-| `/agent-vision mood` | **Primary** — capture → `read_file` → disposition → incorporate → respond/act (silent) |
-| `/agent-vision snapshot` | Supporting — same capture stack; object/scene inspect |
-| `/agent-vision roast` | Supporting — same vision path; opt-in comedy |
-| Streaming | Disabled (fixed message, no process) |
-| Production MCP | No |
+| `/agent-vision` or `mood` | **Primary** — arm + disposition → reason → respond (silent) |
+| `snapshot` / `roast` | Supporting — arm + mode |
+| `off` | Disarm |
+| Streaming | Disabled; do not arm |
 
-Image analysis on Grok uses multimodal `read_file` on the saved JPEG (not `codex exec -i`). Camera only on explicit slash invoke.
+New chat always starts **OFF**. Vision path: multimodal `read_file`. Process: one-shot capture per look (no always-on daemon).
+
+Contract: [docs/agent-vision-grok-session-sticky.md](../../docs/agent-vision-grok-session-sticky.md).
 
 ## Install
 
-Requires a signed `dist/AgentVision.app` in the repo tree (or release artifacts copied into `dist/`).
-
 ```bash
-# from repository root
-scripts/install-runtime.sh   # ~/.local/share/agent-vision + PATH shim
-scripts/install-grok.sh      # ~/.grok/skills/agent-vision
+scripts/install-runtime.sh
+scripts/install-grok.sh
 ```
 
-- Put `~/.local/bin` on `PATH`.
-- Use Grok with **sandbox off** (default).
-- Open a **new** Grok session after install.
-- Primary use: `/agent-vision mood` (optionally with a work request in the same turn).
-
-Full user instructions: [INSTALL.md](../../INSTALL.md#grok-build).  
-QA matrix: [docs/agent-vision-grok-install-uninstall-traceability.md](../../docs/agent-vision-grok-install-uninstall-traceability.md).
+- `~/.local/bin` on `PATH`
+- Grok **sandbox off**
+- New Grok session after install
+- Primary: `/agent-vision` or `/agent-vision mood`
 
 ## Layout
 
 ```text
 hosts/grok/
   plugin.json
-  skills/agent-vision/SKILL.md   # agent instructions (mood-first)
+  skills/agent-vision/SKILL.md
   README.md
 ```
 
-## Uninstall
-
-```bash
-scripts/uninstall-grok.sh
-scripts/uninstall-runtime.sh              # optional
-scripts/uninstall-runtime.sh --remove-frames
-```
+Sticky helper (shared): `scripts/agent-vision-sticky.sh`
 
 ## Tests
 
 ```bash
 scripts/test-grok-adapter.sh
-AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh   # optional hardware
+scripts/test-grok-sticky-state.sh
 ```
-
-## Design
-
-[docs/agent-vision-grok-build-compatibility.md](../../docs/agent-vision-grok-build-compatibility.md)  
-[docs/agent-vision-mood-technical-note.md](../../docs/agent-vision-mood-technical-note.md)

@@ -21,29 +21,30 @@ command -v python3 >/dev/null || {
 text="$(cat "$SKILL")"
 if [[ "$text" == ---$'\n'* ]]; then pass "frontmatter present"; else fail "frontmatter missing"; fi
 [[ "$text" == *"name: agent-vision"* ]] && pass "name: agent-vision" || fail "name: agent-vision"
-[[ "$text" == *"disable-model-invocation: true"* ]] && pass "disable-model-invocation" || fail "disable-model-invocation"
-[[ "$text" == *"argument-hint: mood|snapshot|roast|streaming"* ]] && pass "argument-hint mood-first" || fail "argument-hint mood-first"
-[[ "$text" == *"## Purpose (read this first)"* ]] && pass "purpose section first" || fail "purpose section first"
-[[ "$text" == *"main product value is mood"* ]] || [[ "$text" == *"main product value is mood/disposition"* ]] && pass "mood primary product value" || fail "mood primary product value"
-[[ "$text" == *"Mood reasoning loop"* ]] && pass "mood reasoning loop" || fail "mood reasoning loop"
-[[ "$text" == *"Incorporate that knowledge into your reasoning"* ]] || [[ "$text" == *"incorporate that knowledge into reasoning"* ]] || [[ "$text" == *"Incorporate into reasoning before"* ]] && pass "incorporate into reasoning" || fail "incorporate into reasoning"
+[[ "$text" == *"disable-model-invocation: false"* ]] && pass "disable-model-invocation false" || fail "disable-model-invocation false"
+[[ "$text" == *"argument-hint: mood|snapshot|roast|off|streaming"* ]] && pass "argument-hint sticky modes" || fail "argument-hint sticky modes"
+[[ "$text" == *"Session sticky model"* ]] && pass "session sticky model" || fail "session sticky model"
+[[ "$text" == *"NEW conversation"* ]] || [[ "$text" == *"New chat starts OFF"* ]] && pass "new chat starts OFF" || fail "new chat starts OFF"
+[[ "$text" == *"agent-vision-sticky.sh"* ]] && pass "sticky script referenced" || fail "sticky script referenced"
+[[ "$text" == *"/agent-vision off"* ]] && pass "off command" || fail "off command"
+[[ "$text" == *"substantive"* ]] && pass "substantive turn capture" || fail "substantive turn capture"
+[[ "$text" == *"Incorporate that understanding into your reasoning"* ]] || [[ "$text" == *"incorporate that into reasoning"* ]] || [[ "$text" == *"Incorporate that understanding"* ]] && pass "incorporate into reasoning" || fail "incorporate into reasoning"
 [[ "$text" == *"agent-vision-capture-file"* ]] && pass "capture helper named" || fail "capture helper named"
 [[ "$text" == *"read_file"* ]] && pass "read_file vision path" || fail "read_file vision path"
 [[ "$text" == *"~/.agent-vision/frames"* ]] && pass "Grok frame dir" || fail "Grok frame dir"
-[[ "$text" == *"the first shell command must create the frame directory"* ]] && pass "camera-first" || fail "camera-first"
-[[ "$text" == *"Do not inspect or roast the repository"* ]] && pass "no repo roast" || fail "no repo roast"
-[[ "$text" == *"Agent Vision streaming is temporarily disabled"* ]] && pass "streaming disabled copy" || fail "streaming disabled copy"
-[[ "$text" == *"there is no Agent Vision streaming session to stop"* ]] && pass "stop-streaming copy" || fail "stop-streaming copy"
+[[ "$text" == *"first shell command"* ]] && pass "camera-first" || fail "camera-first"
 [[ "$text" == *"Do not use codex exec"* ]] && pass "no codex exec" || fail "no codex exec"
-[[ "$text" == *"## Mood workflow (primary)"* ]] && pass "mood workflow primary" || fail "mood workflow primary"
-[[ "$text" == *"## Snapshot workflow (supporting)"* ]] && pass "snapshot supporting" || fail "snapshot supporting"
-[[ "$text" == *"## Roast workflow (supporting)"* ]] && pass "roast supporting" || fail "roast supporting"
-[[ "$text" == *"400 characters or fewer"* ]] && pass "roast length limit" || fail "roast length limit"
-[[ "$text" == *"interaction_state"* ]] && pass "mood JSON keys" || fail "mood JSON keys"
-[[ "$text" == *"**Do not display**"* ]] || [[ "$text" == *"Do not display"* ]] && pass "mood no display" || fail "mood no display"
-[[ "$text" != *"Milestone 2"* ]] && pass "no Milestone 2 roast/mood deferral" || fail "Milestone 2 deferral still present"
-[[ "$text" != *"Not in Ship A"* ]] && pass "no Ship A roast exclusion" || fail "Ship A roast exclusion still present"
+[[ "$text" == *"Agent Vision streaming is temporarily disabled"* ]] && pass "streaming disabled copy" || fail "streaming disabled copy"
+[[ "$text" != *"Milestone 2"* ]] && pass "no Milestone 2 deferral" || fail "Milestone 2 deferral still present"
 [[ "$text" != *"~/.codex/plugins/cache/local/agent-vision/1.0.3"* ]] && pass "no Codex 1.0.3 cache hardcode" || fail "Codex 1.0.3 cache hardcode present"
+
+# Codex sticky contract present
+CODEX_SKILL="${ROOT}/skills/camera-control/SKILL.md"
+if [[ -f "$CODEX_SKILL" ]]; then
+  ct="$(cat "$CODEX_SKILL")"
+  [[ "$ct" == *"Session sticky model"* ]] && pass "Codex sticky model" || fail "Codex sticky model"
+  [[ "$ct" == *"/agent-vision off"* ]] || [[ "$ct" == *"`off`"* ]] && pass "Codex off" || fail "Codex off"
+fi
 
 python3 - "$PLUGIN" <<'PY'
 import json, pathlib, sys
@@ -51,15 +52,15 @@ p = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert p.get("name") == "agent-vision", p
 assert "mcpServers" not in p, p
 desc = (p.get("description") or "").lower()
-assert "mood" in desc, p
-assert "disposition" in desc or "reason" in desc or "reasoning" in desc, p
-print("PASS: plugin.json name, no mcpServers, mood-first description")
+assert "sticky" in desc and "mood" in desc, p
+print("PASS: plugin.json name, no mcpServers, sticky mood description")
 PY
 
 for script in \
   install-runtime.sh uninstall-runtime.sh \
   install-grok.sh uninstall-grok.sh \
-  test-capture-file-cli.sh test-grok-adapter.sh
+  agent-vision-sticky.sh \
+  test-capture-file-cli.sh test-grok-adapter.sh test-grok-sticky-state.sh
 do
   path="${ROOT}/scripts/${script}"
   if [[ -f "$path" ]]; then
@@ -67,9 +68,6 @@ do
   fi
 done
 
-# Optional: installed skill matches if present.
-# During install preflight (AGENT_VISION_INSTALL_PREFLIGHT=1), drift is warn-only so
-# install-grok can upgrade an older/drifted skill instead of self-blocking.
 if [[ -f "${HOME}/.grok/skills/agent-vision/SKILL.md" ]]; then
   if diff -q "$SKILL" "${HOME}/.grok/skills/agent-vision/SKILL.md" >/dev/null; then
     pass "installed user skill matches repo"

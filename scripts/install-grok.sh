@@ -126,5 +126,5 @@ if [[ "$SKIP_PLUGIN" != "1" ]]; then
   echo "    grok plugin install $USER_PLUGIN_DIR --trust"
   echo "  and ensure it is listed under [plugins] enabled when required."
 fi
-echo "  Primary: /agent-vision mood  (ascertain disposition → reason with it → respond)"
-echo "  Also:    /agent-vision snapshot | roast  (supporting; streaming disabled)"
+echo "  Primary: /agent-vision  (arm sticky + mood → reason with vision each turn)"
+echo "  Also:    snapshot | roast | off   (streaming disabled; new chat starts OFF)"

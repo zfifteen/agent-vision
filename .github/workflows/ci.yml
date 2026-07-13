@@ -39,13 +39,16 @@ jobs:
           if skill.exists():
               text = skill.read_text(encoding="utf-8")
               assert "name: agent-vision" in text
-              assert "disable-model-invocation: true" in text
+              assert "disable-model-invocation: false" in text
+              assert "Session sticky model" in text
           print("manifest validation OK")
           PY
       - name: Install dry-run
         run: scripts/install-local.sh --dry-run
       - name: Grok adapter static tests
         run: scripts/test-grok-adapter.sh
+      - name: Sticky session state tests
+        run: scripts/test-grok-sticky-state.sh
       - name: Stage capture helper for CLI error-path tests
         run: |
           mkdir -p dist

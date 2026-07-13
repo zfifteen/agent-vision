@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Agent Vision is a local macOS camera appliance for coding agents. Package **1.5.0**+ supports **Codex** and **Grok Build** with the same one-shot modes (snapshot, roast, mood). Streaming is disabled on both hosts.
+Agent Vision is a local macOS camera appliance for coding agents. Package **1.5.0**+ supports **Codex** and **Grok Build** with mood-first **sticky** sessions (arm with `/agent-vision`, disarm with `/agent-vision off`). Streaming is disabled on both hosts.
 
 ## Data Handling
 
@@ -9,7 +9,9 @@ Agent Vision captures images from the built-in Mac camera only when an installed
 - **Codex** snapshot mode starts the camera, captures one JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera.
 - **Grok Build** snapshot mode saves under `~/.agent-vision/frames` and uses local multimodal `read_file` after capture.
 - **Roast** (both hosts) uses snapshot file materialization, then analyzes the saved JPEG for an opt-in playful roast (Codex: `codex exec -i`; Grok: `read_file`).
-- **Mood** (both hosts) uses snapshot file materialization, then analyzes the saved JPEG for strict JSON used only as current-response delivery calibration (Codex: `codex exec -i`; Grok: `read_file`). Mood does not display the image or JSON by default.
+- **Mood** (both hosts, default on arm) uses snapshot file materialization, then analyzes the saved JPEG for disposition and delivery calibration (Codex: `codex exec -i`; Grok: `read_file`). Mood does not display the image or JSON by default.
+- **Sticky session:** after arm, each substantive turn may capture again until the user turns Agent Vision off. Each look is still a one-shot process (camera on briefly, then off)—not an always-on daemon.
+- **New chat starts off.** Install and idle startup never open the camera.
 - Streaming mode is temporarily disabled and launches no Agent Vision process on either host.
 
 Agent Vision does not implement cloud upload, background recording, audio capture, device selection, telemetry, analytics, remote logging, an installed MCP server, or an idle camera-capable background process.
