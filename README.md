@@ -14,10 +14,10 @@ If the idea of an AI assistant seeing your desk makes your soul leave your body 
 
 | Host | Status | Features | Frames | Install |
 | --- | --- | --- | --- | --- |
-| **Codex** | Stable (package **1.0.3**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
-| **Grok Build** | Public **Ship A** (`1.0.4-ship-a` runtime/plugin meta) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | `install-runtime.sh` + `install-grok.sh` from this repo |
+| **Codex** | Stable (package **1.5.0**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
+| **Grok Build** | Public **Ship A** (package **1.5.0**) | **snapshot** only; streaming disabled; no roast/mood yet | `~/.agent-vision/frames` | Release package or clone: `install-runtime.sh` + `install-grok.sh` |
 
-Version triad: Codex package remains **1.0.3**; Grok Ship A runtime/plugin use **1.0.4-ship-a**; full multi-host **1.1.0** is reserved for a later dual-host product release.
+Both hosts share package version **1.5.0**. Roast/mood on Grok remain Milestone 2.
 
 Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
 
@@ -93,17 +93,17 @@ For QA evidence that the install and uninstall lifecycle maps to the available O
 Manual package install:
 
 ```bash
-curl -L -o agent-vision-1.0.3.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.3/agent-vision-1.0.3.tar.gz
-tar -xzf agent-vision-1.0.3.tar.gz
-cd agent-vision-1.0.3
+curl -L -o agent-vision-1.5.0.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.5.0/agent-vision-1.5.0.tar.gz
+tar -xzf agent-vision-1.5.0.tar.gz
+cd agent-vision-1.5.0
 ./install.sh
 ```
 
 ### Grok Build (Ship A)
 
-Grok Build support is public as **Ship A**: **snapshot** + disabled streaming. Roast and mood are not available on Grok yet (Milestone 2). Full multi-host product branding (`1.1.0`) is reserved for a later dual-host lifecycle release.
+Grok Build support is public as **Ship A** in **1.5.0**: **snapshot** + disabled streaming. Roast and mood are not available on Grok yet (Milestone 2).
 
-From a clone of this repository with a signed `dist/AgentVision.app` (release tree or local build):
+From the packaged release (or a clone with signed `dist/AgentVision.app`):
 
 ```bash
 # 1) Shared runtime (signed app + capture helper + PATH shim)
@@ -153,7 +153,7 @@ Streaming mode is temporarily disabled:
 /agent-vision streaming
 ```
 
-This launches no Agent Vision process in 1.0.3. The command returns the temporary disabled message.
+This launches no Agent Vision process in 1.5.0. The command returns the temporary disabled message.
 
 Stop streaming:
 
@@ -161,7 +161,7 @@ Stop streaming:
 Agent Vision streaming off
 ```
 
-You can also say `stop streaming` or `turn off the camera`. In 1.0.3, Codex reports that there is no Agent Vision streaming session to stop and launches no Agent Vision process.
+You can also say `stop streaming` or `turn off the camera`. In 1.5.0, Codex reports that there is no Agent Vision streaming session to stop and launches no Agent Vision process.
 
 Take one image and request immediate emotional damage, responsibly:
 
@@ -255,7 +255,7 @@ flowchart LR
 
 The native app owns camera permission. Capture launches the signed app only for explicit one-shot requests, writes one JPEG to an absolute path, and prints JSON. Host adapters never depend on production MCP image content for the user-visible contract.
 
-**Codex package install** stages under `~/plugins/agent-vision` and `~/.codex/plugins/cache/local/agent-vision/1.0.3`, registers `agent-vision@local`, and removes legacy MCP config.
+**Codex package install** stages under `~/plugins/agent-vision` and `~/.codex/plugins/cache/local/agent-vision/1.5.0`, registers `agent-vision@local`, and removes legacy MCP config.
 
 **Grok install** is two-step: shared runtime home + PATH shim, then skill under `~/.grok/skills/agent-vision`.
 
@@ -326,7 +326,7 @@ Source Codex install builds and signs locally (Swift, Xcode CLT, signing identit
 **Codex — slash missing**
 
 ```bash
-ls ~/.codex/plugins/cache/local/agent-vision/1.0.3
+ls ~/.codex/plugins/cache/local/agent-vision/1.5.0
 ```
 
 Open a new Codex session after install.

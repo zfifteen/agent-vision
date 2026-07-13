@@ -1,38 +1,64 @@
 # Release Notes
 
-## Unreleased — Grok Build Ship A (public)
+## 1.5.0 — Grok Build support
 
-Adds an experimental **Grok Build** host adapter alongside the stable Codex 1.0.3 package. Codex behavior is unchanged.
+Unified multi-host release: **Codex** and **Grok Build** both ship as first-class hosts under package version **1.5.0**.
 
-### Version strings (Ship A)
+### Highlights
 
-| Surface | String | Meaning |
-| --- | --- | --- |
-| Codex package / `.codex-plugin` / `Info.plist` | **1.0.3** | Stable Codex-packaged release (unchanged) |
-| Shared runtime `INSTALL_META` / Grok `plugin.json` | **1.0.4-ship-a** | Grok Ship A adapter + runtime install track |
-| Full multi-host product claim | **not used** | Reserved for future `1.1.0` (Ship B) |
+- **Grok Build (Ship A):** `/agent-vision snapshot` via shared runtime + Grok skill adapter.
+- **Codex:** same one-shot snapshot, roast, and mood paths; plugin cache moves to `.../1.5.0`.
+- **Shared invariants preserved:** no production MCP server, no camera process on install/idle/unrelated prompts/streaming/stop-streaming.
+- Streaming remains disabled with version-aligned fixed copy until an explicit start/stop runtime lands.
 
-### Grok Build (Ship A)
+### Version
 
-- Shared runtime installer: `scripts/install-runtime.sh` → `~/.local/share/agent-vision` + `~/.local/bin/agent-vision-capture-file` shim.
+| Surface | String |
+| --- | --- |
+| Codex package / `.codex-plugin` / `Info.plist` | **1.5.0** |
+| Shared runtime `INSTALL_META` / Grok `plugin.json` | **1.5.0** |
+| GitHub release tag | **v1.5.0** |
+
+### Grok Build
+
+- Shared runtime: `scripts/install-runtime.sh` → `~/.local/share/agent-vision` + `~/.local/bin/agent-vision-capture-file` shim.
 - Grok skill/plugin: `hosts/grok/`, `scripts/install-grok.sh` / `uninstall-grok.sh`.
-- `/agent-vision snapshot` on Grok: one-shot JPEG under `~/.agent-vision/frames`, multimodal `read_file` ingest, Markdown image display.
-- Streaming disabled with version-agnostic fixed copy; stop-streaming launches no process.
-- No production MCP registration on Grok; `disable-model-invocation: true` on the skill.
+- Snapshot JPEG under `~/.agent-vision/frames`; multimodal `read_file` ingest; Markdown image display.
+- Streaming disabled (fixed copy, no process); stop-streaming launches no process.
+- No production MCP on Grok; `disable-model-invocation: true` on the skill.
 - Supported capture environment: Grok **sandbox off** (default).
-- Static tests: `scripts/test-grok-adapter.sh`; CLI errors: `scripts/test-capture-file-cli.sh`.
-- Roast and mood on Grok are **not** included (Milestone 2).
+- Roast and mood on Grok are **not** included yet (Milestone 2).
+- Release tarball includes `hosts/grok/` and runtime/Grok install scripts under `scripts/`.
 
 ### Codex
 
-- Remains on the **1.0.3** package path (snapshot, roast, mood; no production MCP).
-- Frame path and plugin cache paths frozen for this cut.
+- Plugin cache path: `~/.codex/plugins/cache/local/agent-vision/1.5.0`.
+- Install removes prior package caches including **1.0.3**, **1.0.2**, **1.0.1**, and **1.0.0**.
+- Snapshot, roast, mood unchanged in behavior; frames still under `~/.codex/agent-vision/frames`.
 
 ### Docs
 
-- Multi-host README / INSTALL / PRIVACY.
+- Multi-host README / INSTALL / PRIVACY / CODEX_INSTALL updated for **1.5.0**.
 - [docs/agent-vision-grok-build-compatibility.md](docs/agent-vision-grok-build-compatibility.md)
 - [docs/agent-vision-grok-install-uninstall-traceability.md](docs/agent-vision-grok-install-uninstall-traceability.md)
+
+### Install (packaged)
+
+Codex:
+
+```bash
+curl -L -o agent-vision-1.5.0.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.5.0/agent-vision-1.5.0.tar.gz
+tar -xzf agent-vision-1.5.0.tar.gz
+cd agent-vision-1.5.0
+./install.sh
+```
+
+Grok (from the same package tree, with signed `dist/`):
+
+```bash
+scripts/install-runtime.sh
+scripts/install-grok.sh
+```
 
 ## 1.0.3
 

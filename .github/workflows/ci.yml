@@ -25,8 +25,8 @@ jobs:
           mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
 
           assert plugin["name"] == "agent-vision"
-          assert plugin.get("version") == "1.0.3"
-          # 1.0.3 / Ship A: no production MCP advertisement (eager-start hotfix).
+          assert plugin.get("version") == "1.5.0"
+          # 1.5.0 / Ship A: no production MCP advertisement (eager-start hotfix).
           assert "mcpServers" not in plugin, "plugin.json must not advertise mcpServers"
           assert mcp.get("mcpServers", {}) == {}, ".mcp.json must have empty mcpServers"
 

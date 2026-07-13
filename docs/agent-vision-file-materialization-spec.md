@@ -6,7 +6,7 @@
 
 | Host | Materialize | Vision / display ingest |
 | --- | --- | --- |
-| Codex (1.0.3) | `agent-vision-capture-file` → `~/.codex/agent-vision/frames` | Markdown image link; roast/mood use `codex exec -i` |
+| Codex (1.5.0) | `agent-vision-capture-file` → `~/.codex/agent-vision/frames` | Markdown image link; roast/mood use `codex exec -i` |
 | Grok Build (Ship A) | `agent-vision-capture-file` → `~/.agent-vision/frames` | Multimodal `read_file` on the absolute path + Markdown image link |
 
 The tested Codex path does not make MCP image content directly available to the assistant as inspectable vision input. Production Grok and Codex user contracts therefore **must not** depend on MCP image payloads in memory.
@@ -46,10 +46,10 @@ Absolute default runtime home:
 "$HOME/.local/share/agent-vision/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
-Codex 1.0.3 package (unchanged):
+Codex 1.5.0 package:
 
 ```bash
-"$HOME/.codex/plugins/cache/local/agent-vision/1.0.3/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+"$HOME/.codex/plugins/cache/local/agent-vision/1.5.0/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 (`1.0.2` cache paths in older docs are historical only.)

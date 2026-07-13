@@ -29,13 +29,13 @@ This document is the canonical naming source for Agent Vision (including the Cod
 | PATH shim | `$HOME/.local/bin/agent-vision-capture-file` |
 | Codex frame directory | `$HOME/.codex/agent-vision/frames` |
 | Grok frame directory (Ship A) | `$HOME/.agent-vision/frames` |
-| Codex plugin cache (1.0.3) | `~/.codex/plugins/cache/local/agent-vision/1.0.3` |
+| Codex plugin cache (1.5.0) | `~/.codex/plugins/cache/local/agent-vision/1.5.0` |
 
 ## MCP (non-production on public hosts)
 
 | Surface | Value | Production policy |
 | --- | --- | --- |
-| MCP server id | `agent-vision` | **Not registered** on Codex 1.0.3 or Grok Ship A |
+| MCP server id | `agent-vision` | **Not registered** on Codex 1.5.0 or Grok Ship A |
 | MCP tool prefix | `agent_vision_*` | Source/tests only |
 | MCP wrapper script | `agent-vision-mcp` | Excluded from packaged user runtime |
 

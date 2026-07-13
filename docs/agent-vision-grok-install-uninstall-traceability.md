@@ -69,4 +69,4 @@ test ! -e "$HOME/.local/bin/agent-vision-capture-file"
 
 ## Dual-host note
 
-Installing Grok does not remove Codex 1.0.3. Uninstalling the Grok adapter should not remove a runtime still needed for other uses; use `uninstall-runtime.sh` only when no host needs the shared app.
+Installing Grok does not remove the Codex package (1.5.0). Uninstalling the Grok adapter should not remove a runtime still needed for other uses; use `uninstall-runtime.sh` only when no host needs the shared app.

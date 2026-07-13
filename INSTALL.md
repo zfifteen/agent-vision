@@ -4,8 +4,8 @@ Agent Vision supports two hosts. Pick the section that matches your assistant.
 
 | Host | Status | What you get |
 | --- | --- | --- |
-| [Codex](#codex-stable-package) | Stable package **1.0.3** | snapshot, roast, mood; streaming disabled |
-| [Grok Build](#grok-build-ship-a) | Public **Ship A** | **snapshot** only; streaming disabled |
+| [Codex](#codex-stable-package) | Stable package **1.5.0** | snapshot, roast, mood; streaming disabled |
+| [Grok Build](#grok-build-ship-a) | Public **Ship A** (**1.5.0**) | **snapshot** only; streaming disabled |
 
 Shared rules on both hosts:
 
@@ -28,15 +28,15 @@ Codex should download the packaged release, extract it, run `./install.sh`, and 
 ### Manual package install
 
 ```bash
-curl -L -o agent-vision-1.0.3.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.3/agent-vision-1.0.3.tar.gz
-tar -xzf agent-vision-1.0.3.tar.gz
-cd agent-vision-1.0.3
+curl -L -o agent-vision-1.5.0.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.5.0/agent-vision-1.5.0.tar.gz
+tar -xzf agent-vision-1.5.0.tar.gz
+cd agent-vision-1.5.0
 ./install.sh
 ```
 
 The installer stages the signed packaged `AgentVision.app`, stages the plugin under `~/plugins/agent-vision`, updates `~/.agents/plugins/marketplace.json`, and registers the local marketplace plus `agent-vision@local` in `~/.codex/config.toml`.
 
-Agent Vision 1.0.3 does not register an MCP server.
+Agent Vision 1.5.0 does not register an MCP server.
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
@@ -94,9 +94,14 @@ Public Grok support is **Ship A**: explicit **snapshot** plus disabled streaming
 
 ### Install
 
+From the **1.5.0** package (recommended) or a clone with signed `dist/`:
+
 ```bash
-git clone https://github.com/zfifteen/agent-vision.git
-cd agent-vision
+# Package:
+#   curl -L -o agent-vision-1.5.0.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.5.0/agent-vision-1.5.0.tar.gz
+#   tar -xzf agent-vision-1.5.0.tar.gz && cd agent-vision-1.5.0
+#
+# Or clone + local/signed dist, then:
 
 # 1) Shared camera runtime → ~/.local/share/agent-vision + PATH shim
 scripts/install-runtime.sh

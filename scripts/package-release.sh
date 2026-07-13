@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="1.0.3"
+VERSION="1.5.0"
 OUT="$ROOT/release/agent-vision-$VERSION"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -38,13 +38,13 @@ cat > "$OUT/dist/AgentVision.app/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.3</string>
+  <string>1.5.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
+  <string>Agent Vision lets a local coding agent request camera frames when you explicitly use its slash command.</string>
 </dict>
 </plist>
 PLIST
@@ -56,6 +56,20 @@ cp "$ROOT/scripts/install-packaged.sh" "$OUT/install.sh"
 chmod +x "$OUT/install.sh"
 cp "$ROOT/scripts/uninstall-packaged.sh" "$OUT/uninstall.sh"
 chmod +x "$OUT/uninstall.sh"
+
+# Grok Build host adapter + shared runtime installers (Ship A)
+mkdir -p "$OUT/scripts" "$OUT/hosts"
+cp "$ROOT/scripts/install-runtime.sh" "$OUT/scripts/install-runtime.sh"
+cp "$ROOT/scripts/uninstall-runtime.sh" "$OUT/scripts/uninstall-runtime.sh"
+cp "$ROOT/scripts/install-grok.sh" "$OUT/scripts/install-grok.sh"
+cp "$ROOT/scripts/uninstall-grok.sh" "$OUT/scripts/uninstall-grok.sh"
+chmod +x \
+  "$OUT/scripts/install-runtime.sh" \
+  "$OUT/scripts/uninstall-runtime.sh" \
+  "$OUT/scripts/install-grok.sh" \
+  "$OUT/scripts/uninstall-grok.sh"
+cp -R "$ROOT/hosts/grok" "$OUT/hosts/grok"
+
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
 cp "$ROOT/.mcp.json" "$OUT/.mcp.json"
 cp -R "$ROOT/assets" "$OUT/assets"

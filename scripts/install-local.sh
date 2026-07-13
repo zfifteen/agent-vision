@@ -3,10 +3,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OLD_SLUG="codex""-vision"
+PREV_PACKAGE_VERSION="1.0.3"
 OLD_RUNTIME_VERSION="1.0.2"
 OLD_VERSION="1.0.1"
 LEGACY_VERSION="1.0.0"
-VERSION="1.0.3"
+VERSION="1.5.0"
 DRY_RUN=0
 if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
@@ -32,10 +33,10 @@ for rel in [".codex-plugin/plugin.json", ".mcp.json"]:
     if rel == ".codex-plugin/plugin.json" and data["name"] != "agent-vision":
         raise SystemExit(f"{rel} has wrong plugin name")
     if rel == ".codex-plugin/plugin.json" and "mcpServers" in data:
-        raise SystemExit(f"{rel} must not advertise Agent Vision MCP servers in 1.0.3")
+        raise SystemExit(f"{rel} must not advertise Agent Vision MCP servers in 1.5.0")
     if rel == ".mcp.json":
         if data.get("mcpServers", {}).get("agent-vision") is not None:
-            raise SystemExit(f"{rel} must not register an agent-vision MCP server in 1.0.3")
+            raise SystemExit(f"{rel} must not register an agent-vision MCP server in 1.5.0")
 
 command = root / "commands" / "agent-vision.md"
 text = command.read_text(encoding="utf-8")
@@ -51,7 +52,7 @@ required_command_snippets = [
     "Do not inspect or roast the repository",
     "the first shell command must create the frame directory and run `agent-vision-capture-file`",
     "- `snapshot`: take one usable image and turn the camera off.",
-    "- `streaming`: report that streaming is temporarily disabled in Agent Vision 1.0.3.",
+    "- `streaming`: report that streaming is temporarily disabled in Agent Vision 1.5.0.",
     "- `roast`: take one usable image, turn the camera off, and write a playful roast.",
     "- `mood`: take one usable image, turn the camera off, and estimate current interaction state for response delivery calibration only.",
     "For `snapshot`, create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it",
@@ -113,6 +114,7 @@ swift build --disable-sandbox -c release --package-path "$ROOT"
 APP="$ROOT/dist/AgentVision.app"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
+PREV_PACKAGE_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$PREV_PACKAGE_VERSION"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
 OLD_RUNTIME_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_RUNTIME_VERSION"
 LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$LEGACY_VERSION"
@@ -137,13 +139,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0.3</string>
+  <string>1.5.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSCameraUsageDescription</key>
-  <string>Agent Vision lets a local Codex session request camera frames when you explicitly use its slash command.</string>
+  <string>Agent Vision lets a local coding agent request camera frames when you explicitly use its slash command.</string>
 </dict>
 </plist>
 PLIST
@@ -162,7 +164,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
+rm -rf "$CACHE_HOME" "$PREV_PACKAGE_CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -247,6 +249,7 @@ PY
 rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$PREV_PACKAGE_CACHE_HOME" \
   "$OLD_RUNTIME_CACHE_HOME" \
   "$OLD_CACHE_HOME" \
   "$LEGACY_CACHE_HOME" \
@@ -275,4 +278,4 @@ PY
 echo "Agent Vision installed at $PLUGIN_HOME"
 echo "Agent Vision cached at $CACHE_HOME"
 echo "Agent Vision plugin registered in $CODEX_CONFIG"
-echo "Use /agent-vision snapshot, /agent-vision roast, or /agent-vision mood. Streaming is disabled in 1.0.3."
+echo "Use /agent-vision snapshot, /agent-vision roast, or /agent-vision mood. Streaming is disabled in 1.5.0."

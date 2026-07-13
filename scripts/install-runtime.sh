@@ -4,8 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# Ship A public string (align with hosts/grok/plugin.json). Codex package remains 1.0.3.
-VERSION="1.0.4-ship-a"
+# Align with hosts/grok/plugin.json and Codex package version.
+VERSION="1.5.0"
 DEFAULT_HOME="${HOME}/.local/share/agent-vision"
 AGENT_VISION_HOME="${AGENT_VISION_HOME:-$DEFAULT_HOME}"
 FRAME_ROOT="${HOME}/.agent-vision"

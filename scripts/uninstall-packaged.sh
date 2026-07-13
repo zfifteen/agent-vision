@@ -3,7 +3,8 @@ set -euo pipefail
 
 OLD_SLUG="codex""-vision"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
-CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.3"
+CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.5.0"
+PREV_PACKAGE_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.3"
 OLD_RUNTIME_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.2"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.1"
 LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/1.0.0"
@@ -77,6 +78,7 @@ fi
 rm -rf \
   "$PLUGIN_HOME" \
   "$CACHE_HOME" \
+  "$PREV_PACKAGE_CACHE_HOME" \
   "$OLD_RUNTIME_CACHE_HOME" \
   "$OLD_CACHE_HOME" \
   "$LEGACY_CACHE_HOME" \

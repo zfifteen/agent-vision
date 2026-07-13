@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Agent Vision is a local macOS camera appliance for coding agents. The stable packaged host is **Codex** (1.0.3). **Grok Build** is supported as public **Ship A** (snapshot only).
+Agent Vision is a local macOS camera appliance for coding agents. Package **1.5.0** supports **Codex** (snapshot, roast, mood) and **Grok Build** public Ship A (snapshot only).
 
 ## Data Handling
 

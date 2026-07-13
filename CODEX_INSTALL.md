@@ -13,14 +13,14 @@ Install the packaged release. Do not clone the repository and run `scripts/insta
 1. Download the release archive:
 
 ```bash
-curl -L -o agent-vision-1.0.3.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.0.3/agent-vision-1.0.3.tar.gz
+curl -L -o agent-vision-1.5.0.tar.gz https://github.com/zfifteen/agent-vision/releases/download/v1.5.0/agent-vision-1.5.0.tar.gz
 ```
 
 2. Extract the release archive:
 
 ```bash
-tar -xzf agent-vision-1.0.3.tar.gz
-cd agent-vision-1.0.3
+tar -xzf agent-vision-1.5.0.tar.gz
+cd agent-vision-1.5.0
 ```
 
 3. Inspect the packaged app signature:
@@ -37,7 +37,7 @@ codesign --verify --deep --strict dist/AgentVision.app
 
 If an already-open Codex chat does not show `/agent-vision` after a successful install, open a new Codex chat or session so the slash-command index refreshes.
 
-The installer removes legacy duplicate `mcp_servers.agent_vision` and `mcp_servers."agent-vision"` config. Agent Vision 1.0.3 does not register an MCP server, and the installed package must not contain `dist/agent-vision-mcp`.
+The installer removes legacy duplicate `mcp_servers.agent_vision` and `mcp_servers."agent-vision"` config. Agent Vision 1.5.0 does not register an MCP server, and the installed package must not contain `dist/agent-vision-mcp`.
 
 For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
 
@@ -50,7 +50,7 @@ For QA traceability against the available OpenAI/Codex plugin guidance, see `doc
 /agent-vision mood
 ```
 
-Version 1.0.3 is explicit and one-shot:
+Version 1.5.0 is explicit and one-shot:
 
 - `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera.
 - `/agent-vision streaming` is temporarily disabled and launches no Agent Vision process.

@@ -183,9 +183,9 @@ try:
         assert_capture_file()
         assert_markdown_image()
     elif expected_contract == "streaming":
-        assert_streaming_disabled("Agent Vision streaming is temporarily disabled in 1.0.3 while the runtime is being moved to an explicit start/stop design.")
+        assert_streaming_disabled("Agent Vision streaming is temporarily disabled in 1.5.0 while the runtime is being moved to an explicit start/stop design.")
     elif expected_contract == "stop-streaming":
-        assert_streaming_disabled("Agent Vision streaming is disabled in 1.0.3, so there is no Agent Vision streaming session to stop.")
+        assert_streaming_disabled("Agent Vision streaming is disabled in 1.5.0, so there is no Agent Vision streaming session to stop.")
     elif expected_contract == "roast":
         assert_capture_file()
         image_passes = [

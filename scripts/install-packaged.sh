@@ -8,12 +8,14 @@ else
   ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 OLD_SLUG="codex""-vision"
+PREV_PACKAGE_VERSION="1.0.3"
 OLD_RUNTIME_VERSION="1.0.2"
 OLD_VERSION="1.0.1"
 LEGACY_VERSION="1.0.0"
-VERSION="1.0.3"
+VERSION="1.5.0"
 PLUGIN_HOME="$HOME/plugins/agent-vision"
 CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$VERSION"
+PREV_PACKAGE_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$PREV_PACKAGE_VERSION"
 OLD_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_VERSION"
 OLD_RUNTIME_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$OLD_RUNTIME_VERSION"
 LEGACY_CACHE_HOME="$HOME/.codex/plugins/cache/local/agent-vision/$LEGACY_VERSION"
@@ -58,12 +60,12 @@ function run(argv) {
     throw new Error(".codex-plugin/plugin.json has wrong plugin name")
   }
   if (Object.prototype.hasOwnProperty.call(plugin, "mcpServers")) {
-    throw new Error(".codex-plugin/plugin.json must not advertise Agent Vision MCP servers in 1.0.3")
+    throw new Error(".codex-plugin/plugin.json must not advertise Agent Vision MCP servers in 1.5.0")
   }
   const mcp = readJSON(root + "/.mcp.json")
   const servers = ((mcp || {}).mcpServers || {})
   if (Object.prototype.hasOwnProperty.call(servers, "agent-vision")) {
-    throw new Error(".mcp.json must not register an agent-vision MCP server in 1.0.3")
+    throw new Error(".mcp.json must not register an agent-vision MCP server in 1.5.0")
   }
 }
 JXA
@@ -79,7 +81,7 @@ cp -R "$ROOT/commands" "$PLUGIN_HOME/commands"
 cp -R "$ROOT/skills" "$PLUGIN_HOME/skills"
 cp -R "$ROOT/dist" "$PLUGIN_HOME/dist"
 
-rm -rf "$CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
+rm -rf "$CACHE_HOME" "$PREV_PACKAGE_CACHE_HOME" "$OLD_RUNTIME_CACHE_HOME" "$OLD_CACHE_HOME" "$LEGACY_CACHE_HOME"
 mkdir -p "$CACHE_HOME"
 cp -R "$ROOT/.codex-plugin" "$CACHE_HOME/.codex-plugin"
 cp "$ROOT/.mcp.json" "$CACHE_HOME/.mcp.json"
@@ -174,6 +176,7 @@ JXA
 rm -rf \
   "$HOME/plugins/$OLD_SLUG" \
   "$HOME/.codex/plugins/cache/local/$OLD_SLUG" \
+  "$PREV_PACKAGE_CACHE_HOME" \
   "$OLD_RUNTIME_CACHE_HOME" \
   "$OLD_CACHE_HOME" \
   "$LEGACY_CACHE_HOME" \

@@ -14,7 +14,7 @@ Agent Vision camera requests are not repository tasks. Do not orient on the work
 For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, the first shell command must be the camera capture command:
 
 ```bash
-mkdir -p "$HOME/.codex/agent-vision/frames" && OUTPUT="$HOME/.codex/agent-vision/frames/agent-vision-$(date +%Y%m%d-%H%M%S).jpg" && "$HOME/.codex/plugins/cache/local/agent-vision/1.0.3/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+mkdir -p "$HOME/.codex/agent-vision/frames" && OUTPUT="$HOME/.codex/agent-vision/frames/agent-vision-$(date +%Y%m%d-%H%M%S).jpg" && "$HOME/.codex/plugins/cache/local/agent-vision/1.5.0/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 If this rule is violated, report that as command-dispatch behavior. Do not reinterpret repository inspection as part of the camera workflow.
@@ -28,7 +28,7 @@ For `/agent-vision snapshot`, `/agent-vision roast`, and `/agent-vision mood`, t
 For one-shot camera context, materialize the camera image to a JPEG file. Create `$HOME/.codex/agent-vision/frames`, choose an absolute output path inside it, then run:
 
 ```bash
-"$HOME/.codex/plugins/cache/local/agent-vision/1.0.3/dist/agent-vision-capture-file" --output "$OUTPUT" --json
+"$HOME/.codex/plugins/cache/local/agent-vision/1.5.0/dist/agent-vision-capture-file" --output "$OUTPUT" --json
 ```
 
 This is the normal image-access path. It calls the installed Agent Vision capture stack, decodes the returned image content, writes exactly one JPEG file, and prints JSON with the saved path and metadata.
@@ -53,8 +53,8 @@ For streaming mode:
 
 1. Do not call a tool.
 2. Do not launch `AgentVision.app`, `agent-vision-mcp`, or `agent-vision-capture-file`.
-3. Reply exactly: `Agent Vision streaming is temporarily disabled in 1.0.3 while the runtime is being moved to an explicit start/stop design. Snapshot, roast, and mood still use one-shot capture and exit after the requested frame.`
-4. For stop-streaming requests, reply exactly: `Agent Vision streaming is disabled in 1.0.3, so there is no Agent Vision streaming session to stop.`
+3. Reply exactly: `Agent Vision streaming is temporarily disabled in 1.5.0 while the runtime is being moved to an explicit start/stop design. Snapshot, roast, and mood still use one-shot capture and exit after the requested frame.`
+4. For stop-streaming requests, reply exactly: `Agent Vision streaming is disabled in 1.5.0, so there is no Agent Vision streaming session to stop.`
 
 ## Slash Commands
 
@@ -63,16 +63,16 @@ For streaming mode:
 - `/agent-vision roast`: materialize one JPEG file, run `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...roast prompt..."`, then return the saved image link and the roast text. The final response must include a Markdown image link using the captured absolute JPEG path.
 - `/agent-vision mood`: materialize one JPEG file, run `codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" -- "...mood JSON prompt..."`, then silently apply only permitted response-shape adjustments to the current response or task phase. Do not display the saved image or raw JSON unless the user explicitly asks to debug the mood analysis.
 
-Agent Vision 1.0.3 has no streaming session. When the user asks to stop camera use or stop streaming, report that there is no Agent Vision streaming session to stop.
+Agent Vision 1.5.0 has no streaming session. When the user asks to stop camera use or stop streaming, report that there is no Agent Vision streaming session to stop.
 
 Treat requests such as "streaming off", "stop streaming", or "turn off the camera" as stop-streaming requests that launch no Agent Vision process.
 
 ## Guardrails
 
 - Agent Vision is macOS-only.
-- The plugin uses the built-in Mac camera only in version 1.0.3.
+- The plugin uses the built-in Mac camera only in version 1.5.0.
 - Snapshot, roast, and mood mode intentionally wait for a usable frame. If the camera returns black warm-up frames, the tool keeps the camera on, waits 5 seconds between attempts, and tries up to 3 total attempts before returning an error.
-- Agent Vision 1.0.3 must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process at install, plugin load, idle Codex startup, unrelated prompts, streaming requests, or stop-streaming requests.
+- Agent Vision 1.5.0 must not start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper process at install, plugin load, idle Codex startup, unrelated prompts, streaming requests, or stop-streaming requests.
 - Streaming is temporarily disabled until it has an explicit start/stop runtime independent of Codex plugin-load MCP lifecycle.
 - Snapshot mode captures one usable frame, saves it as a JPEG file, and turns the camera off.
 - Mood mode captures one usable frame, saves it as a JPEG file, analyzes that file through `codex exec -i`, and changes response delivery only. It must not change factual standards, permissions, approval behavior, user intent, or task scope.

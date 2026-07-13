@@ -1,6 +1,6 @@
 {
   "name": "agent-vision",
-  "version": "1.0.4-ship-a",
+  "version": "1.5.0",
   "description": "macOS Agent Vision for Grok Build: explicit one-shot local camera snapshot (Ship A).",
   "author": {
     "name": "Velocity Works",

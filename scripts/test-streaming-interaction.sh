@@ -24,4 +24,4 @@ if [[ -n "$leaked" ]]; then
   exit 1
 fi
 
-echo "agent-vision streaming is disabled in 1.0.3; no streaming interaction test is available until the explicit runtime lands."
+echo "agent-vision streaming is disabled in 1.5.0; no streaming interaction test is available until the explicit runtime lands."
