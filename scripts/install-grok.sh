@@ -93,6 +93,9 @@ mkdir -p "${HOME}/.grok/skills"
 rm -rf "$USER_SKILL_DIR"
 mkdir -p "$USER_SKILL_DIR"
 cp "${SKILL_SRC}/SKILL.md" "${USER_SKILL_DIR}/SKILL.md"
+if [[ -d "${SKILL_SRC}/references" ]]; then
+  cp -R "${SKILL_SRC}/references" "${USER_SKILL_DIR}/references"
+fi
 
 if [[ "$SKIP_PLUGIN" != "1" ]]; then
   mkdir -p "${HOME}/.grok/plugins"
@@ -100,7 +103,20 @@ if [[ "$SKIP_PLUGIN" != "1" ]]; then
   mkdir -p "${USER_PLUGIN_DIR}/skills/agent-vision"
   cp "${PLUGIN_SRC}/plugin.json" "${USER_PLUGIN_DIR}/plugin.json"
   cp "${SKILL_SRC}/SKILL.md" "${USER_PLUGIN_DIR}/skills/agent-vision/SKILL.md"
+  if [[ -d "${SKILL_SRC}/references" ]]; then
+    cp -R "${SKILL_SRC}/references" "${USER_PLUGIN_DIR}/skills/agent-vision/references"
+  fi
 fi
+
+# PATH helpers for sticky / turn-gate / purge (never start camera)
+mkdir -p "${HOME}/.local/bin"
+for helper in agent-vision-sticky agent-vision-turn-gate agent-vision-purge-frames; do
+  src="${ROOT}/scripts/${helper}.sh"
+  if [[ -f "$src" ]]; then
+    ln -sfn "$src" "${HOME}/.local/bin/${helper}"
+    chmod +x "$src"
+  fi
+done
 
 after_raw="$(pgrep -f 'agent-vision-capture-file|agent-vision-mcp|AgentVision.app|mcp-fifo' 2>/dev/null || true)"
 after_pids="$(normalize_pids "$after_raw")"

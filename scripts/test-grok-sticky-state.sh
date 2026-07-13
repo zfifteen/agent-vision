@@ -31,8 +31,18 @@ echo "$out" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["sti
 if "$STICKY" is-on; then pass "is-on after arm"; else fail "is-on after arm"; fi
 
 status="$("$STICKY" status)"
-echo "$status" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["sticky"] is True' \
-  && pass "status sticky true" || fail "status sticky true"
+echo "$status" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["sticky"] is True; assert "last_capture_path" in d; assert "last_capture_age_seconds" in d' \
+  && pass "status sticky true + last_capture fields" || fail "status sticky true + last_capture fields"
+
+# last capture age after turn-gate record
+GATE="${ROOT}/scripts/agent-vision-turn-gate.sh"
+fake="$TMP_HOME/cap.jpg"
+echo jpg >"$fake"
+chmod +x "$GATE" 2>/dev/null || true
+"$GATE" record --path "$fake" >/dev/null
+status2="$("$STICKY" status)"
+echo "$status2" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["last_capture_ok"] is True; assert d["last_capture_age_seconds"] is not None' \
+  && pass "status last_capture after turn-gate" || fail "status last_capture after turn-gate"
 
 "$STICKY" off >/dev/null
 if ! "$STICKY" is-on; then pass "is-on after off"; else fail "is-on after off"; fi

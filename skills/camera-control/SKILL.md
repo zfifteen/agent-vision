@@ -1,72 +1,53 @@
 ---
 name: camera-control
 description: >
-  CRITICAL WHILE ARMED: capture is not enough. Before EVERY non-whitelist reply
-  you MUST (1) agent-vision-capture-file (2) understand the NEW image (codex exec -i
-  for mood/roast) (3) USE the image content in your reasoning and response shape.
-  Skipping capture OR capturing but ignoring the image is a contract failure.
-  Disarm only with /agent-vision off.
+  CRITICAL WHILE ARMED: capture, understand NEW image, USE in reasoning, turn-gate
+  record+ready. Blind or theater answers INVALID. Topic irrelevant. Off to disarm.
 ---
 
 # Agent Vision (Codex)
 
-## HARD GATE — non-optional vision **in reasoning** (read first)
+Recipes: see repo `hosts/grok/skills/agent-vision/references/mood-roast-recipes.md` for shared JSON/roast detail (Codex uses `codex exec -i` for mood/roast).
 
-**The whole point is that image content enters your reasoning before you answer.**  
-Capture without use is **INVALID**. An answer identical to a blind answer is **INVALID**.
+## HARD GATE — vision in reasoning
 
-### Required loop while ARMED
+ARMED after `/agent-vision` until off. New chat OFF.
 
-ARMED after `/agent-vision` (bare/mood/snapshot/roast) in **this** chat until off. New chat OFF.
-
-Unless skip whitelist applies:
+**Non-whitelist turns while ARMED:**
 
 1. Do not answer yet.
-2. **First shell:** capture to `$HOME/.codex/agent-vision/frames` via `.../1.5.0/dist/agent-vision-capture-file`.
-3. Understand **this turn’s** image (mood/roast: `codex exec -i "$OUTPUT"`; snapshot: use path + scene).
-4. **USE what you saw** in planning and writing the answer (disposition + any task-relevant scene).
-5. Then answer. Skip of 2–4 → **INVALID**.
+2. First shell: capture to `$HOME/.codex/agent-vision/frames` via `.../1.5.0/dist/agent-vision-capture-file`.
+3. **Ambiguity burst:** one second capture if first unusable.
+4. Understand image (`codex exec -i` for mood/roast; path for snapshot).
+5. **USE** what you saw in reasoning/delivery (not identical-to-blind).
+6. `agent-vision-turn-gate record --path "$OUTPUT"` then `agent-vision-turn-gate ready` (fail-closed).
+7. Then answer.
 
-**Topic is irrelevant.** Code/docs/planning/brainstorm/meta all require the full loop.
+**FORBIDDEN:** skip for non-visual; capture-without-use; skip turn-gate ready.
 
-### FORBIDDEN
+**Skip whitelist only:** pure off; pure status/`status`; pure streaming.
 
-- Skip for “non-visual” / “wouldn’t help”
-- Capture then answer as if blind
-- Reuse old frames
-- Ceremony without reasoning use
+## Disposition playbooks (delivery only)
 
-### Skip whitelist only
+| State | Do | Don’t |
+| --- | --- | --- |
+| `focused_neutral` | Clear, direct | Over-hedge |
+| `frustrated_or_blocked` | Lead with fix | Long preamble |
+| `tired_or_overloaded` | Shortest correct path | Option walls |
+| `curious_or_exploratory` | Extra context/options | Premature lock-in |
+| `skeptical_or_evaluating` | Evidence first | Hand-wavy claims |
+| `high_stakes_or_cautious` | Confirm before irreversible | Silent risk |
+| `absent`/`uncertain` | Words only | Invent mood |
 
-Pure off/disarm; pure status-only; pure `/agent-vision streaming`.
+## Modes
 
-### End-of-turn checklist
+bare/mood arm+loop; snapshot/roast arm+mode; status; off; streaming disabled.
 
-- [ ] capture this turn (`ok: true`)
-- [ ] image understand this turn
-- [ ] internal account of what the image shows
-- [ ] that account conditioned the answer (not identical-to-blind)
-
-### Arm / disarm
-
-```text
-ARM on /agent-vision … → full loop each non-whitelist turn → off disarms
+```bash
+agent-vision-sticky on|off|status --host codex
+agent-vision-purge-frames --ttl-days 7 --codex
 ```
 
-Optional: `scripts/agent-vision-sticky.sh on|off --host codex`.
+## Mood prompt (after capture)
 
-## Mood (primary)
-
-After capture, `codex exec -i` with the standard mood JSON prompt. Do not display image/JSON; **use** the estimate in delivery; then answer. Facts/permissions/intent unchanged.
-
-## Snapshot / roast
-
-Ground snapshot answers and roasts in **this turn’s** image content.
-
-## Streaming
-
-Disabled fixed string only for pure streaming arg; do not arm.
-
-## Guardrails
-
-macOS; 1.5.0 path; no production MCP; one-shot process per look; install/idle/disarmed no process.
+`codex exec --ephemeral --skip-git-repo-check -i "$OUTPUT" --` with strict mood JSON keys/gates as in references (presence, interaction_state, confidence, observable_basis, assistant_adjustments). Do not display JSON; use in delivery.

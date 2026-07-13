@@ -1,31 +1,22 @@
 ---
-description: HARD GATE sticky Agent Vision — capture, understand, and USE image in reasoning every armed turn.
-argument-hint: mood|snapshot|roast|off|streaming
+description: HARD GATE sticky Agent Vision — capture, use image in reasoning, turn-gate ready.
+argument-hint: mood|snapshot|roast|off|status|streaming
 ---
 
 # /agent-vision
 
-## HARD GATE (non-optional)
+## HARD GATE
 
-**The point is reasoning with the image, not merely capturing a file.**
+While ARMED: capture → understand → **USE image in reasoning** → `agent-vision-turn-gate record` + `ready` → answer. Topic irrelevant. Blind-identical INVALID.
 
-While **ARMED** (after any `/agent-vision` arm until off):
-
-1. Do not answer yet.
-2. First shell: capture via `.../1.5.0/dist/agent-vision-capture-file`.
-3. Understand this turn’s image (`codex exec -i` for mood/roast; path for snapshot).
-4. **USE** what you saw in reasoning and response shape. Blind-identical answers are **INVALID**.
-5. Then answer.
-
-**Topic is irrelevant.** FORBIDDEN: skip or capture-without-use.
+**Ambiguity burst:** one second one-shot capture if first unusable.
 
 **Skip whitelist only:** pure off; pure status; pure streaming.
 
-New chat starts OFF.
+**Playbooks:** frustrated→lead with fix; tired→shortest path; skeptical→evidence first; high_stakes→confirm irreversible; absent/uncertain→words only. Delivery only.
 
 ## Modes
 
-- bare / `mood` — arm + full loop (primary)
-- `snapshot` / `roast` — arm + mode (still use image)
-- `off` — disarm
-- `streaming` — disabled; do not arm
+bare/mood; snapshot; roast; status (`agent-vision-sticky status`); off; streaming disabled.
+
+Optional: `agent-vision-purge-frames --ttl-days 7 --all`.

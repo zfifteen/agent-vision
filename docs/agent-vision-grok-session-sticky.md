@@ -32,16 +32,24 @@ capture → understand image (pixels) → USE image content in reasoning → res
 
 Sticky is **agent policy**, not an always-on camera daemon. Each look uses one-shot `agent-vision-capture-file` (camera on briefly, then off). Install/idle/disarmed must start no Agent Vision process.
 
-## State helper
+## State + gate + purge helpers
 
 ```bash
 scripts/agent-vision-sticky.sh on --host grok|codex --mode mood|snapshot|roast
 scripts/agent-vision-sticky.sh off [--host grok|codex]
-scripts/agent-vision-sticky.sh status
+scripts/agent-vision-sticky.sh status   # sticky + last_capture_age_seconds
 scripts/agent-vision-sticky.sh is-on
+
+scripts/agent-vision-turn-gate.sh record --path /path/to.jpg
+scripts/agent-vision-turn-gate.sh ready [--max-age SEC]   # fail-closed
+scripts/agent-vision-turn-gate.sh status|clear
+
+scripts/agent-vision-purge-frames.sh --ttl-days 7 --all|--grok|--codex [--dry-run]
 ```
 
-State file: `~/.agent-vision/session-state.json` (mode 0600). Never launches the camera.
+State: `~/.agent-vision/session-state.json`. Gate: `~/.agent-vision/turn-gate.json`. Never launches the camera.
+
+**Ambiguity burst:** one second one-shot capture if first frame unusable (documented in skill + references).
 
 ## Host vision paths
 

@@ -53,6 +53,10 @@ jobs:
         run: scripts/test-grok-adapter.sh
       - name: Sticky session state tests
         run: scripts/test-grok-sticky-state.sh
+      - name: Turn-gate tests
+        run: scripts/test-agent-vision-turn-gate.sh
+      - name: Frame purge tests
+        run: scripts/test-agent-vision-purge-frames.sh
       - name: Stage capture helper for CLI error-path tests
         run: |
           mkdir -p dist

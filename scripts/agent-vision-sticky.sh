@@ -5,6 +5,7 @@ set -euo pipefail
 
 STATE_DIR="${HOME}/.agent-vision"
 STATE_FILE="${STATE_DIR}/session-state.json"
+GATE_FILE="${STATE_DIR}/turn-gate.json"
 
 usage() {
   cat <<'EOF'
@@ -13,8 +14,8 @@ Usage: agent-vision-sticky.sh <command> [options]
 Commands:
   on   --host grok|codex [--mode mood|snapshot|roast]
   off  [--host grok|codex]
-  status
-  is-on   Exit 0 if sticky true, 1 if false/missing
+  status   Print sticky + last-capture age (from turn-gate if present).
+  is-on    Exit 0 if sticky true, 1 if false/missing
 
 Never launches the camera or AgentVision.app.
 EOF
@@ -38,7 +39,6 @@ write_state() {
   local host="$2"
   local mode="$3"
   ensure_state_dir
-  # shellcheck disable=SC2016
   python3 - "$STATE_FILE" "$sticky" "$host" "$mode" <<'PY'
 import json
 import pathlib
@@ -66,20 +66,21 @@ print(path.read_text(encoding="utf-8"), end="")
 PY
 }
 
-read_state() {
-  if [[ ! -f "$STATE_FILE" ]]; then
-    printf '%s\n' '{"sticky":false,"host":null,"mode":null,"armed_at":null,"updated_at":null}'
-    return 0
-  fi
-  python3 - "$STATE_FILE" <<'PY'
+read_status() {
+  python3 - "$STATE_FILE" "$GATE_FILE" <<'PY'
 import json
 import pathlib
 import sys
+from datetime import datetime, timezone
 
-path = pathlib.Path(sys.argv[1])
-try:
-    data = json.loads(path.read_text(encoding="utf-8"))
-except Exception:
+state_path = pathlib.Path(sys.argv[1])
+gate_path = pathlib.Path(sys.argv[2])
+if state_path.is_file():
+    try:
+        data = json.loads(state_path.read_text(encoding="utf-8"))
+    except Exception:
+        data = {}
+else:
     data = {}
 out = {
     "sticky": bool(data.get("sticky")),
@@ -87,7 +88,29 @@ out = {
     "mode": data.get("mode"),
     "armed_at": data.get("armed_at"),
     "updated_at": data.get("updated_at"),
+    "last_capture_path": None,
+    "last_capture_at": None,
+    "last_capture_age_seconds": None,
+    "last_capture_ok": False,
 }
+if gate_path.is_file():
+    try:
+        gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    except Exception:
+        gate = {}
+    path = gate.get("path")
+    recorded = gate.get("recorded_at")
+    exists = bool(path and pathlib.Path(path).is_file())
+    out["last_capture_path"] = path
+    out["last_capture_at"] = recorded
+    out["last_capture_ok"] = bool(gate.get("ok")) and exists
+    if recorded:
+        try:
+            ts = datetime.fromisoformat(recorded.replace("Z", "+00:00"))
+            age = int((datetime.now(timezone.utc) - ts).total_seconds())
+            out["last_capture_age_seconds"] = max(0, age)
+        except Exception:
+            pass
 print(json.dumps(out, indent=2))
 PY
 }
@@ -169,7 +192,6 @@ case "$cmd" in
     write_state true "$HOST" "$MODE"
     ;;
   off)
-    # Preserve last host if present when not specified
     if [[ -z "$HOST" && -f "$STATE_FILE" ]]; then
       HOST="$(python3 -c "import json,pathlib; p=pathlib.Path('$STATE_FILE');
 print((json.loads(p.read_text()) if p.exists() else {}).get('host') or '')" 2>/dev/null || true)"
@@ -177,7 +199,7 @@ print((json.loads(p.read_text()) if p.exists() else {}).get('host') or '')" 2>/d
     write_state false "${HOST:-}" ""
     ;;
   status)
-    read_state
+    read_status
     ;;
   is-on)
     if is_on; then

@@ -64,12 +64,16 @@ cp "$ROOT/scripts/uninstall-runtime.sh" "$OUT/scripts/uninstall-runtime.sh"
 cp "$ROOT/scripts/install-grok.sh" "$OUT/scripts/install-grok.sh"
 cp "$ROOT/scripts/uninstall-grok.sh" "$OUT/scripts/uninstall-grok.sh"
 cp "$ROOT/scripts/agent-vision-sticky.sh" "$OUT/scripts/agent-vision-sticky.sh"
+cp "$ROOT/scripts/agent-vision-turn-gate.sh" "$OUT/scripts/agent-vision-turn-gate.sh"
+cp "$ROOT/scripts/agent-vision-purge-frames.sh" "$OUT/scripts/agent-vision-purge-frames.sh"
 chmod +x \
   "$OUT/scripts/install-runtime.sh" \
   "$OUT/scripts/uninstall-runtime.sh" \
   "$OUT/scripts/install-grok.sh" \
   "$OUT/scripts/uninstall-grok.sh" \
-  "$OUT/scripts/agent-vision-sticky.sh"
+  "$OUT/scripts/agent-vision-sticky.sh" \
+  "$OUT/scripts/agent-vision-turn-gate.sh" \
+  "$OUT/scripts/agent-vision-purge-frames.sh"
 cp -R "$ROOT/hosts/grok" "$OUT/hosts/grok"
 
 cp -R "$ROOT/.codex-plugin" "$OUT/.codex-plugin"
