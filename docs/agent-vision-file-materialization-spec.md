@@ -6,8 +6,10 @@
 
 | Host | Materialize | Vision / display ingest |
 | --- | --- | --- |
-| Codex (1.5.0) | `agent-vision-capture-file` → `~/.codex/agent-vision/frames` | Markdown image link; roast/mood use `codex exec -i` |
+| Codex (1.5.0 + main sticky) | `agent-vision-capture-file` → `~/.codex/agent-vision/frames` | Markdown image link; roast/mood use `codex exec -i` |
 | Grok Build | `agent-vision-capture-file` → `~/.agent-vision/frames` | Multimodal `read_file` on the absolute path; Markdown for snapshot/roast; mood silent |
+
+**Sticky:** while armed, each non-whitelist turn materializes a **new** JPEG the same way as an explicit snapshot (one-shot helper), then the host must **use image content in reasoning** (HARD GATE). See [agent-vision-grok-session-sticky.md](./agent-vision-grok-session-sticky.md).
 
 The tested Codex path does not make MCP image content directly available to the assistant as inspectable vision input. Production Grok and Codex user contracts therefore **must not** depend on MCP image payloads in memory.
 
@@ -74,9 +76,13 @@ Codex 1.5.0 package:
 5. **Codex:** display Markdown image link.  
    **Grok:** `read_file` on the path, then Markdown image link + analysis.
 
-### Roast / mood (Codex only in current public cut)
+### Roast / mood (both hosts)
 
-Materialize JPEG, then analyze with the host vision path: Codex uses `codex exec -i`; Grok uses multimodal `read_file` on the absolute path with the same roast/mood prompts and gates.
+Materialize JPEG, then analyze with the host vision path: Codex uses `codex exec -i`; Grok uses multimodal `read_file` on the absolute path with the same roast/mood prompts and gates. Mood is silent by default (no image/JSON display).
+
+### Sticky armed turns
+
+Same materialization as snapshot. Then: understand pixels → use in reasoning → `agent-vision-turn-gate record` + single-use `ready`. Do not reuse a prior frame path as a substitute for this turn’s capture.
 
 ### Streaming
 
@@ -84,7 +90,7 @@ Disabled on both public hosts. Fixed user-visible copy; **no** Agent Vision proc
 
 ## Process lifecycle
 
-One-shot capture launches `AgentVision.app` only for that request and must exit afterward. Install and idle host sessions must not start the app or helper.
+One-shot capture launches `AgentVision.app` only for that request and must exit afterward. Install, idle, and **disarmed** host sessions must not start the app or helper.
 
 Production installs do **not** register an Agent Vision MCP server. Source-tree MCP code remains for tests/dev only.
 
@@ -93,6 +99,7 @@ Production installs do **not** register an Agent Vision MCP server. Source-tree 
 ```bash
 bash -n scripts/agent-vision-capture-file.sh scripts/install-runtime.sh scripts/install-grok.sh
 scripts/test-grok-adapter.sh
+scripts/test-agent-vision-turn-gate.sh
 scripts/test-capture-file-cli.sh
 # optional live:
 AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh
@@ -104,6 +111,7 @@ swift test
 
 See also:
 
+- [agent-vision-grok-session-sticky.md](./agent-vision-grok-session-sticky.md)
 - [agent-vision-grok-build-compatibility.md](./agent-vision-grok-build-compatibility.md)
 - [agent-vision-grok-install-uninstall-traceability.md](./agent-vision-grok-install-uninstall-traceability.md)
 - [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md)

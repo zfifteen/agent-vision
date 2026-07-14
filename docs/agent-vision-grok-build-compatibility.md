@@ -1,9 +1,10 @@
 # Agent Vision: Grok Build CLI Compatibility
 
-**Status:** **Ship A implemented and publicly documented** (snapshot + disabled streaming on Grok Build). Planning sections retained as the north-star contract.  
-**Branch:** `feat/grok-build-compatibility`  
+**Status:** **Ship A shipped** (1.5.0 multi-host package). **Main now includes** sticky mood-first sessions, roast/mood parity, HARD GATE, turn-gate, and purge helpers on Grok + Codex.  
+**Planning sections below** retain Ship A/B history and north-star notes; for the **current session contract**, prefer [agent-vision-grok-session-sticky.md](./agent-vision-grok-session-sticky.md) and root README / INSTALL.  
+**Branch (historical):** `feat/grok-build-compatibility` (merged)  
 **Date:** 2026-07-13  
-**Last revised:** 2026-07-13 (implementation + public docs pass; [expert review](./agent-vision-grok-build-compatibility-review.md) applied)  
+**Last revised:** 2026-07-13 (sticky HARD GATE docs pass; [expert review](./agent-vision-grok-build-compatibility-review.md) applied)  
 **Repository policy:** Same project, multi-host adapters — **not** a new repository.  
 **Validation:** Phase 0 `read_file` PASS ([evidence](./evidence/phase-0-vision-ingest-2026-07-13.md)); live Grok session green; `scripts/test-grok-adapter.sh` green.
 

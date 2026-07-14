@@ -2,47 +2,68 @@
 
 # Agent Vision
 
-Agent Vision is a macOS-only local camera appliance for AI coding agents. A signed native app captures one explicit JPEG frame when you ask; the host adapter (Codex or Grok Build) materializes that file and inspects it through a proven local path.
+Agent Vision is a macOS-only local camera appliance for AI coding agents. A signed native app captures one JPEG frame when the agent needs to look; the host adapter (Codex or Grok Build) materializes that file and inspects it through a proven local path.
 
-Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product. Just a signed `AgentVision.app` and a local JPEG when you invoke `/agent-vision`.
+**Product purpose:** mood-first **sticky vision-in-the-loop**. Arm once with `/agent-vision` (default mood). While armed, every substantive turn **captures → understands the image → uses image content in reasoning** before responding. Disarm with `/agent-vision off`. New chat always starts **OFF**.
+
+Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product. Each look is still a brief one-shot process (camera on, frame, camera off)—not a background daemon.
 
 Some people will love this. Some people will absolutely hate it. Both reactions are reasonable.
 
-If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for people who already trust a local assistant with real work and want to say, "look at this thing," without screenshot gymnastics.
+If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for people who already trust a local assistant with real work and want continuous local visual context without screenshot gymnastics.
 
 ## Hosts
 
 | Host | Status | Features | Frames | Install |
 | --- | --- | --- | --- | --- |
-| **Codex** | Stable (package **1.5.0**) | snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` |
-| **Grok Build** | Public (package **1.5.0**+) | snapshot, roast, mood; streaming disabled | `~/.agent-vision/frames` | Release package or clone: `install-runtime.sh` + `install-grok.sh` |
+| **Codex** | Stable (package **1.5.0** + main sticky/HARD GATE) | sticky mood-first; snapshot, roast, mood; streaming disabled | `~/.codex/agent-vision/frames` | Packaged release + `install.sh` (reinstall skill for sticky) |
+| **Grok Build** | Public (**1.5.0**+ main) | sticky mood-first; snapshot, roast, mood; streaming disabled | `~/.agent-vision/frames` | `install-runtime.sh` + `install-grok.sh` |
 
-Both hosts share mood-first **sticky** sessions: arm with `/agent-vision` (default mood), re-capture on substantive turns until `/agent-vision off`. New chat starts off. Streaming is disabled. Grok uses multimodal `read_file`; Codex uses `codex exec -i` for mood/roast.
+Both hosts share:
 
-Shared on both hosts: signed `AgentVision.app`, one-shot capture helper, no production MCP server, no camera process on install/idle/unrelated prompts.
+- Mood-first **sticky** sessions (arm → loop until off)
+- **HARD GATE:** capture without using the image in reasoning is **INVALID**
+- Per-turn **turn-gate** (`begin` / `record` / single-use `ready`)
+- One-shot capture helper, signed `AgentVision.app`, no production MCP
+- No camera process on install, idle, or disarmed turns
 
-Design notes: [docs/agent-vision-grok-build-compatibility.md](docs/agent-vision-grok-build-compatibility.md).
+Grok uses multimodal `read_file`. Codex uses `codex exec -i` for mood/roast (Markdown path for snapshot).
+
+Contracts: [docs/agent-vision-grok-session-sticky.md](docs/agent-vision-grok-session-sticky.md) · design history: [docs/agent-vision-grok-build-compatibility.md](docs/agent-vision-grok-build-compatibility.md).
 
 ## What It Does
 
-Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper. The camera runs only for an explicit one-shot slash command.
+Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper. The camera runs only when the skill runs a capture for an armed turn or an explicit one-shot mode.
 
 ### Slash command
 
 ```text
-/agent-vision snapshot
-/agent-vision streaming
-/agent-vision roast
+/agent-vision              # arm sticky (default mood)
 /agent-vision mood
+/agent-vision snapshot
+/agent-vision roast
+/agent-vision status
+/agent-vision off
+/agent-vision streaming    # disabled; does not arm
 ```
 
-**Mood** (primary; bare `/agent-vision`): arm sticky → capture → understand image → ascertain disposition → incorporate into reasoning → respond (silent). Re-captures on each substantive turn until off.
+| Mode | Behavior |
+| --- | --- |
+| **bare / mood** (primary) | Arm sticky → capture → understand → disposition → **use in reasoning** → respond (silent by default). Re-captures every non-whitelist turn until off. |
+| **snapshot** / **roast** | Arm sticky + that mode (show image / playful roast), same HARD GATE loop on later turns. |
+| **status** | Sticky + last-capture age; no camera if the turn is pure status. |
+| **off** | Disarm; no further captures. Also: stop / disable / “turn off the camera”. |
+| **streaming** | Disabled fixed message; does not arm. |
 
-**Snapshot** / **roast**: arm sticky and use the same capture stack (show image / playful roast).
+**HARD GATE (while armed):** on every turn except a closed skip whitelist (pure off, pure status, pure streaming):
 
-**Off**: `/agent-vision off` (also stop / turn off camera) disarms sticky; no further captures. New chat always starts off.
+```text
+capture → understand image (pixels) → USE image content in reasoning → turn-gate ready → respond
+```
 
-**Streaming** is disabled (fixed message; does not arm). Each look is still one-shot process lifecycle—not an always-on camera.
+Topic is irrelevant. Capture theater (save a JPEG and ignore it) is a failure. An answer identical to a blind answer is **INVALID**.
+
+Helpers (never start the camera): `agent-vision-sticky`, `agent-vision-turn-gate`, `agent-vision-purge-frames` (PATH shims after install).
 
 ## What It Does Not Do
 
@@ -54,14 +75,14 @@ Agent Vision does not implement:
 - Device selection.
 - Browser `getUserMedia`.
 - Remote camera access.
-- Automatic frame ingestion.
+- Automatic frame ingestion while **disarmed**.
 - Mood history, training datasets, background mood detection, or a separate image archive.
 
 The camera stays local. Snapshot and roast use a saved JPEG file as the user-visible image contract on both hosts.
 
 ## Who This Is For
 
-Agent Vision is for local-first Codex or Grok Build users who want the assistant to inspect physical things near the computer.
+Agent Vision is for local-first Codex or Grok Build users who want the assistant to keep visual context in the loop while they work—and to inspect physical things near the computer when it matters.
 
 It is useful when the thing you need help with is real, visible, and annoying to describe:
 
@@ -99,9 +120,11 @@ cd agent-vision-1.5.0
 ./install.sh
 ```
 
+Sticky HARD GATE improvements ship on **main** after the 1.5.0 tarball. For those: install from a current clone (`scripts/install-local.sh`) or re-stage the latest `skills/camera-control` and helper scripts after pulling main.
+
 ### Grok Build
 
-Grok Build gets the same one-shot modes as Codex: **snapshot**, **roast**, **mood** (streaming still disabled). Image analysis uses multimodal `read_file` on the saved JPEG.
+**Primary value is sticky mood-first vision**, not one-shot snapshot only. Image analysis uses multimodal `read_file` on the saved JPEG.
 
 From the packaged release (or a clone with signed `dist/AgentVision.app`):
 
@@ -109,17 +132,17 @@ From the packaged release (or a clone with signed `dist/AgentVision.app`):
 # 1) Shared runtime (signed app + capture helper + PATH shim)
 scripts/install-runtime.sh
 
-# 2) Grok skill (+ optional user plugin tree under ~/.grok)
+# 2) Grok skill (+ sticky / turn-gate / purge helpers + optional ~/.grok plugin tree)
 scripts/install-grok.sh
 ```
 
-Ensure `~/.local/bin` is on your `PATH` so `agent-vision-capture-file` resolves. Open a **new** Grok session with **sandbox off** (default), then:
+Ensure `~/.local/bin` is on your `PATH` so `agent-vision-capture-file` and the helper shims resolve. Open a **new** Grok session with **sandbox off** (default), then:
 
 ```text
-/agent-vision snapshot
-/agent-vision roast
-/agent-vision mood
+/agent-vision
 ```
+
+or `/agent-vision mood`. That arms sticky vision for the conversation. Later substantive turns re-capture and use vision until `/agent-vision off`.
 
 Frames: `~/.agent-vision/frames`. Uninstall: `scripts/uninstall-grok.sh` (adapter) and/or `scripts/uninstall-runtime.sh` (camera runtime).
 
@@ -135,19 +158,19 @@ Install Agent Vision from https://github.com/zfifteen/agent-vision. Use the pack
 
 ## Slash Commands
 
-Ask Codex:
+Arm sticky mood (primary):
 
 ```text
-Use Agent Vision to start the camera, inspect the latest frame, and tell me what you can read from my note.
+/agent-vision
 ```
 
-Take one image and turn the camera off:
+or `/agent-vision mood`.
+
+Take one image and show it (also arms sticky):
 
 ```text
 /agent-vision snapshot
 ```
-
-Use this when you want one usable image and then want the camera off. Codex should show the saved JPEG through an absolute Markdown image link.
 
 Streaming mode is temporarily disabled:
 
@@ -155,15 +178,15 @@ Streaming mode is temporarily disabled:
 /agent-vision streaming
 ```
 
-This launches no Agent Vision process in 1.5.0. The command returns the temporary disabled message.
+This launches no Agent Vision process. The command returns the temporary disabled message.
 
-Stop streaming:
+Stop / disarm:
 
 ```text
-Agent Vision streaming off
+/agent-vision off
 ```
 
-You can also say `stop streaming` or `turn off the camera`. In 1.5.0, Codex reports that there is no Agent Vision streaming session to stop and launches no Agent Vision process.
+You can also say `stop streaming`, `turn off the camera`, or `agent vision off`. While disarmed (or if streaming was never started), Codex/Grok report that there is no streaming session and launch no Agent Vision process for pure disarm/streaming phrases.
 
 Take one image and request immediate emotional damage, responsibly:
 
@@ -174,6 +197,14 @@ Take one image and request immediate emotional damage, responsibly:
 Roast mode uses the same camera lifecycle as snapshot mode, then adds a short text response. The roast is opt-in and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
 
 ## Example Workflows
+
+Sticky mood while you work:
+
+```text
+/agent-vision
+
+[then keep working — each substantive turn re-captures and uses vision]
+```
 
 Read something in the room:
 
@@ -231,13 +262,16 @@ Estimate current interaction state for response delivery:
 /agent-vision mood
 ```
 
-Mood mode is opt-in. It uses the same saved JPEG frame path as snapshot and roast, then analyzes that image for strict JSON (Codex via `codex exec -i`; Grok via `read_file`). The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
+Mood mode is opt-in at arm time (and is the default for bare `/agent-vision`). It uses the same saved JPEG frame path as snapshot and roast, then analyzes that image for strict JSON (Codex via `codex exec -i`; Grok via `read_file`). The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
+
+While sticky is armed, that mood (or scene) loop runs again on each substantive turn—not only when you re-type the slash command.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  A["Host slash /agent-vision"] --> B["agent-vision-capture-file"]
+  A["Host slash /agent-vision"] --> S["Sticky state"]
+  S --> B["agent-vision-capture-file"]
   B --> C["AgentVision.app capture-file"]
   C --> D["AVFoundation"]
   D --> E["Built-in Mac camera"]
@@ -245,32 +279,37 @@ flowchart LR
   F --> C
   C --> B
   B --> G["Saved JPEG file"]
+  G --> T["turn-gate record + ready"]
   G --> H["Host ingest"]
-  H --> I["Markdown image / read_file / codex exec -i"]
+  H --> I["read_file / codex exec -i / Markdown"]
+  I --> R["USE image in reasoning"]
+  T --> R
 ```
 
 | Layer | Location |
 | --- | --- |
 | Shared runtime | `AgentVision.app` + `agent-vision-capture-file` (Codex plugin cache and/or `~/.local/share/agent-vision`) |
+| Session helpers | `agent-vision-sticky`, `agent-vision-turn-gate`, `agent-vision-purge-frames` |
+| Session state | `~/.agent-vision/session-state.json`, `~/.agent-vision/turn-gate.json` |
 | Codex host | `.codex-plugin/`, `commands/`, `skills/camera-control/` |
 | Grok host | `hosts/grok/` skill + `plugin.json` |
 
-The native app owns camera permission. Capture launches the signed app only for explicit one-shot requests, writes one JPEG to an absolute path, and prints JSON. Host adapters never depend on production MCP image content for the user-visible contract.
+The native app owns camera permission. Capture launches the signed app only for armed turns / explicit modes, writes one JPEG to an absolute path, and prints JSON. Host adapters never depend on production MCP image content for the user-visible contract.
 
 **Codex package install** stages under `~/plugins/agent-vision` and `~/.codex/plugins/cache/local/agent-vision/1.5.0`, registers `agent-vision@local`, and removes legacy MCP config.
 
-**Grok install** is two-step: shared runtime home + PATH shim, then skill under `~/.grok/skills/agent-vision`.
+**Grok install** is two-step: shared runtime home + PATH shim, then skill under `~/.grok/skills/agent-vision` plus sticky/turn-gate/purge shims.
 
 ## Camera Modes
 
 Snapshot mode:
 
-1. Codex runs `agent-vision-capture-file --output "$OUTPUT" --json`.
+1. Host runs `agent-vision-capture-file --output "$OUTPUT" --json`.
 2. The file materializer launches `AgentVision.app capture-file`.
 3. `AgentVision.app` starts the built-in camera if it is not already running.
 4. The app waits for and returns one usable JPEG frame.
 5. The file materializer writes the JPEG to `$OUTPUT` and prints JSON with `ok: true`.
-6. Codex displays the saved JPEG with an absolute Markdown image link.
+6. Host displays or inspects the saved JPEG (Markdown and/or host vision path).
 
 Roast mode:
 
@@ -279,7 +318,7 @@ Roast mode:
 3. Host analyzes the image (Codex: `codex exec -i`; Grok: `read_file`).
 4. Host returns the saved JPEG link and the roast text from that image analysis.
 
-Mood mode:
+Mood mode (primary; also the sticky default):
 
 1. Host runs `agent-vision-capture-file --output "$OUTPUT" --json`.
 2. The file materializer writes one usable JPEG to `$OUTPUT`.
@@ -287,13 +326,15 @@ Mood mode:
 4. Host applies permitted response-shape adjustments only to the current response or task phase.
 5. Host does not display the captured image, raw JSON, confidence band, or visual-analysis rationale unless the user explicitly asks to debug mood mode.
 
-Streaming is disabled on both hosts. `/agent-vision streaming`, `stop streaming`, and `turn off the camera` launch no Agent Vision process.
+**Sticky armed turns** repeat capture → understand → **use in reasoning** → turn-gate ready, with optional ambiguity burst (one second one-shot if the first frame is unusable).
 
-**Invariant:** explicit snapshot, roast, and mood may blink the camera briefly; install, idle host startup, unrelated prompts, streaming, and stop-streaming create **no** Agent Vision process.
+Streaming is disabled on both hosts. `/agent-vision streaming` and pure stop-streaming phrases launch no Agent Vision process. Disarm phrases clear sticky and also launch no capture.
+
+**Invariant:** armed substantive turns and explicit snapshot/roast/mood may blink the camera briefly; install, idle host startup, disarmed unrelated prompts, streaming, and stop-streaming create **no** Agent Vision process.
 
 ## Privacy
 
-One-shot and explicit. No production Agent Vision MCP server. No streaming session. macOS asks for camera permission for signed `AgentVision.app` on first capture. Repeated prompts usually mean the app identity changed—rerun the relevant installer.
+Explicit arm, per-look one-shot process, no production Agent Vision MCP server, no streaming session. macOS asks for camera permission for signed `AgentVision.app` on first capture. Repeated prompts usually mean the app identity changed—rerun the relevant installer.
 
 See [PRIVACY.md](PRIVACY.md).
 
@@ -304,7 +345,10 @@ swift test
 swift build -c release
 scripts/install-local.sh --dry-run          # Codex source install checks
 scripts/test-slash-commands.sh              # Codex slash matrix
-scripts/test-grok-adapter.sh                # Grok static contracts
+scripts/test-grok-adapter.sh                # Grok static contracts (HARD GATE, sticky)
+scripts/test-grok-sticky-state.sh           # sticky state helper
+scripts/test-agent-vision-turn-gate.sh      # single-use ready
+scripts/test-agent-vision-purge-frames.sh
 AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh   # optional live capture
 scripts/install-runtime.sh --dry-run
 scripts/install-grok.sh --dry-run
@@ -337,6 +381,7 @@ Open a new Codex session after install.
 ```bash
 echo "$PATH" | tr ':' '\n' | grep local/bin
 ls ~/.local/bin/agent-vision-capture-file
+ls ~/.local/bin/agent-vision-sticky
 ls ~/.local/share/agent-vision/dist/agent-vision-capture-file
 ls ~/.grok/skills/agent-vision/SKILL.md
 ```
@@ -347,7 +392,9 @@ Re-run `scripts/install-runtime.sh` and `scripts/install-grok.sh`. Put `~/.local
 
 **Streaming** — disabled on both hosts; no process should start.
 
-**Black frames** — warm-up retries (3 attempts, 5s apart), then error instead of a useless JPEG.
+**Black frames** — warm-up retries (3 attempts, 5s apart), then error instead of a useless JPEG. Skills may try one ambiguity-burst second capture.
+
+**Sticky “skips” vision** — reinstall skill from main; confirm HARD GATE + turn-gate in `SKILL.md`; open a new session; `/agent-vision status` should show sticky + last capture age.
 
 ## License
 

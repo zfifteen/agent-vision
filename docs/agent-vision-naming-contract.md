@@ -30,6 +30,14 @@ This document is the canonical naming source for Agent Vision (including the Cod
 | Codex frame directory | `$HOME/.codex/agent-vision/frames` |
 | Grok frame directory | `$HOME/.agent-vision/frames` |
 | Codex plugin cache (1.5.0) | `~/.codex/plugins/cache/local/agent-vision/1.5.0` |
+| Session state directory | `$HOME/.agent-vision/` |
+| Sticky state file | `$HOME/.agent-vision/session-state.json` |
+| Turn-gate state file | `$HOME/.agent-vision/turn-gate.json` |
+| Sticky helper | `agent-vision-sticky` (`scripts/agent-vision-sticky.sh`) |
+| Turn-gate helper | `agent-vision-turn-gate` (`scripts/agent-vision-turn-gate.sh`) |
+| Frame purge helper | `agent-vision-purge-frames` (`scripts/agent-vision-purge-frames.sh`) |
+
+Helpers never start the camera. Sticky is agent policy over one-shot capture, not a second daemon product.
 
 ## MCP (non-production on public hosts)
 

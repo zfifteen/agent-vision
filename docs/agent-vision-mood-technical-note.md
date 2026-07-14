@@ -2,7 +2,9 @@
 
 Date: 2026-05-06
 
-Status: concept note  
+Status: concept note (historical framing; product now ships sticky mood-first on main)
+
+> **Current product (supersedes one-shot-only framing below):** bare `/agent-vision` arms a **sticky** mood-first session. While armed, each non-whitelist turn re-captures and **must use image content in reasoning** (HARD GATE). Disposition playbooks shape delivery only. See [agent-vision-grok-session-sticky.md](./agent-vision-grok-session-sticky.md). Sections below remain useful for JSON keys and delivery-fit theory.
 
 **Host scope:** Codex mood path (`codex exec -i`) and Grok mood path (multimodal `read_file`). Same JSON contract and silent-display rules. See [agent-vision-grok-build-compatibility.md](./agent-vision-grok-build-compatibility.md).
 

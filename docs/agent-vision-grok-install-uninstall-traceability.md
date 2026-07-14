@@ -1,22 +1,23 @@
 # Agent Vision Grok Build Install/Uninstall Traceability
 
 Date: 2026-07-13  
-Scope: **Grok Build** — sticky mood-first session (arm → capture each substantive turn → off); supporting snapshot/roast; streaming disabled
+Scope: **Grok Build** — sticky mood-first session (arm → HARD GATE capture each non-whitelist turn → off); supporting snapshot/roast; streaming disabled; turn-gate + purge helpers
 
-Codex package lifecycle remains documented in [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md).
+Codex package lifecycle remains documented in [agent-vision-install-uninstall-traceability.md](./agent-vision-install-uninstall-traceability.md).  
+Sticky contract: [agent-vision-grok-session-sticky.md](./agent-vision-grok-session-sticky.md).
 
 ## Runtime invariant
 
-Install, Grok skill/plugin enablement, idle Grok startup, unrelated prompts, `/agent-vision streaming`, and stop-streaming requests must not start:
+Install, Grok skill/plugin enablement, idle Grok startup, **disarmed** prompts, `/agent-vision streaming`, pure status, and stop-streaming requests must not start:
 
 ```text
 agent-vision-mcp
 AgentVision.app
-agent-vision-capture-file   # except during explicit /agent-vision snapshot|roast|mood
+agent-vision-capture-file   # except during armed non-whitelist turns or explicit snapshot|roast|mood
 mcp-fifo
 ```
 
-Camera-capable code runs only for explicit `/agent-vision snapshot`, `/agent-vision roast`, or `/agent-vision mood` through the installed capture helper.
+Camera-capable code runs only when the skill runs the capture helper for an **armed** turn (or explicit one-shot arm modes). Sticky/turn-gate/purge helpers never start the camera.
 
 ## Traceability matrix
 
@@ -24,15 +25,19 @@ Camera-capable code runs only for explicit `/agent-vision snapshot`, `/agent-vis
 | --- | --- | --- |
 | Shared runtime installable | `scripts/install-runtime.sh` → `$AGENT_VISION_HOME` (default `~/.local/share/agent-vision`) | `test -x "$HOME/.local/share/agent-vision/dist/agent-vision-capture-file"` |
 | Codesign preserved | Copy without re-sign when possible; `codesign --verify --deep --strict` | Verify after install |
-| PATH shim | `~/.local/bin/agent-vision-capture-file` | `command -v agent-vision-capture-file` with `~/.local/bin` on PATH |
-| Frame directory | `~/.agent-vision/frames` (dirs mode `0700`) | Exists after install or first one-shot mode |
+| PATH shim (capture) | `~/.local/bin/agent-vision-capture-file` | `command -v agent-vision-capture-file` with `~/.local/bin` on PATH |
+| PATH shims (helpers) | sticky / turn-gate / purge via `install-grok.sh` | `command -v agent-vision-sticky agent-vision-turn-gate agent-vision-purge-frames` |
+| Frame directory | `~/.agent-vision/frames` (dirs mode `0700`) | Exists after install or first capture |
+| Session state dir | `~/.agent-vision/session-state.json`, `turn-gate.json` | Written only by helpers/skill; no camera |
 | Grok skill installed | `~/.grok/skills/agent-vision/SKILL.md` | `scripts/install-grok.sh`; `test -f` skill path |
-| Skill contracts | Mood-first purpose, reasoning loop, `disable-model-invocation: true`, camera-first, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
+| Skill contracts | Mood-first purpose, HARD GATE, sticky, turn-gate, `disable-model-invocation: false`, no Codex cache sole path | `scripts/test-grok-adapter.sh` |
 | No MCP | Empty/absent Agent Vision MCP in Grok config; plugin has no `mcpServers` | `test-grok-adapter.sh`; inspect `~/.grok/config.toml` |
 | Install starts no camera | Baseline PID check in install scripts | Install scripts fail if new Agent Vision PIDs appear |
+| Sticky arm/off | sticky helper + skill | Manual `/agent-vision` then `/agent-vision off`; `agent-vision-sticky status` |
 | Snapshot works | Helper + `read_file` | Manual `/agent-vision snapshot`; optional `AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh` |
 | Roast works | Capture + `read_file` + roast text; Markdown image link | Manual `/agent-vision roast` |
-| Mood works (primary) | Capture + `read_file` + ascertain disposition + incorporate into reasoning before answer; silent | Manual `/agent-vision mood` (optionally with a work request) |
+| Mood works (primary) | Capture + `read_file` + disposition + incorporate into reasoning; silent | Manual `/agent-vision mood` (optionally with a work request) |
+| HARD GATE armed turns | Capture + use pixels + turn-gate ready each non-whitelist turn | Manual multi-turn while armed; `test-agent-vision-turn-gate.sh` |
 | Streaming safe | Fixed disabled copy; no process | Manual slash / stop phrases |
 | Uninstall adapter | `scripts/uninstall-grok.sh` | Skill/plugin dirs gone; runtime may remain |
 | Uninstall runtime | `scripts/uninstall-runtime.sh` | Runtime home and shim removed |
@@ -50,7 +55,10 @@ test -x "$HOME/.local/bin/agent-vision-capture-file"
 scripts/install-grok.sh --dry-run
 scripts/install-grok.sh
 test -f "$HOME/.grok/skills/agent-vision/SKILL.md"
+command -v agent-vision-sticky agent-vision-turn-gate agent-vision-purge-frames
 scripts/test-grok-adapter.sh
+scripts/test-grok-sticky-state.sh
+scripts/test-agent-vision-turn-gate.sh
 # optional live:
 # AGENT_VISION_LIVE=1 scripts/test-capture-file-cli.sh
 # Must not leave residual processes after capture:

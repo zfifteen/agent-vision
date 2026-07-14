@@ -41,22 +41,30 @@ The installer removes legacy duplicate `mcp_servers.agent_vision` and `mcp_serve
 
 For QA traceability against the available OpenAI/Codex plugin guidance, see `docs/agent-vision-install-uninstall-traceability.md`.
 
+Sticky HARD GATE / turn-gate / purge helpers ship on **main** after the 1.5.0 tarball. If the user wants that behavior, install from a current clone with `scripts/install-local.sh` (developer) or re-stage the latest skill + helper scripts. Contract: `docs/agent-vision-grok-session-sticky.md`.
+
 5. Use the bundled slash command:
 
 ```text
-/agent-vision snapshot
-/agent-vision streaming
-/agent-vision roast
+/agent-vision
 /agent-vision mood
+/agent-vision snapshot
+/agent-vision roast
+/agent-vision status
+/agent-vision off
+/agent-vision streaming
 ```
 
-Version 1.5.0 is explicit and one-shot:
+Product model (mainline skill; package 1.5.0+ sticky updates):
 
-- `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, and stops the camera.
-- `/agent-vision streaming` is temporarily disabled and launches no Agent Vision process.
-- `/agent-vision roast` is snapshot plus prose: it materializes one usable JPEG, passes that exact file to `codex exec -i`, displays the saved image, and returns one opt-in playful roast of 400 characters or fewer from visible non-sensitive details.
-- `/agent-vision mood` materializes one usable JPEG, passes that exact file to `codex exec -i`, and uses strict JSON internally for current-response delivery only.
-- Stop-streaming requests report that there is no Agent Vision streaming session to stop and launch no Agent Vision process.
+- **Primary:** bare `/agent-vision` or `/agent-vision mood` **arms** sticky mood-first vision. While armed, each non-whitelist turn must capture → understand the image → **use image content in reasoning** (HARD GATE), then respond. New chat always starts **OFF**.
+- `/agent-vision snapshot` waits for one usable JPEG frame, saves it under `~/.codex/agent-vision/frames`, displays it with an absolute Markdown image link, stops the camera for that look, and arms sticky.
+- `/agent-vision streaming` is temporarily disabled and launches no Agent Vision process (does not arm).
+- `/agent-vision roast` is snapshot plus prose: it materializes one usable JPEG, passes that exact file to `codex exec -i`, displays the saved image, returns one opt-in playful roast of 400 characters or fewer from visible non-sensitive details, and arms sticky.
+- `/agent-vision mood` materializes one usable JPEG, passes that exact file to `codex exec -i`, and uses strict JSON internally for current-response delivery only (silent).
+- `/agent-vision status` reports sticky + last-capture age without opening the camera when the turn is pure status.
+- `/agent-vision off` (also stop / turn off the camera) **disarms** sticky. Stop-streaming-only phrases report that there is no Agent Vision streaming session and launch no Agent Vision process.
+- Each look still uses a one-shot capture process (not an always-on daemon).
 
 Required idle invariant:
 
