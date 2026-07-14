@@ -6,11 +6,9 @@ Agent Vision is a macOS-only local camera appliance for AI coding agents. A sign
 
 **Product purpose:** mood-first **sticky vision-in-the-loop**. Arm once with `/agent-vision` (default mood). While armed, every substantive turn **captures → understands the image → uses image content in reasoning** before responding. Disarm with `/agent-vision off`. New chat always starts **OFF**.
 
-Not a browser camera hack. Not a cloud vision service. Not an always-on surveillance product. Each look is still a brief one-shot process (camera on, frame, camera off)—not a background daemon.
+**Design:** signed local macOS camera capture only. Each look is a brief one-shot process (camera on, single JPEG frame, camera off). Frames stay on disk under the host frame directory. Install, idle, and disarmed turns leave the camera process stopped.
 
-Some people will love this. Some people will absolutely hate it. Both reactions are reasonable.
-
-If the idea of an AI assistant seeing your desk makes your soul leave your body and file a formal complaint, this plugin is not trying to convert you. Agent Vision is for people who already trust a local assistant with real work and want continuous local visual context without screenshot gymnastics.
+Agent Vision is for people who already trust a local assistant with real work and want continuous local visual context without screenshot gymnastics. The camera is an explicit, armable permission: opt in with `/agent-vision`, opt out with `/agent-vision off`.
 
 ## Hosts
 
@@ -33,7 +31,7 @@ Contracts: [docs/agent-vision-grok-session-sticky.md](docs/agent-vision-grok-ses
 
 ## What It Does
 
-Installing, enabling, or idling the host must **not** start `agent-vision-mcp`, `AgentVision.app`, or any Agent Vision camera-capable helper. The camera runs only when the skill runs a capture for an armed turn or an explicit one-shot mode.
+Install, enable, and idle leave `agent-vision-mcp`, `AgentVision.app`, and every Agent Vision camera helper stopped. The camera runs only when the skill runs a capture for an armed turn or an explicit one-shot mode.
 
 ### Slash command
 
@@ -65,20 +63,15 @@ Topic is irrelevant. Capture theater (save a JPEG and ignore it) is a failure. A
 
 Helpers (never start the camera): `agent-vision-sticky`, `agent-vision-turn-gate`, `agent-vision-purge-frames` (PATH shims after install).
 
-## What It Does Not Do
+## Privacy and capture surface
 
-Agent Vision does not implement:
+What ships today:
 
-- Cloud upload.
-- Background recording.
-- Audio capture.
-- Device selection.
-- Browser `getUserMedia`.
-- Remote camera access.
-- Automatic frame ingestion while **disarmed**.
-- Mood history, training datasets, background mood detection, or a separate image archive.
-
-The camera stays local. Snapshot and roast use a saved JPEG file as the user-visible image contract on both hosts.
+- **Local-only capture** through signed `AgentVision.app` and AVFoundation on the built-in Mac camera.
+- **One JPEG per look**, written under the host frame directory; snapshot and roast use that file as the user-visible image contract on both hosts.
+- **Armed turns only** for automatic frame ingestion; pure status / off / streaming-disabled phrases leave the camera idle.
+- **Per-frame analysis** for mood and roast on the current JPEG only (each capture stands alone).
+- **Still-image appliance:** AVFoundation JPEG from the built-in Mac camera; local host frame directory as the contract.
 
 ## Who This Is For
 
@@ -92,10 +85,10 @@ It is useful when the thing you need help with is real, visible, and annoying to
 - A whiteboard diagram that made sense during the meeting and has since become a corporate cave painting.
 - A printed error code on a device whose manufacturer believed fonts were a moral weakness.
 - A desk setup where the cable situation has entered its final form.
-- A receipt, shipping label, part number, serial number, or sticker that you do not want to retype.
+- A receipt, shipping label, part number, serial number, or sticker that you want to avoid retyping.
 - A physical prototype where you need another set of eyes and those eyes can also read Swift.
 
-It is not for people who want their camera to be completely absent from their AI workflow. That is a good boundary. Keep it. This plugin is deliberately explicit because the camera is not a casual permission.
+Camera use stays deliberate: arm when you want vision in the loop; leave the skill off when you want a text-only session.
 
 ## Install
 
@@ -124,7 +117,7 @@ Sticky HARD GATE improvements ship on **main** after the 1.5.0 tarball. For thos
 
 ### Grok Build
 
-**Primary value is sticky mood-first vision**, not one-shot snapshot only. Image analysis uses multimodal `read_file` on the saved JPEG.
+**Primary value is sticky mood-first vision** (continuous armed loop). One-shot snapshot and roast modes are available too. Image analysis uses multimodal `read_file` on the saved JPEG.
 
 From the packaged release (or a clone with signed `dist/AgentVision.app`):
 
@@ -153,7 +146,7 @@ See [INSTALL.md](INSTALL.md) and [docs/agent-vision-grok-install-uninstall-trace
 If you are asking Codex to install the plugin for you, use a prompt like this:
 
 ```text
-Install Agent Vision from https://github.com/zfifteen/agent-vision. Use the packaged release archive from the repo releases, not the source/developer installer. Extract the archive, run ./install.sh, and open a new Codex session before using /agent-vision. Confirm install and idle Codex startup create no Agent Vision process.
+Install Agent Vision from https://github.com/zfifteen/agent-vision. Use the packaged release archive from the repo releases (the user-facing install path). Extract the archive, run ./install.sh, and open a new Codex session before using /agent-vision. Confirm install and idle Codex startup leave every Agent Vision process stopped.
 ```
 
 ## Slash Commands
@@ -194,7 +187,7 @@ Take one image and request immediate emotional damage, responsibly:
 /agent-vision roast
 ```
 
-Roast mode uses the same camera lifecycle as snapshot mode, then adds a short text response. The roast is opt-in and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. It should not infer or attack protected traits, body size, age, disability, or other sensitive attributes. It is a tiny comedy mode, not a license to become a municipal cruelty department.
+Roast mode uses the same camera lifecycle as snapshot mode, then adds a short text response. The roast is opt-in and based only on visible non-sensitive details such as outfit, posture, expression, lighting, or room chaos. Stay clear of protected traits, body size, age, disability, and other sensitive attributes. Keep it a tiny comedy mode with a short, playful punch.
 
 ## Example Workflows
 
@@ -254,7 +247,7 @@ Use it when you have made the bold choice to ask your computer for fashion notes
 Roast me in 400 characters or fewer.
 ```
 
-The plugin cannot touch objects, move the camera, choose a different camera, or infer anything outside the returned image. If the camera cannot see it, Agent Vision cannot see it either. This is still software, not a dramatic scene from a hacking movie.
+The appliance reads a single local JPEG from the built-in camera path. Physical control of objects, pan/tilt, and alternate device selection are outside this surface. Reasoning is grounded in the returned frame only.
 
 Estimate current interaction state for response delivery:
 
@@ -264,7 +257,7 @@ Estimate current interaction state for response delivery:
 
 Mood mode is opt-in at arm time (and is the default for bare `/agent-vision`). It uses the same saved JPEG frame path as snapshot and roast, then analyzes that image for strict JSON (Codex via `codex exec -i`; Grok via `read_file`). The captured image and JSON are internal control signals and are not displayed in the normal response. Low-confidence or unusable images return `uncertain` or `absent` and do not apply state-specific response shaping. User correction overrides the visual estimate for the current response or task phase.
 
-While sticky is armed, that mood (or scene) loop runs again on each substantive turn—not only when you re-type the slash command.
+While sticky is armed, that mood (or scene) loop runs again on each substantive turn, including turns after the initial slash command.
 
 ## Architecture
 
